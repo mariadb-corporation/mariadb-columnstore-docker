@@ -8,6 +8,7 @@ API_KEY=${API_KEY:-somekey123}
 
 # Intialize Container If Necessary
 if [ ! -e $IFLAG ]; then
+  cp /opt/cmapi/engine_files/mcs-loadbrm.py /usr/bin/mcs-loadbrm.py
   $MCS_INSTALL_BIN/columnstore-init &> $LOG_PREFIX/columnstore-init.log
 fi
 
@@ -21,10 +22,5 @@ echo CMAPI PID = $!
 
 # Start MariaDB
 /usr/share/mysql/mysql.server start
-
-# Start Columnstore Engine Proceses For Single Node
-if [[ $(hostname -s) == $PM1 ]]; then
-  curl -s -X PUT "https://$PM1:8640/cmapi/0.4.0/cluster/add-node" --header 'Content-Type:application/json' --header "x-api-key:$API_KEY" --data '{"timeout":60, "node": "'$PM1'"}' -k
-fi
 
 exit 0

@@ -2,6 +2,7 @@
 
 # Set Path Variables
 IFLAG=/etc/columnstore/container-initialized
+SHAREDFLAG=/var/lib/columnstore/storagemanager/sm-initialized
 LOG_PREFIX=/var/log/mariadb/columnstore
 MCS_INSTALL_BIN=/usr/bin
 MCS_INSTALL_PATH=/var/lib/columnstore
@@ -74,131 +75,133 @@ for i in $PROGS ; do
   fi
 done
 
-# Start System
-echo Starting...
+if [ ! -e $SHAREDFLAG ]; then
+  touch $SHAREDFLAG
 
-touch $LOG_PREFIX/storagemanager.log && chmod 666 $LOG_PREFIX/storagemanager.log
-$MCS_INSTALL_BIN/StorageManager &> $LOG_PREFIX/storagemanager.log &
-echo StorageManager PID = $!
+  # Start System
+  echo Starting...
 
-echo loading BRM
-$MCS_INSTALL_BIN/mcs-loadbrm.py no
+  touch $LOG_PREFIX/storagemanager.log && chmod 666 $LOG_PREFIX/storagemanager.log
+  $MCS_INSTALL_BIN/StorageManager &> $LOG_PREFIX/storagemanager.log &
+  echo StorageManager PID = $!
 
-touch $LOG_PREFIX/workernode.log && chmod 666 $LOG_PREFIX/workernode.log
-$MCS_INSTALL_BIN/workernode DBRM_Worker1 &> $LOG_PREFIX/workernode.log &
-echo workernode PID = $!
+  echo loading BRM
+  $MCS_INSTALL_BIN/mcs-loadbrm.py no
 
-touch $LOG_PREFIX/controllernode.log && chmod 666 $LOG_PREFIX/controllernode.log
-$MCS_INSTALL_BIN/controllernode &> $LOG_PREFIX/controllernode.log &
-echo controllernode PID = $!
+  touch $LOG_PREFIX/workernode.log && chmod 666 $LOG_PREFIX/workernode.log
+  $MCS_INSTALL_BIN/workernode DBRM_Worker1 &> $LOG_PREFIX/workernode.log &
+  echo workernode PID = $!
 
-touch $LOG_PREFIX/primproc.log && chmod 666 $LOG_PREFIX/primproc.log
-$MCS_INSTALL_BIN/PrimProc &> $LOG_PREFIX/primproc.log &
-echo PrimProc PID = $!
+  touch $LOG_PREFIX/controllernode.log && chmod 666 $LOG_PREFIX/controllernode.log
+  $MCS_INSTALL_BIN/controllernode &> $LOG_PREFIX/controllernode.log &
+  echo controllernode PID = $!
 
-sleep 1
+  touch $LOG_PREFIX/primproc.log && chmod 666 $LOG_PREFIX/primproc.log
+  $MCS_INSTALL_BIN/PrimProc &> $LOG_PREFIX/primproc.log &
+  echo PrimProc PID = $!
 
-touch $LOG_PREFIX/exemgr.log && chmod 666 $LOG_PREFIX/exemgr.log
-$MCS_INSTALL_BIN/ExeMgr &> $LOG_PREFIX/exemgr.log &
-echo ExeMgr PID = $!
+  sleep 1
 
-touch $LOG_PREFIX/writeengineserver.log && chmod 666 $LOG_PREFIX/writeengineserver.log
-$MCS_INSTALL_BIN/WriteEngineServer &> $LOG_PREFIX/writeengineserver.log &
-echo WriteEngineServer PID = $!
+  touch $LOG_PREFIX/exemgr.log && chmod 666 $LOG_PREFIX/exemgr.log
+  $MCS_INSTALL_BIN/ExeMgr &> $LOG_PREFIX/exemgr.log &
+  echo ExeMgr PID = $!
 
-sleep 2
+  touch $LOG_PREFIX/writeengineserver.log && chmod 666 $LOG_PREFIX/writeengineserver.log
+  $MCS_INSTALL_BIN/WriteEngineServer &> $LOG_PREFIX/writeengineserver.log &
+  echo WriteEngineServer PID = $!
 
-touch $LOG_PREFIX/dmlproc.log && chmod 666 $LOG_PREFIX/dmlproc.log
-$MCS_INSTALL_BIN/DMLProc &> $LOG_PREFIX/dmlproc.log &
-echo DMLProc PID = $!
+  sleep 2
 
-touch $LOG_PREFIX/ddlproc.log && chmod 666 $LOG_PREFIX/ddlproc.log
-$MCS_INSTALL_BIN/DDLProc &> $LOG_PREFIX/ddlproc.log &
-echo DDLProc PID = $!
+  touch $LOG_PREFIX/dmlproc.log && chmod 666 $LOG_PREFIX/dmlproc.log
+  $MCS_INSTALL_BIN/DMLProc &> $LOG_PREFIX/dmlproc.log &
+  echo DMLProc PID = $!
 
-$MCS_INSTALL_BIN/dbbuilder 7 &> $LOG_PREFIX/dbbuilder.log
+  touch $LOG_PREFIX/ddlproc.log && chmod 666 $LOG_PREFIX/ddlproc.log
+  $MCS_INSTALL_BIN/DDLProc &> $LOG_PREFIX/ddlproc.log &
+  echo DDLProc PID = $!
 
-/usr/share/mysql/mysql.server start
+  $MCS_INSTALL_BIN/dbbuilder 7 &> $LOG_PREFIX/dbbuilder.log
 
-MARIADB_RUNNING=$(mariadb-admin ping)
-if [[ $MARIADB_RUNNING == *"alive"* ]]; then
-  # Disable Cracklib
-  $MCS_INSTALL_BIN/mariadb -e "UNINSTALL SONAME 'cracklib_password_check.so';"
-  if [ $? -ne 0 ]; then
+  MARIADB_RUNNING=$(mariadb-admin ping)
+  if [[ $MARIADB_RUNNING == *"alive"* ]]; then
+    # Disable Cracklib
+    $MCS_INSTALL_BIN/mariadb -e "UNINSTALL SONAME 'cracklib_password_check.so';"
+    if [ $? -ne 0 ]; then
       echo "ERROR: Deactivating Cracklib"
       exit 1
-  fi
-  # Set Up Cross Engine Join User
-  $MCS_INSTALL_BIN/mariadb -e "GRANT SELECT ON *.* TO 'cej'@'127.0.0.1' IDENTIFIED BY '$CEJ_PASSWORD';"
-  if [ $? -ne 0 ]; then
+    fi
+    # Set Up Cross Engine Join User
+    $MCS_INSTALL_BIN/mariadb -e "GRANT SELECT ON *.* TO 'cej'@'127.0.0.1' IDENTIFIED BY '$CEJ_PASSWORD';"
+    if [ $? -ne 0 ]; then
       echo "ERROR: During cross engine join user creation."
       exit 1
-  fi
-  $MCS_INSTALL_BIN/mcsSetConfig CrossEngineSupport User "cej"
-  $MCS_INSTALL_BIN/mcsSetConfig CrossEngineSupport Password "$CEJ_PASSWORD"
-  echo "Cross engine join user created"
-  unset CEJ_PASSWORD
-  # Set Up Replication User
-  $MCS_INSTALL_BIN/mariadb -e "GRANT REPLICATION SLAVE, REPLICATION CLIENT ON *.* TO '$REP_USER'@'%' IDENTIFIED BY '$REP_PASSWORD';"
-  if [ $? -ne 0 ]; then
+    fi
+    $MCS_INSTALL_BIN/mcsSetConfig CrossEngineSupport User "cej"
+    $MCS_INSTALL_BIN/mcsSetConfig CrossEngineSupport Password "$CEJ_PASSWORD"
+    echo "Cross engine join user created"
+    unset CEJ_PASSWORD
+    # Set Up Replication User
+    $MCS_INSTALL_BIN/mariadb -e "GRANT REPLICATION SLAVE, REPLICATION CLIENT ON *.* TO '$REP_USER'@'%' IDENTIFIED BY '$REP_PASSWORD';"
+    if [ $? -ne 0 ]; then
       echo "ERROR: During replication user creation."
       exit 1
-  fi
-  echo "Replication user created"
-  # Set Up Replication
-  if [[ $(hostname -s) != $PM1 ]]; then
-    mysql -e "STOP SLAVE;
-              CHANGE MASTER TO MASTER_HOST='$PM1',
-              MASTER_USER='$REP_USER',
-              MASTER_PASSWORD='$REP_PASSWORD',
-              MASTER_USE_GTID=slave_pos,
-              MASTER_CONNECT_RETRY=10;
-              START SLAVE;"
-    if [ $? -ne 0 ]; then
+    fi
+    echo "Replication user created"
+    # Set Up Replication
+    if [[ $(hostname -s) != $PM1 ]]; then
+      mysql -e "STOP SLAVE;
+                CHANGE MASTER TO MASTER_HOST='$PM1',
+                MASTER_USER='$REP_USER',
+                MASTER_PASSWORD='$REP_PASSWORD',
+                MASTER_USE_GTID=slave_pos,
+                MASTER_CONNECT_RETRY=10;
+                START SLAVE;"
+      if [ $? -ne 0 ]; then
         echo "ERROR: Performing CHANGE MASTER on Replica"
         exit 1
+      fi
+      sed -i "s|read_only = OFF|read_only = ON|" /etc/my.cnf.d/columnstore.cnf
     fi
-    sed -i "s|read_only = OFF|read_only = ON|" /etc/my.cnf.d/columnstore.cnf
-  fi
-  unset REP_PASSWORD
-# Securing MariaDB Installation
-  $MCS_INSTALL_BIN/mariadb -e "DROP DATABASE IF EXISTS test; DELETE FROM mysql.user WHERE User='';"
-  if [ $? -ne 0 ]; then
+    unset REP_PASSWORD
+    # Securing MariaDB Installation
+    $MCS_INSTALL_BIN/mariadb -e "DROP DATABASE IF EXISTS test; DELETE FROM mysql.user WHERE User='';"
+    if [ $? -ne 0 ]; then
       echo "ERROR: Securing mariadb"
       exit 1
-  fi
-  # Enable Cracklib
-  $MCS_INSTALL_BIN/mariadb -e "INSTALL SONAME 'cracklib_password_check.so';"
-  if [ $? -ne 0 ]; then
+    fi
+    # Enable Cracklib
+    $MCS_INSTALL_BIN/mariadb -e "INSTALL SONAME 'cracklib_password_check.so';"
+    if [ $? -ne 0 ]; then
       echo "ERROR: Activating Cracklib"
       exit 1
+    fi
   fi
-fi
 
-# Stop System
-echo Stopping...
+  # Stop System
+  echo Stopping...
 
-/usr/share/mysql/mysql.server stop
+  /usr/share/mysql/mysql.server stop
 
-if  [[ ! -z $(pidof $PROGS) ]]; then
-   $MCS_INSTALL_BIN/save_brm
+  if  [[ ! -z $(pidof $PROGS) ]]; then
+    $MCS_INSTALL_BIN/mcs-savebrm.py   
 
-   echo Sending SIGTERM to Columnstore processes
-   kill $(pidof $PROGS) > /dev/null
-   sleep 3
-   counter=1
-   while [ -n "$(pidof StorageManager)" -a $counter -le 60 ]
-   do
-     sleep 1
-     ((counter++))
-   done
-   echo Sending SIGKILL to ColumnStore processes
-   kill -9 $(pidof $PROGS) > /dev/null
-fi
+    echo Sending SIGTERM to Columnstore processes
+    kill $(pidof $PROGS) > /dev/null
+    sleep 3
+    counter=1
+    while [ -n "$(pidof StorageManager)" -a $counter -le 60 ]
+    do
+      sleep 1
+      ((counter++))
+    done
+    echo Sending SIGKILL to ColumnStore processes
+    kill -9 $(pidof $PROGS) > /dev/null
+  fi
 
-echo Clearing shared memory
-$MCS_INSTALL_BIN/clearShm
+  echo Clearing shared memory
+  $MCS_INSTALL_BIN/clearShm
 
+fi 
 # Mark Container Initialized
 touch $IFLAG
 
