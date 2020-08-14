@@ -22,11 +22,7 @@ REP_PASSWORD="${REP_PASSWORD:-C0lumnStore!}"
 API_KEY="${API_KEY:-somekey123}"
 
 # Set Resource Variables
-CAP_PCT=95
-MAX_RAM=$(free -m | awk 'NR==2{printf "%d", $2*.'$CAP_PCT' }')
 SERVER_SUBNET=$(hostname -i | cut -d "." -f 1-3 -s)
-TOTALUMMEMORY=$( echo $MAX_RAM / 4  | bc )M
-NUMBLOCKSPCT=$( echo $MAX_RAM / 2  | bc )M
 SERVER_ID=$(hostname -I | cut -d . -f 4)
 PROGS='StorageManager load_brm workernode controllernode PrimProc ExeMgr DMLProc DDLProc WriteEngineServer'
 
@@ -39,9 +35,8 @@ echo "read_only = OFF" >> /etc/my.cnf.d/columnstore.cnf
 sed -i "s|^x-api-key.*|x-api-key = '$API_KEY'|" /etc/columnstore/cmapi_server.conf
 
 # Performance Tuning
-$MCS_INSTALL_BIN/mcsSetConfig HashJoin TotalPmUmMemory "10%"
-$MCS_INSTALL_BIN/mcsSetConfig HashJoin TotalUmMemory "$TOTALUMMEMORY"
-$MCS_INSTALL_BIN/mcsSetConfig DBBC NumBlocksPct "$NUMBLOCKSPCT"
+$MCS_INSTALL_BIN/mcsSetConfig HashJoin TotalUmMemory "25%"
+$MCS_INSTALL_BIN/mcsSetConfig DBBC NumBlocksPct "50"
 
 # Storagemanager Configuration
 if [ $USE_S3_STORAGE -eq 1 ]; then
