@@ -4,7 +4,7 @@
 IFLAG=/etc/columnstore/container-initialized
 LOG_PREFIX=/var/log/mariadb/columnstore
 MCS_INSTALL_BIN=/usr/bin
-API_KEY="${API_KEY:-somekey123}"
+API_KEY=${API_KEY:-somekey123}
 
 # Intialize Container If Necessary
 if [ ! -e $IFLAG ]; then
