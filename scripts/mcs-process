@@ -1,0 +1,52 @@
+#!/usr/bin/bash
+
+export PYTHONPATH=/opt/cmapi/deps
+export LD_PRELOAD=/usr/lib64/libjemalloc.so.2
+
+cmapi_server(){
+  /opt/cmapi/python/bin/python3 -m cmapi_server &> /var/log/mariadb/columnstore/cmapi_server.log &
+}
+
+StorageManager(){
+  /usr/bin/StorageManager &> /var/log/mariadb/columnstore/storagemanager.log &
+}
+
+loadbrm(){
+  /usr/bin/mcs-loadbrm.py
+}
+
+workernode(){
+  /usr/bin/workernode DBRM_Worker1 &> /var/log/mariadb/columnstore/workernode.log &
+}
+
+controllernode(){
+  /usr/bin/controllernode fg &> /var/log/mariadb/columnstore/controllernode.log &
+}
+
+PrimProc(){
+  /usr/bin/PrimProc &> /var/log/mariadb/columnstore/primproc.log &
+}
+
+ExeMgr(){
+  /usr/bin/ExeMgr &> /var/log/mariadb/columnstore/exemgr.log &
+}
+
+WriteEngineServer(){
+  /usr/bin/WriteEngineServer &> /var/log/mariadb/columnstore/writeengineserver.log &
+}
+
+DMLProc() {
+  /usr/bin/DMLProc &> /var/log/mariadb/columnstore/dmlproc.log &
+}
+
+DDLProc() {
+  /usr/bin/DDLProc &> /var/log/mariadb/columnstore/ddlproc.log &
+}
+
+mysqld_safe() {
+  /usr/share/mysql/mysql.server start
+}
+
+"$@"
+
+exit 0

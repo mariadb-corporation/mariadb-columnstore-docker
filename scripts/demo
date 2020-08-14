@@ -1,0 +1,15 @@
+#!/usr/bin/bash
+
+# Add Additional Nodes To Create Cluster
+curl -s -X PUT "https://$PM1:8640/cmapi/0.4.0/cluster/add-node" --header 'Content-Type:application/json' --header "x-api-key:$API_KEY" --data '{"timeout":60, "node": "'$PM2'"}' -k | jq .
+curl -s -X PUT "https://$PM1:8640/cmapi/0.4.0/cluster/add-node" --header 'Content-Type:application/json' --header "x-api-key:$API_KEY" --data '{"timeout":60, "node": "'$PM3'"}' -k | jq .
+
+# Load Sample Data
+rm -rf /tmp/mariadb-columnstore-samples
+git clone https://github.com/mariadb-corporation/mariadb-columnstore-samples.git /tmp/mariadb-columnstore-samples
+cd /tmp/mariadb-columnstore-samples/flights
+sed -i  "s|1..12|1..2|" /tmp/mariadb-columnstore-samples/flights/get_flight_data.sh
+./create_flights_db.sh
+./get_flight_data.sh
+./load_flight_data.sh
+rm -rf /tmp/mariadb-columnstore-samples

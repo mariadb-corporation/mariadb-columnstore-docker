@@ -1,0 +1,195 @@
+#!/usr/bin/bash
+
+# Set Path Variables
+IFLAG=/etc/columnstore/container-initialized
+LOG_PREFIX=/var/log/mariadb/columnstore
+MCS_INSTALL_BIN=/usr/bin
+MCS_INSTALL_PATH=/var/lib/columnstore
+JEMALLOC_PATH="/usr/lib64/libjemalloc.so.2"
+
+export LD_PRELOAD=$JEMALLOC_PATH
+
+# Set StorageManager Defaults
+ASYNC_CONN="${ASYNC_CONN:-0}"
+ANALYTICS_ONLY="${ANALYTICS_ONLY:-0}"
+USE_S3_STORAGE="${USE_S3_STORAGE:-0}"
+
+# Set Credential Defaults
+CEJ_USER="${CEJ_USER:-cej}"
+CEJ_PASSWORD="${CEJ_PASSWORD:-C0lumnStore!}"
+REP_USER="${REP_USER:-idbrep}"
+REP_PASSWORD="${REP_PASSWORD:-C0lumnStore!}"
+API_KEY="${API_KEY:-somekey123}"
+
+# Set Resource Variables
+CAP_PCT=95
+MAX_RAM=$(free -m | awk 'NR==2{printf "%d", $2*.'$CAP_PCT' }')
+SERVER_SUBNET=$(hostname -i | cut -d "." -f 1-3 -s)
+TOTALUMMEMORY=$( echo $MAX_RAM / 4  | bc )M
+NUMBLOCKSPCT=$( echo $MAX_RAM / 2  | bc )M
+SERVER_ID=$(hostname -I | cut -d . -f 4)
+PROGS='StorageManager load_brm workernode controllernode PrimProc ExeMgr DMLProc DDLProc WriteEngineServer'
+
+# Adjust Columnstore Cluster Configuration
+sed -i "s|#log_bin|log_bin|" /etc/my.cnf.d/columnstore.cnf
+sed -i "s|#server-id = 1|server_id = $SERVER_ID|" /etc/my.cnf.d/columnstore.cnf
+echo "read_only = OFF" >> /etc/my.cnf.d/columnstore.cnf
+
+# Add API Key To 'cmapi_server.conf'
+sed -i "s|^x-api-key.*|x-api-key = '$API_KEY'|" /etc/columnstore/cmapi_server.conf
+
+# Performance Tuning
+$MCS_INSTALL_BIN/mcsSetConfig HashJoin TotalPmUmMemory "10%"
+$MCS_INSTALL_BIN/mcsSetConfig HashJoin TotalUmMemory "$TOTALUMMEMORY"
+$MCS_INSTALL_BIN/mcsSetConfig DBBC NumBlocksPct "$NUMBLOCKSPCT"
+
+# Storagemanager Configuration
+if [ $USE_S3_STORAGE -eq 1 ]; then
+  $MCS_INSTALL_BIN/mcsSetConfig Installation DBRootStorageType "storagemanager"
+  $MCS_INSTALL_BIN/mcsSetConfig StorageManager Enabled "Y"
+  $MCS_INSTALL_BIN/mcsSetConfig SystemConfig DataFilePlugin "libcloudio.so"
+  if [ $ASYNC_CONN -eq 1 ]; then
+      sed -i "s|object_size = 5M|object_size = 2M|" /etc/columnstore/storagemanager.cnf
+      sed -i "s|max_concurrent_uploads = 21|max_concurrent_uploads = 2|" /etc/columnstore/storagemanager.cnf
+      sed -i "s|max_concurrent_downloads = 21|max_concurrent_downloads = 10|" /etc/columnstore/storagemanager.cnf
+  fi
+  sed -i "s|cache_size = 2g|cache_size = 8g|" /etc/columnstore/storagemanager.cnf
+  sed -i "s|service =.*|service = S3|" /etc/columnstore/storagemanager.cnf
+  sed -i "s|region =.*|region = $S3_REGION|" /etc/columnstore/storagemanager.cnf
+  sed -i "s|bucket =.*|bucket = $S3_BUCKET|" /etc/columnstore/storagemanager.cnf
+  sed -i "s|# endpoint =.*|endpoint = $S3_ENDPOINT|" /etc/columnstore/storagemanager.cnf
+  sed -i "s|# aws_access_key_id =.*|aws_access_key_id = $S3_ACCESS_KEY_ID|" /etc/columnstore/storagemanager.cnf
+  sed -i "s|# aws_secret_access_key =.*|aws_secret_access_key = $S3_SECRET_ACCESS_KEY|" /etc/columnstore/storagemanager.cnf
+  sed -i "s|^gs_access_key_id =.*|gs_access_key_id = $S3_ACCESS_KEY_ID|" /root/.boto
+  sed -i "s|^gs_secret_access_key =.*|gs_secret_access_key = $S3_SECRET_ACCESS_KEY|" /root/.boto
+fi
+
+# Set Instance Type
+if [ $ANALYTICS_ONLY -eq 1 ]; then
+  echo "" >> /etc/my.cnf.d/columnstore.cnf
+  echo "default_storage_engine=Columnstore" >> /etc/my.cnf.d/columnstore.cnf
+  echo "enforce_storage_engine=Columnstore" >> /etc/my.cnf.d/columnstore.cnf
+fi
+
+# Verify All Programs Are Available
+for i in $PROGS ; do
+  if [ ! -x $MCS_INSTALL_BIN/$i ] ; then
+    echo "$i doesn't exist."
+    exit 1
+  fi
+done
+
+# Start System
+echo Starting...
+
+touch $LOG_PREFIX/storagemanager.log && chmod 666 $LOG_PREFIX/storagemanager.log
+$MCS_INSTALL_BIN/StorageManager &> $LOG_PREFIX/storagemanager.log &
+echo StorageManager PID = $!
+
+echo loading BRM
+$MCS_INSTALL_BIN/mcs-loadbrm.py no
+
+touch $LOG_PREFIX/workernode.log && chmod 666 $LOG_PREFIX/workernode.log
+$MCS_INSTALL_BIN/workernode DBRM_Worker1 &> $LOG_PREFIX/workernode.log &
+echo workernode PID = $!
+
+touch $LOG_PREFIX/controllernode.log && chmod 666 $LOG_PREFIX/controllernode.log
+$MCS_INSTALL_BIN/controllernode &> $LOG_PREFIX/controllernode.log &
+echo controllernode PID = $!
+
+touch $LOG_PREFIX/primproc.log && chmod 666 $LOG_PREFIX/primproc.log
+$MCS_INSTALL_BIN/PrimProc &> $LOG_PREFIX/primproc.log &
+echo PrimProc PID = $!
+
+sleep 1
+
+touch $LOG_PREFIX/exemgr.log && chmod 666 $LOG_PREFIX/exemgr.log
+$MCS_INSTALL_BIN/ExeMgr &> $LOG_PREFIX/exemgr.log &
+echo ExeMgr PID = $!
+
+touch $LOG_PREFIX/writeengineserver.log && chmod 666 $LOG_PREFIX/writeengineserver.log
+$MCS_INSTALL_BIN/WriteEngineServer &> $LOG_PREFIX/writeengineserver.log &
+echo WriteEngineServer PID = $!
+
+sleep 2
+
+touch $LOG_PREFIX/dmlproc.log && chmod 666 $LOG_PREFIX/dmlproc.log
+$MCS_INSTALL_BIN/DMLProc &> $LOG_PREFIX/dmlproc.log &
+echo DMLProc PID = $!
+
+touch $LOG_PREFIX/ddlproc.log && chmod 666 $LOG_PREFIX/ddlproc.log
+$MCS_INSTALL_BIN/DDLProc &> $LOG_PREFIX/ddlproc.log &
+echo DDLProc PID = $!
+
+$MCS_INSTALL_BIN/dbbuilder 7 &> $LOG_PREFIX/dbbuilder.log
+
+/usr/share/mysql/mysql.server start
+
+MARIADB_RUNNING=$(mariadb-admin ping)
+if [[ $MARIADB_RUNNING == *"alive"* ]]; then
+  # Set Up Cross Engine Join User
+  $MCS_INSTALL_BIN/mariadb -e "GRANT SELECT ON *.* TO 'cej'@'127.0.0.1' IDENTIFIED BY '$CEJ_PASSWORD';"
+  if [ $? -ne 0 ]; then
+      echo "ERROR: During cross engine join user creation."
+      exit 1
+  fi
+  $MCS_INSTALL_BIN/mcsSetConfig CrossEngineSupport User "cej"
+  $MCS_INSTALL_BIN/mcsSetConfig CrossEngineSupport Password "$CEJ_PASSWORD"
+  echo "Cross engine join user created"
+  unset CEJ_PASSWORD
+  # Set Up Replication User
+  $MCS_INSTALL_BIN/mariadb -e "GRANT REPLICATION SLAVE, REPLICATION CLIENT ON *.* TO '$REP_USER'@'%' IDENTIFIED BY '$REP_PASSWORD';"
+  if [ $? -ne 0 ]; then
+      echo "ERROR: During replication user creation."
+      exit 1
+  fi
+  echo "Replication user created"
+  # Set Up Replication
+  if [[ $(hostname -s) != $PM1 ]]; then
+    mysql -e "STOP SLAVE;
+              CHANGE MASTER TO MASTER_HOST='$PM1',
+              MASTER_USER='$REP_USER',
+              MASTER_PASSWORD='$REP_PASSWORD',
+              MASTER_USE_GTID=slave_pos,
+              MASTER_CONNECT_RETRY=10;
+              START SLAVE;"
+    sed -i "s|read_only = OFF|read_only = ON|" /etc/my.cnf.d/columnstore.cnf
+  fi
+  unset REP_PASSWORD
+# Securing MariaDB Installation
+  $MCS_INSTALL_BIN/mariadb -e "DROP DATABASE IF EXISTS test; DELETE FROM mysql.user WHERE User='';"
+  if [ $? -ne 0 ]; then
+      echo "ERROR: Securing mariadb"
+      exit 1
+  fi
+fi
+
+# Stop System
+echo Stopping...
+
+/usr/share/mysql/mysql.server stop
+
+if  [[ ! -z $(pidof $PROGS) ]]; then
+   $MCS_INSTALL_BIN/save_brm
+
+   echo Sending SIGTERM to Columnstore processes
+   kill $(pidof $PROGS) > /dev/null
+   sleep 3
+   counter=1
+   while [ -n "$(pidof StorageManager)" -a $counter -le 60 ]
+   do
+     sleep 1
+     ((counter++))
+   done
+   echo Sending SIGKILL to ColumnStore processes
+   kill -9 $(pidof $PROGS) > /dev/null
+fi
+
+echo Clearing shared memory
+$MCS_INSTALL_BIN/clearShm
+
+# Mark Container Initialized
+touch $IFLAG
+
+# Return to cmapi-start
+exit 0

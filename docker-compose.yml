@@ -1,0 +1,54 @@
+version: '3'
+
+services:
+
+  pm1:
+    image: mariadb/skysql-enterprise-columnstore-handoff:cluster-dev
+    hostname: ${PM1}
+    container_name: ${PM1}
+    volumes:
+      - data1:/var/lib/columnstore/data1
+      - data2:/var/lib/columnstore/data2
+      - data3:/var/lib/columnstore/data3
+      - storagemanager:/var/lib/columnstore/storagemanager
+    env_file:
+      - .env
+    depends_on:
+      - "pm3"
+    links:
+      - "pm2"
+      - "pm3"
+
+  pm2:
+    image: mariadb/skysql-enterprise-columnstore-handoff:cluster-dev
+    hostname: ${PM2}
+    container_name: ${PM2}
+    volumes:
+      - data1:/var/lib/columnstore/data1
+      - data2:/var/lib/columnstore/data2
+      - data3:/var/lib/columnstore/data3
+      - storagemanager:/var/lib/columnstore/storagemanager
+    env_file:
+      - .env
+    depends_on:
+      - "pm3"
+    links:
+      - "pm3"
+
+  pm3:
+    image: mariadb/skysql-enterprise-columnstore-handoff:cluster-dev
+    hostname: ${PM3}
+    container_name: ${PM3}
+    volumes:
+      - data1:/var/lib/columnstore/data1
+      - data2:/var/lib/columnstore/data2
+      - data3:/var/lib/columnstore/data3
+      - storagemanager:/var/lib/columnstore/storagemanager
+    env_file:
+      - .env
+
+volumes:
+  data1:
+  data2:
+  data3:
+  storagemanager:
