@@ -1,11 +1,8 @@
 #!/usr/bin/bash
 
-API_KEY=${API_KEY:-somekey123}
-
 # Add Additional Nodes To Create Cluster
-curl -s -X PUT "https://$PM1:8640/cmapi/0.4.0/cluster/add-node" --header 'Content-Type:application/json' --header "x-api-key:somekey123" --data '{"timeout":60, "node": "'$PM1'"}' -k | jq .
-curl -s -X PUT "https://$PM1:8640/cmapi/0.4.0/cluster/add-node" --header 'Content-Type:application/json' --header "x-api-key:somekey123" --data '{"timeout":60, "node": "'$PM2'"}' -k | jq .
-curl -s -X PUT "https://$PM1:8640/cmapi/0.4.0/cluster/add-node" --header 'Content-Type:application/json' --header "x-api-key:somekey123" --data '{"timeout":60, "node": "'$PM3'"}' -k | jq .
+curl -s -X PUT "https://$PM1:8640/cmapi/0.4.0/cluster/add-node" --header 'Content-Type:application/json' --header "x-api-key:$API_KEY" --data '{"timeout":60, "node": "'$PM2'"}' -k | jq .
+curl -s -X PUT "https://$PM1:8640/cmapi/0.4.0/cluster/add-node" --header 'Content-Type:application/json' --header "x-api-key:$API_KEY" --data '{"timeout":60, "node": "'$PM3'"}' -k | jq .
 
 # Load Sample Data
 rm -rf /tmp/mariadb-columnstore-samples

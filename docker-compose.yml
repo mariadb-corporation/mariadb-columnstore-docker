@@ -3,8 +3,7 @@ version: '3'
 services:
 
   pm1:
-    build: .
-    image: mcs1_image
+    image: mariadb/skysql-enterprise-columnstore-handoff:cluster-dev
     hostname: ${PM1}
     container_name: ${PM1}
     volumes:
@@ -21,8 +20,7 @@ services:
       - "pm3"
 
   pm2:
-    build: .
-    image: mcs2_image
+    image: mariadb/skysql-enterprise-columnstore-handoff:cluster-dev
     hostname: ${PM2}
     container_name: ${PM2}
     volumes:
@@ -38,8 +36,7 @@ services:
       - "pm3"
 
   pm3:
-    build: .
-    image: mcs3_image
+    image: mariadb/skysql-enterprise-columnstore-handoff:cluster-dev
     hostname: ${PM3}
     container_name: ${PM3}
     volumes:
