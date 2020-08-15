@@ -70,7 +70,7 @@ RUN dnf -y install \
 
 # Add, Unpack & Clean CMAPI Package
 RUN mkdir -p /opt/cmapi
-ADD https://cspkg.s3.amazonaws.com/cmapi/master/189/mariadb-columnstore-cmapi.tar.gz /opt/cmapi
+ADD https://cspkg.s3.amazonaws.com/cmapi/master/195/mariadb-columnstore-cmapi.tar.gz /opt/cmapi
 WORKDIR /opt/cmapi
 RUN tar -xvzf mariadb-columnstore-cmapi.tar.gz && rm -f mariadb-columnstore-cmapi.tar.gz && rm -rf /opt/cmapi/service*
 WORKDIR /
