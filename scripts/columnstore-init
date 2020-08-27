@@ -310,10 +310,10 @@ fi
 # Clean Remnants
 rm -f /var/lib/mysql/*.err
 
-if [ ! $SKYSQL_INITIALIZATION -eq 1 ]; then
+#if [ ! $SKYSQL_INITIALIZATION -eq 1 ]; then
     # Mark Container Initialized
     touch $IFLAG
-fi
+#fi
 
 # Return To cmapi-start
 exit 0
