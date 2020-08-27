@@ -23,10 +23,10 @@ Adding monitor ... done
 
 ### Access Containers
 
-*   ```docker exec -it mcs1 bash```
-*   ```docker exec -it mcs2 bash```
-*   ```docker exec -it mcs3 bash```
-*   ```docker exec -it mx1 bash```
+*   PM1: ```docker exec -it mcs1 bash```
+*   PM2: ```docker exec -it mcs2 bash```
+*   PM3: ```docker exec -it mcs3 bash```
+*   MaxScale: ```docker exec -it mx1 bash```
 
 ## Columnstore API Info
 
