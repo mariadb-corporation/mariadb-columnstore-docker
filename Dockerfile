@@ -91,6 +91,7 @@ COPY scripts/demo \
      scripts/cmapi-restart \
      scripts/columnstore-backup.sh \
      scripts/columnstore-restore.sh \
+     scripts/add-node-to-cluster.sh \
      scripts/mcs-process /usr/bin/
 
 # Add Tini Init Process
@@ -105,6 +106,7 @@ RUN chmod +x /usr/bin/tini \
     /usr/bin/cmapi-restart \
     /usr/bin/columnstore-backup.sh \
     /usr/bin/columnstore-restore.sh \
+    /usr/bin/add-node-to-cluster.sh \
     /usr/bin/mcs-process
 
 # Stream Edit Monit Config
