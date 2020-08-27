@@ -44,4 +44,12 @@ echo CMAPI PID = $!
 # Start MariaDB
 /usr/share/mysql/mysql.server start
 
+if [ ! -e $IFLAG ] && [ $SKYSQL_INITIALIZATION -eq 1 ]; then
+    # Initialize the columnstore cluster
+    /usr/bin/add-node-to-cluster.sh
+
+    # Mark Container Initialized
+    touch $IFLAG
+fi
+
 exit 0

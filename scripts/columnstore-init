@@ -22,6 +22,11 @@ MAX_PASS="${MAX_PASS:-C0lumnStore!}"
 REP_USER="${REP_USER:-idbrep}"
 REP_PASS="${REP_PASS:-C0lumnStore!}"
 
+# Set network defaults for SkySQL
+if [ -z $PM1_DNS ]; then
+    PM1_DNS=$PM1
+fi
+
 # Miscellaneous Variables
 SERVER_ID=$(hostname -i | cut -d "." -f 4)
 PROGS=('StorageManager' 'load_brm' 'workernode' 'controllernode' 'PrimProc' 'ExeMgr' 'DMLProc' 'DDLProc' 'WriteEngineServer')
@@ -283,7 +288,7 @@ else
 
     $MCS_INSTALL_BIN/mariadb -e "
             STOP SLAVE;
-            CHANGE MASTER TO MASTER_HOST='$PM1',
+            CHANGE MASTER TO MASTER_HOST='$PM1_DNS',
             MASTER_USER='$REP_USER',
             MASTER_PASSWORD='$REP_PASS',
             MASTER_USE_GTID=slave_pos,
@@ -305,8 +310,10 @@ fi
 # Clean Remnants
 rm -f /var/lib/mysql/*.err
 
-# Mark Container Initialized
-touch $IFLAG
+if [ ! $SKYSQL_INITIALIZATION -eq 1 ]; then
+    # Mark Container Initialized
+    touch $IFLAG
+fi
 
 # Return To cmapi-start
 exit 0
