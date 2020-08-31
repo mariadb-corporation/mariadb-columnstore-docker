@@ -155,7 +155,7 @@ if [[ $(hostname -s) == "$PM1" ]]; then
 
     /usr/share/mysql/mysql.server start
 
-    # Set Up MariaDB Cross Engine Join & Replication
+    # Set Up MariaDB Cross Engine Join & Replication & SkySQL specific users
     MARIADB_RUNNING=$(mariadb-admin ping)
     if [[ $MARIADB_RUNNING == *"alive"* ]]; then
 
@@ -226,6 +226,23 @@ if [[ $(hostname -s) == "$PM1" ]]; then
             exit 1
         fi
         echo 'MaxScale user created'
+
+        if [ $SKYSQL_INITIALIZATION -eq 1 ] && [ -d "/mnt/skysql/columnstore-container-scripts" ]; then
+            for f in /mnt/skysql/columnstore-container-scripts/*; do
+                case "$f" in
+                    *.sql)
+                        echo "$0: running $f"
+                        "$MCS_INSTALL_BIN/mariadb" < "$f"
+                        if [ $? -ne 0 ]; then
+                            echo "ERROR: Wasn't able to initialize SkySQL specific users."
+                            exit 1
+                        fi
+                        echo
+                        ;;
+                esac
+            echo
+            done
+        fi
 
         # Securing MariaDB Installation
         $MCS_INSTALL_BIN/mariadb -e "
