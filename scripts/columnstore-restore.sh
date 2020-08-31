@@ -82,7 +82,7 @@ SKYSQL_ADMIN_USER_HASH=${SKYSQL_ADMIN_USER_HASH:0:41}
 
 # Stop the ColumnStore daemon to start the restore process
 monit unmonitor all
-columnstore-stop
+cmapi-stop
 
 # Purge the source S3 bucket so that the backup data can be restored into it
 gsutil -m rm $SOURCE_BUCKET/*
@@ -121,7 +121,7 @@ CURRENT_OBJECT_SIZE=$(awk '/^object_size = /' /etc/columnstore/storagemanager.cn
 sed -i "s@$CURRENT_OBJECT_SIZE@$BACKUP_OBJECT_SIZE@g" /etc/columnstore/storagemanager.cnf
 
 # Start ColumnStore
-columnstore-start
+cmapi-start
 columnstoreDBWrite -c resume
 
 # Restore the old skysql_admin user credentials
