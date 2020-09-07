@@ -50,26 +50,18 @@ static pthread_mutex_t LOCK_hostname;
   sprintf(maxscale_port_env,"%s_%s", release_name, "MARIADB_MAXSCALE_SERVICE_PORT"); \
   const char* maxscale_address = getenv(maxscale_address_env); \
   const char* maxscale_port = getenv(maxscale_port_env); \
-  const char* maxscale_api_username_file_name = "/mnt/secrets-maxscale-api/username"; \
-  const char* maxscale_api_password_file_name = "/mnt/secrets-maxscale-api/password"; \
-  const char* server_username_file_name = "/mnt/secrets-maxscale/username"; \
-  const char* server_password_file_name = "/mnt/secrets-maxscale/password"; \
+  const char* maxscale_api_username_file_name = "/mnt/skysql/columnstore-container-configuration/maxscale-api-username"; \
+  const char* maxscale_api_password_file_name = "/mnt/skysql/columnstore-container-configuration/maxscale-api-password"; \
+  const char* server_username = getenv("MAX_USER"); \
+  const char* server_password = getenv("MAX_PASS"); \
   FILE* maxscale_api_username_file = fopen(maxscale_api_username_file_name, "r"); \
   FILE* maxscale_api_password_file = fopen(maxscale_api_password_file_name, "r"); \
-  FILE* server_username_file = fopen(server_username_file_name, "r"); \
-  FILE* server_password_file = fopen(server_password_file_name, "r"); \
   char maxscale_api_username[256]; \
   char maxscale_api_password[256]; \
-  char server_username[256]; \
-  char server_password[256]; \
   fgets(maxscale_api_username, sizeof(maxscale_api_username), maxscale_api_username_file); \
   fclose(maxscale_api_username_file); \
   fgets(maxscale_api_password, sizeof(maxscale_api_password), maxscale_api_password_file); \
-  fclose(maxscale_api_password_file); \
-  fgets(server_username, sizeof(server_username), server_username_file); \
-  fclose(server_username_file); \
-  fgets(server_password, sizeof(server_password), server_password_file); \
-  fclose(server_password_file);
+  fclose(maxscale_api_password_file);
 
 #define ERROR_CLEANUP_MESSAGE(message) \
   *is_null = 0; \
