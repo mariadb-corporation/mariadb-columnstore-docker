@@ -127,7 +127,7 @@ size_t writefunc(void *ptr, size_t size, size_t nmemb, struct string *s)
 }
 
 // returns 0 on success, something else on failure
-int restart_slave_replication(char * server_username, char * server_password)
+int restart_slave_replication(const char * server_username, const char * server_password)
 {
     // restart replication so that the new settings are loaded
     MYSQL *con = mysql_init(NULL);
