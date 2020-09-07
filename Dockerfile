@@ -4,7 +4,6 @@
 FROM centos:8 as template
 
 # Default Env Variables
-ENV TINI_VERSION=v0.18.0
 ENV MARIADB_VERSION=10.5
 ENV MARIADB_ENTERPRISE_TOKEN=xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
 
@@ -30,9 +29,32 @@ COPY replication_udf/* /udf/
 # Compile the UDF
 RUN gcc -fPIC -shared -o replication.so cJSON.c replication.c `mariadb_config --include` -lcurl -lm `mariadb_config --libs`
 
+# compile pcre2grep as it's needed for HTAP's backup/restore
+################################################################################
+FROM template as pcre2grep-builder
+
+USER root
+WORKDIR /opt
+ARG PCRE2_VERSION=10.35
+
+# install the build dependencies
+RUN dnf -y update && \
+    dnf group install -y "Development Tools"
+
+# compile pcre2grep
+RUN curl https://ftp.pcre.org/pub/pcre/pcre2-${PCRE2_VERSION}.tar.gz -o pcre2.tar.gz && \
+    tar -xf pcre2.tar.gz && \
+    cd pcre2-${PCRE2_VERSION} && \
+    ./configure --disable-shared --with-heap-limit=1024 --with-match-limit=500000 --with-match-limit-depth=5000 && \
+    make && \
+    cp pcre2grep /opt
+
 # build the ColumnStore image
 ################################################################################
 FROM template as main
+
+# Default Env Variables
+ENV TINI_VERSION=v0.18.0
 
 # Add A SkySQL Specific PATH Entry
 ENV PATH="/mnt/skysql/columnstore-container-scripts:${PATH}"
@@ -88,17 +110,17 @@ ENV LANGUAGE=en_US.UTF-8
 
 # Install MariaDB Packages
 RUN dnf -y install \
-     https://cspkg.s3.amazonaws.com/develop/pull_request/460/centos8/MariaDB-shared-10.5.6-1.el8.x86_64.rpm \
-     https://cspkg.s3.amazonaws.com/develop/pull_request/460/centos8/MariaDB-common-10.5.6-1.el8.x86_64.rpm \
-     https://cspkg.s3.amazonaws.com/develop/pull_request/460/centos8/MariaDB-client-10.5.6-1.el8.x86_64.rpm \
-     https://cspkg.s3.amazonaws.com/develop/pull_request/460/centos8/MariaDB-server-10.5.6-1.el8.x86_64.rpm \
-     https://cspkg.s3.amazonaws.com/develop/pull_request/460/centos8/MariaDB-backup-10.5.6-1.el8.x86_64.rpm \
-     https://cspkg.s3.amazonaws.com/develop/pull_request/460/centos8/MariaDB-cracklib-password-check-10.5.6-1.el8.x86_64.rpm \
-     https://cspkg.s3.amazonaws.com/develop/pull_request/460/centos8/MariaDB-columnstore-engine-10.5.6-1.el8.x86_64.rpm
+     https://cspkg.s3.amazonaws.com/columnstore-1.5.4-1/pull_request/561/centos8/MariaDB-shared-10.5.5_3-1.el8.x86_64.rpm \
+     https://cspkg.s3.amazonaws.com/columnstore-1.5.4-1/pull_request/561/centos8/MariaDB-common-10.5.5_3-1.el8.x86_64.rpm \
+     https://cspkg.s3.amazonaws.com/columnstore-1.5.4-1/pull_request/561/centos8/MariaDB-client-10.5.5_3-1.el8.x86_64.rpm \
+     https://cspkg.s3.amazonaws.com/columnstore-1.5.4-1/pull_request/561/centos8/MariaDB-server-10.5.5_3-1.el8.x86_64.rpm \
+     https://cspkg.s3.amazonaws.com/columnstore-1.5.4-1/pull_request/561/centos8/MariaDB-backup-10.5.5_3-1.el8.x86_64.rpm \
+     https://cspkg.s3.amazonaws.com/columnstore-1.5.4-1/pull_request/561/centos8/MariaDB-cracklib-password-check-10.5.5_3-1.el8.x86_64.rpm \
+     https://cspkg.s3.amazonaws.com/columnstore-1.5.4-1/pull_request/561/centos8/MariaDB-columnstore-engine-10.5.5_3-1.el8.x86_64.rpm
 
 # Add, Unpack & Clean CMAPI Package
 RUN mkdir -p /opt/cmapi
-ADD https://cspkg.s3.amazonaws.com/cmapi/pr/222/mariadb-columnstore-cmapi.tar.gz /opt/cmapi
+ADD https://cspkg.s3.amazonaws.com/cmapi/master/237/mariadb-columnstore-cmapi.tar.gz /opt/cmapi
 WORKDIR /opt/cmapi
 RUN tar -xvzf mariadb-columnstore-cmapi.tar.gz && \
     rm -f mariadb-columnstore-cmapi.tar.gz && \
@@ -123,6 +145,7 @@ COPY scripts/demo \
      scripts/mcs-process /usr/bin/
 
 COPY --from=udf_builder /udf/replication.so /usr/lib64/mysql/plugin/replication.so
+COPY --from=pcre2grep-builder /opt/pcre2grep /usr/bin/pcre2grep
 
 # Add Tini Init Process
 ADD https://github.com/krallin/tini/releases/download/${TINI_VERSION}/tini /usr/bin/tini
