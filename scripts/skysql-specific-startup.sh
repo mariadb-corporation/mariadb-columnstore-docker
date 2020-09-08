@@ -43,19 +43,19 @@ function add-node-to-cluster() {
     curl -s -X PUT "https://$PM1_DNS:8640/cmapi/0.4.0/cluster/add-node" --header 'Content-Type:application/json' --header "x-api-key:$CMAPI_KEY" --data "{\"timeout\":60, \"node\": \"$DNS_NAME\"}" -k | jq .
     curl -s https://$PM1_DNS:8640/cmapi/0.4.0/cluster/status --header 'Content-Type:application/json' --header "x-api-key:$CMAPI_KEY" -k | jq .
 
-    # Wait for MaxScale to be available
-    echo "Waiting for MaxScale to be available"
-    MAXSCALE_API_USERNAME=$(cat /mnt/skysql/columnstore-container-configuration/maxscale-api-username)
-    MAXSCALE_API_PASSWORD=$(cat /mnt/skysql/columnstore-container-configuration/maxscale-api-password)
-    curl -X GET -u ${MAXSCALE_API_USERNAME}:${MAXSCALE_API_PASSWORD} ${RELEASE_NAME}-mariadb-maxscale:8989/v1/maxscale --fail 2>/dev/null >/dev/null
-    while [ $? -ne 0 ]; do
-        echo -n "."
-        sleep 3
-        curl -X GET -u ${MAXSCALE_API_USERNAME}:${MAXSCALE_API_PASSWORD} ${RELEASE_NAME}-mariadb-maxscale:8989/v1/maxscale --fail 2>/dev/null >/dev/null
-    done
-
-    echo ""
     if [ $CLUSTER_TOPOLOGY == "columnstore" ]; then
+        # Wait for MaxScale to be available
+        echo "Waiting for MaxScale to be available"
+        MAXSCALE_API_USERNAME=$(cat /mnt/skysql/columnstore-container-configuration/maxscale-api-username)
+        MAXSCALE_API_PASSWORD=$(cat /mnt/skysql/columnstore-container-configuration/maxscale-api-password)
+        curl -X GET -u ${MAXSCALE_API_USERNAME}:${MAXSCALE_API_PASSWORD} ${RELEASE_NAME}-mariadb-maxscale:8989/v1/maxscale --fail 2>/dev/null >/dev/null
+        while [ $? -ne 0 ]; do
+            echo -n "."
+            sleep 3
+            curl -X GET -u ${MAXSCALE_API_USERNAME}:${MAXSCALE_API_PASSWORD} ${RELEASE_NAME}-mariadb-maxscale:8989/v1/maxscale --fail 2>/dev/null >/dev/null
+        done
+
+        echo ""
         # Add node to MaxScale
         curl -X GET -u ${MAXSCALE_API_USERNAME}:${MAXSCALE_API_PASSWORD} ${RELEASE_NAME}-mariadb-maxscale:8989/v1/servers/$SHORT_DNS_NAME --fail 2>/dev/null >/dev/null
         if [ $? -ne 0 ]; then
