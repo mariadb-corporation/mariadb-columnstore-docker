@@ -1,0 +1,6 @@
+.DS_Store
+.env_bak
+.env_local
+switch
+rebuild
+push

@@ -1,0 +1,151 @@
+#!/bin/bash
+
+CMAPI_KEY="${CMAPI_KEY:-somekey123}"
+IFLAG='/etc/columnstore/container-initialized'
+MAX_USER="${MAX_USER:-maxscale}"
+MAX_PASS="${MAX_PASS:-C0lumnStore!}"
+REP_USER="${REP_USER:-idbrep}"
+REP_PASS="${REP_PASS:-C0lumnStore!}"
+
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[0;33m'
+NC='\033[0m'
+
+CMAPI="curl --write-out '%{http_code}' --silent --output /dev/null -X PUT https://${PM1}:8640/cmapi/0.4.0/cluster"
+MAXAPI="curl --write-out '%{http_code}' --silent --output /dev/null -X POST -u admin:mariadb ${MX1}:8989/v1"
+
+HEADER1="'Content-Type:application/json'"
+HEADER2="'x-api-key:$CMAPI_KEY'"
+
+PAYLOAD1='{"timeout":60, "node": "'$PM1'"}'
+PAYLOAD2='{"timeout":60, "node": "'$PM2'"}'
+PAYLOAD3='{"timeout":60, "node": "'$PM3'"}'
+PAYLOAD4='{"data":{"id":"pm3","type":"servers","attributes":{"parameters":{"address":"'$PM3'","protocol":"MariaDBBackend"}}}}'
+PAYLOAD5='{"data":{"id":"pm2","type":"servers","attributes":{"parameters":{"address":"'$PM2'","protocol":"MariaDBBackend"}}}}'
+PAYLOAD6='{"data":{"id":"pm1","type":"servers","attributes":{"parameters":{"address":"'$PM1'","protocol":"MariaDBBackend"}}}}'
+PAYLOAD7='{"data":{"id":"mcs_service","type":"services","attributes":{"router":"readwritesplit","parameters":{"user":"'$MAX_USER'","password":"'$MAX_PASS'"}},"relationships":{"servers":{"data":[{"id":"pm1","type":"servers"},{"id":"pm2","type":"servers"},{"id":"pm3","type":"servers"}]}}}}'
+PAYLOAD8='{"data":{"id":"mcs_listener","type":"listeners","attributes":{"parameters":{"protocol":"MariaDBClient","port":3306}},"relationships":{"services":{"data":[{"id":"mcs_service","type":"services"}]}}}}'
+PAYLOAD9='{"data":{"id":"mcs_monitor","type":"monitors","attributes":{"module":"mariadbmon","parameters":{"monitor_interval":1000,"user":"'$MAX_USER'","password":"'$MAX_PASS'","replication_user":"'$REP_USER'","replication_password":"'$REP_PASS'","detect_replication_lag":true,"enforce_read_only_slaves":true,"auto_failover":true,"auto_rejoin":true}},"relationships":{"servers":{"data":[{"id":"pm1","type":"servers"},{"id":"pm2","type":"servers"},{"id":"pm3","type":"servers"}]}}}}'
+
+RESOURCE1='add-node'
+RESOURCE2='servers'
+RESOURCE3='services'
+RESOURCE4='listeners'
+RESOURCE5='monitors'
+
+MODULES=("$CMAPI/$RESOURCE1 --header $HEADER1 --header $HEADER2 --data '$PAYLOAD1' -k" "$CMAPI/$RESOURCE1 --header $HEADER1 --header $HEADER2 --data '$PAYLOAD2' -k" "$CMAPI/$RESOURCE1 --header $HEADER1 --header $HEADER2 --data '$PAYLOAD3' -k")
+SERVERS=("$MAXAPI/$RESOURCE2 -d '$PAYLOAD4'" "$MAXAPI/$RESOURCE2 -d '$PAYLOAD5'" "$MAXAPI/$RESOURCE2 -d '$PAYLOAD6'")
+SERVICE="$MAXAPI/$RESOURCE3 -d '$PAYLOAD7'"
+LISTENER="$MAXAPI/$RESOURCE4 -d '$PAYLOAD8'"
+MONITOR="$MAXAPI/$RESOURCE5 -d '$PAYLOAD9'"
+
+# Wait For Primary Node To Start
+if [ ! -f $IFLAG ]; then
+    echo -n 'Waiting for PM1 to be initialized '
+    while [ ! -f $IFLAG ]
+    do
+        printf "."
+        sleep 2
+    done
+    printf " ${GREEN}done${NC}\n"
+fi
+
+sleep 3
+
+# Add Nodes To Cluster
+count=1
+for i in "${MODULES[@]}"
+do
+    RESULT1=$(bash -c "$i")
+    if [[ "$RESULT1" == 200 ]]; then
+        printf "Adding PM$count to cluster ... ${GREEN}done${NC}\n"
+    else
+        printf "Adding PM$count to cluster ... ${RED}fail${NC}\n"
+        exit 1
+    fi
+    (( count++ ))
+done
+
+sleep 5
+
+# Validate
+QUERY=$(mariadb -sN -e "DROP DATABASE IF EXISTS validate; CREATE DATABASE validate; CREATE TABLE validate.sample (id INT) ENGINE=columnstore; INSERT INTO validate.sample VALUES (99); SELECT id FROM validate.sample;" 2>&1)
+if [ $? = 0 ] && [ $QUERY = 99 ]; then
+    printf "Validating ... ${GREEN}done${NC}\n"
+    mariadb -e "DROP DATABASE IF EXISTS validate;" 2>&1
+else
+    printf "Validating ... ${RED}fail${NC}\n"
+    exit 1
+fi
+
+# Add Servers To MaxScale
+count=1
+for i in "${SERVERS[@]}"
+do
+    RESULT1=$(bash -c "$i")
+    if [[ "$RESULT1" == 403 ]]; then
+        printf "Adding PM$count to MaxScale ... ${YELLOW}already exists${NC}\n"
+    else
+        if [[ "$RESULT1" == 204 ]]; then
+            printf "Adding PM$count to MaxScale ... ${GREEN}done${NC}\n"
+        else
+            printf "Adding PM$count to MaxScale ... ${RED}fail${NC}\n"
+            exit 1
+        fi
+    fi
+    (( count++ ))
+done
+
+# Add Router To MaxScale
+RESULT2=$(bash -c "$SERVICE")
+if [[ "$RESULT2" == 403 ]]; then
+    printf "Adding service to MaxScale ... ${YELLOW}already exists${NC}\n"
+else
+    if [[ "$RESULT2" == 204 ]]; then
+        printf "Adding service ... ${GREEN}done${NC}\n"
+    else
+        printf "Adding service ... ${RED}fail${NC}\n"
+        exit 1
+    fi
+fi
+
+# Add Listener To MaxScale
+RESULT3=$(bash -c "$LISTENER")
+if [[ "$RESULT3" == 403 ]]; then
+    printf "Adding listener to MaxScale ... ${YELLOW}already exists${NC}\n"
+else
+    if [[ "$RESULT3" == 204 ]]; then
+        printf "Adding listener ... ${GREEN}done${NC}\n"
+    else
+        printf "Adding listener ... ${RED}fail${NC}\n"
+        exit 1
+    fi
+fi
+
+# Add Monitor To MaxScale
+RESULT4=$(bash -c "$MONITOR")
+if [[ "$RESULT4" == 403 ]]; then
+    printf "Adding monitor to MaxScale ... ${YELLOW}already exists${NC}\n"
+else
+    if [[ "$RESULT4" == 204 ]]; then
+        printf "Adding monitor ... ${GREEN}done${NC}\n"
+    else
+        printf "Adding monitor ... ${RED}fail${NC}\n"
+        exit 1
+    fi
+fi
+
+unset REP_USER
+unset REP_PASS
+unset MAX_USER
+unset MAX_PASS
+
+#curl -X PATCH -u admin:mariadb ${MX1}:8989/v1/monitors/mcs_monitor/relationships/servers -d '{"data":[]}'
+#curl -X PATCH -u admin:mariadb ${MX1}:8989/v1/services/mcs_service/relationships/servers -d '{"data":[]}'
+#curl -X DELETE -u admin:mariadb ${MX1}:8989/v1/listeners/mcs_listener
+#curl -X DELETE -u admin:mariadb ${MX1}:8989/v1/services/mcs_service
+#curl -X DELETE -u admin:mariadb ${MX1}:8989/v1/monitors/mcs_monitor
+#curl -X DELETE -u admin:mariadb ${MX1}:8989/v1/servers/pm1
+#curl -X DELETE -u admin:mariadb ${MX1}:8989/v1/servers/pm2
+#curl -X DELETE -u admin:mariadb ${MX1}:8989/v1/servers/pm3
