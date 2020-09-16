@@ -1,6 +1,7 @@
 #!/bin/bash
 
 #set -x
+echo "WARNING: THIS IS AN EARLY VERSION OF THIS SCRIPT IT IS FOR DEVELOPMENT PURPOSES ONLY"
 
 # Parse command line arguments
 if [ $# -ge 3 ]; then
@@ -74,6 +75,15 @@ if [ ! -z $CACHE_PATH ] && [ ! -d $CACHE_PATH ]; then
     exit 9
 fi
 
+# Get the cmapi key
+if [ -z ${CMAPI_KEY} ]; then
+    CMAPI_KEY=$(cat /etc/columnstore/cmapi_server.conf | grep 'x-api-key' | grep -oP "(?<=').*?(?=')")
+    if [ $? -ne 0 ] || [ -z ${CMAPI_KEY} ]; then
+        echo "ERROR: Wasn't able to extract the cmapi key"
+        exit 10
+    fi
+fi
+
 echo "$(date) restore started"
 
 # Record the current skysql_admin user's credentials
@@ -82,7 +92,8 @@ SKYSQL_ADMIN_USER_HASH=${SKYSQL_ADMIN_USER_HASH:0:41}
 
 # Stop the ColumnStore daemon to start the restore process
 monit unmonitor all
-columnstore-stop
+curl -s -X PUT https://${HOSTNAME}:8640/cmapi/0.4.0/cluster/shutdown --header 'Content-Type:application/json' --header "x-api-key:${CMAPI_KEY}" --data '{"timeout":60}' -k | jq .
+cmapi-stop
 
 # Purge the source S3 bucket so that the backup data can be restored into it
 gsutil -m rm $SOURCE_BUCKET/*
@@ -121,7 +132,10 @@ CURRENT_OBJECT_SIZE=$(awk '/^object_size = /' /etc/columnstore/storagemanager.cn
 sed -i "s@$CURRENT_OBJECT_SIZE@$BACKUP_OBJECT_SIZE@g" /etc/columnstore/storagemanager.cnf
 
 # Start ColumnStore
-columnstore-start
+cmapi-start
+curl -s -X PUT https://${HOSTNAME}:8640/cmapi/0.4.0/cluster/start --header 'Content-Type:application/json' --header "x-api-key:${CMAPI_KEY}" --data '{"timeout":60}' -k | jq .
+echo "Get cluster status cmapi"
+curl -s https://${HOSTNAME}:8640/cmapi/0.4.0/cluster/status --header 'Content-Type:application/json' --header "x-api-key:${CMAPI_KEY}" -k | jq .
 columnstoreDBWrite -c resume
 
 # Restore the old skysql_admin user credentials
@@ -132,6 +146,9 @@ sed -i "s@<<SKYSQL_ADMIN_USER_HASH>>@${SKYSQL_ADMIN_USER_HASH}@g" /tmp/restore_s
 mariadb < /tmp/restore_skysql_admin_credentials.sql
 rm -f /tmp/restore_skysql_admin_credentials.sql
 
+# Reactivate monit
+monit monitor all
+
 # Restore completed
 echo "$(date) restore completed"
-echo "Please restart the container"
+echo "Please restart the pod"

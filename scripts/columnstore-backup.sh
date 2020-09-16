@@ -1,6 +1,7 @@
 #!/bin/bash
 
 #set -x
+echo "WARNING: THIS IS AN EARLY VERSION OF THIS SCRIPT IT IS FOR DEVELOPMENT PURPOSES ONLY"
 
 # Parse command line arguments
 if [ $# -ge 2 ]; then
@@ -53,10 +54,18 @@ if [ ! -z $JOURNAL_PATH ] && [ ! -d $JOURNAL_PATH ]; then
     exit 6
 fi
 
+# Get the MariaDB version information
+if [ -z ${MARIADB_VERSION} ]; then
+    echo 'ERROR: Was not able to determine the MariaDB Version from the ${MARIADB_VERSION} variable'
+    exit 7
+else
+    echo ${MARIADB_VERSION} > /tmp/MARIADB_VERSION
+fi
+
 # Check that there is only one ColumnStore backup process running
 if [ -f /tmp/backup-running ]; then
     echo "ERROR: There is already a backup program running."
-    exit 7
+    exit 8
 fi
 touch /tmp/backup-running
 
@@ -70,7 +79,7 @@ if [ $? -ne 0 ] || [[ ! $(echo $RESPONSE | grep "locked:") == "" ]]; then
     echo "ERROR: ColumnStore couldn't be put into read only mode, due to active writes to the system."
     echo $RESPONSE
     rm /tmp/backup-running
-    exit 8
+    exit 9
 fi
 echo $RESPONSE
 # Wait 30 seconds to flush the S3 cache.
@@ -83,10 +92,13 @@ else
     echo "ERROR: ColumnStore's journal directory is not empty"
     columnstoreDBWrite -c resume
     rm /tmp/backup-running
-    exit 9
+    exit 10
 fi
 
 # Perform the ColumnStore data backup
+## Copy MariaDB's version information to the S3 backup bucket
+gsutil cp /tmp/MARIADB_VERSION $BACKUP_BUCKET/$BACKUP_PREFIX/MARIADB_VERSION
+
 ## Copy ColumnStore's "metadata" and "etc" directory to the S3 backup bucket.
 gsutil -m cp -r $METADATA_PATH/* $BACKUP_BUCKET/$BACKUP_PREFIX/metadata/
 gsutil -m cp -r /etc/columnstore/* $BACKUP_BUCKET/$BACKUP_PREFIX/etc/

@@ -1,10 +1,60 @@
 # vim:set ft=dockerfile:
-FROM centos:8
+
+# setup a template image
+FROM centos:8 as template
+
+# Default Env Variables
+ENV MARIADB_VERSION=10.5
+ENV MARIADB_ENTERPRISE_TOKEN=deaa8829-2a00-4b1a-a99c-847e772f6833
+
+# build the replication UDFs
+################################################################################
+FROM template as udf_builder
+
+# Change the workdir
+WORKDIR /udf
+
+# Install needed software to compile the UDF
+ADD https://dlm.mariadb.com/enterprise-release-helpers/mariadb_es_repo_setup /tmp
+
+RUN chmod +x /tmp/mariadb_es_repo_setup && \
+    /tmp/mariadb_es_repo_setup --mariadb-server-version=${MARIADB_VERSION} --token=${MARIADB_ENTERPRISE_TOKEN} --apply
+
+RUN dnf -y update && \
+    dnf -y install gcc MariaDB-devel libcurl-devel
+
+# Copy the UDF'es source
+COPY replication_udf/* /udf/
+
+# Compile the UDF
+RUN gcc -fPIC -shared -o replication.so cJSON.c replication.c `mariadb_config --include` -lcurl -lm `mariadb_config --libs`
+
+# compile pcre2grep as it's needed for HTAP's backup/restore
+################################################################################
+FROM template as pcre2grep-builder
+
+USER root
+WORKDIR /opt
+ARG PCRE2_VERSION=10.35
+
+# install the build dependencies
+RUN dnf -y update && \
+    dnf group install -y "Development Tools"
+
+# compile pcre2grep
+RUN curl https://ftp.pcre.org/pub/pcre/pcre2-${PCRE2_VERSION}.tar.gz -o pcre2.tar.gz && \
+    tar -xf pcre2.tar.gz && \
+    cd pcre2-${PCRE2_VERSION} && \
+    ./configure --disable-shared --with-heap-limit=1024 --with-match-limit=500000 --with-match-limit-depth=5000 && \
+    make && \
+    cp pcre2grep /opt
+
+# build the ColumnStore image
+################################################################################
+FROM template as main
 
 # Default Env Variables
 ENV TINI_VERSION=v0.18.0
-ENV MARIADB_VERSION=10.5
-ENV MARIADB_ENTERPRISE_TOKEN=xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
 
 # Add A SkySQL Specific PATH Entry
 ENV PATH="/mnt/skysql/columnstore-container-scripts:${PATH}"
@@ -91,8 +141,13 @@ COPY scripts/demo \
      scripts/cmapi-restart \
      scripts/columnstore-backup.sh \
      scripts/columnstore-restore.sh \
-     scripts/add-node-to-cluster.sh \
+     scripts/htap-backup.sh \
+     scripts/htap-restore.sh \
+     scripts/skysql-specific-startup.sh \
      scripts/mcs-process /usr/bin/
+
+COPY --from=udf_builder /udf/replication.so /usr/lib64/mysql/plugin/replication.so
+COPY --from=pcre2grep-builder /opt/pcre2grep /usr/bin/pcre2grep
 
 # Add Tini Init Process
 ADD https://github.com/krallin/tini/releases/download/${TINI_VERSION}/tini /usr/bin/tini
@@ -106,7 +161,9 @@ RUN chmod +x /usr/bin/tini \
     /usr/bin/cmapi-restart \
     /usr/bin/columnstore-backup.sh \
     /usr/bin/columnstore-restore.sh \
-    /usr/bin/add-node-to-cluster.sh \
+    /usr/bin/htap-backup.sh \
+    /usr/bin/htap-restore.sh \
+    /usr/bin/skysql-specific-startup.sh \
     /usr/bin/mcs-process
 
 # Stream Edit Monit Config
