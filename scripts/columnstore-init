@@ -1,0 +1,345 @@
+#!/bin/bash
+
+# Set Path Variables
+IFLAG='/etc/columnstore/container-initialized'
+LOG_PREFIX='/var/log/mariadb/columnstore'
+MCS_INSTALL_BIN='/usr/bin'
+JEMALLOC_PATH='/usr/lib64/libjemalloc.so.2'
+
+export LD_PRELOAD=$JEMALLOC_PATH
+
+# Set StorageManager Defaults If Missing
+ASYNC_CONN="${ASYNC_CONN:-0}"
+ANALYTICS_ONLY="${ANALYTICS_ONLY:-0}"
+USE_S3_STORAGE="${USE_S3_STORAGE:-0}"
+
+# Set Credential Defaults If Missing
+CMAPI_KEY="${CMAPI_KEY:-somekey123}"
+CEJ_USER="${CEJ_USER:-cej}"
+CEJ_PASS="${CEJ_PASS:-C0lumnStore!}"
+CEJ_HOST="${CEJ_HOST:-%}"
+MAX_USER="${MAX_USER:-maxscale}"
+MAX_PASS="${MAX_PASS:-C0lumnStore!}"
+MAX_HOST="${MAX_HOST:-%}"
+REP_USER="${REP_USER:-idbrep}"
+REP_PASS="${REP_PASS:-C0lumnStore!}"
+REP_HOST="${REP_HOST:-%}"
+
+# Set network defaults for SkySQL
+if [ -z $PM1_DNS ]; then
+    PM1_DNS=$PM1
+fi
+
+# Miscellaneous Variables
+SERVER_ID=$(hostname -i | cut -d "." -f 4)
+PROGS=('StorageManager' 'load_brm' 'workernode' 'controllernode' 'PrimProc' 'ExeMgr' 'DMLProc' 'DDLProc' 'WriteEngineServer')
+RET=$'\n'
+
+# Adjust Columnstore Cluster Configuration
+
+cat <<EOT >> /etc/my.cnf.d/columnstore.cnf
+$RET# Docker Settings
+server_id = $SERVER_ID
+collation_server = utf8_general_ci
+character_set_server = utf8
+log_bin = /var/lib/mysql/mariadb-bin
+log_bin_index = /var/lib/mysql/mariadb-bin.index
+relay_log = /var/lib/mysql/mariadb-relay
+relay_log_index = /var/lib/mysql/mariadb-relay.index
+log_slave_updates = ON
+gtid_strict_mode = ON
+log_error = /var/log/mariadb/columnstore/mariadb-error.log
+#columnstore_cache_inserts = ON
+columnstore_use_import_for_batchinsert=ALWAYS$RET
+EOT
+
+# Add API Key To 'cmapi_server.conf'
+sed -i "s|^x-api-key.*|x-api-key = '${CMAPI_KEY//&/\\&}'|" /etc/columnstore/cmapi_server.conf
+
+# Storagemanager Configuration
+if [ $USE_S3_STORAGE -eq 1 ]; then
+    $MCS_INSTALL_BIN/mcsSetConfig Installation DBRootStorageType "storagemanager"
+    $MCS_INSTALL_BIN/mcsSetConfig StorageManager Enabled "Y"
+    $MCS_INSTALL_BIN/mcsSetConfig SystemConfig DataFilePlugin "libcloudio.so"
+    if [ $ASYNC_CONN -eq 1 ]; then
+        sed -i "s|object_size = 5M|object_size = 2M|" /etc/columnstore/storagemanager.cnf
+        sed -i "s|max_concurrent_uploads = 21|max_concurrent_uploads = 2|" /etc/columnstore/storagemanager.cnf
+        sed -i "s|max_concurrent_downloads = 21|max_concurrent_downloads = 10|" /etc/columnstore/storagemanager.cnf
+    fi
+    sed -i "s|cache_size = 2g|cache_size = 8g|" /etc/columnstore/storagemanager.cnf
+    sed -i "s|service =.*|service = S3|" /etc/columnstore/storagemanager.cnf
+    sed -i "s|region =.*|region = $S3_REGION|" /etc/columnstore/storagemanager.cnf
+    sed -i "s|bucket =.*|bucket = $S3_BUCKET|" /etc/columnstore/storagemanager.cnf
+    sed -i "s|# endpoint =.*|endpoint = $S3_ENDPOINT|" /etc/columnstore/storagemanager.cnf
+    sed -i "s|# aws_access_key_id =.*|aws_access_key_id = $S3_ACCESS_KEY_ID|" /etc/columnstore/storagemanager.cnf
+    sed -i "s|# aws_secret_access_key =.*|aws_secret_access_key = $S3_SECRET_ACCESS_KEY|" /etc/columnstore/storagemanager.cnf
+    sed -i "s|^gs_access_key_id =.*|gs_access_key_id = $S3_ACCESS_KEY_ID|" /root/.boto
+    sed -i "s|^gs_secret_access_key =.*|gs_secret_access_key = $S3_SECRET_ACCESS_KEY|" /root/.boto
+
+    # Clean Out Bucket From Previous Tests (TO BE REMOVED)
+    if [[ $(hostname -s) == "$PM1" ]]; then
+        gsutil -m rm gs://$S3_BUCKET/* > /dev/null 2>&1
+    fi
+fi
+
+# Set Instance Type
+if [ $ANALYTICS_ONLY -eq 1 ]; then
+    echo '' >> /etc/my.cnf.d/columnstore.cnf
+    echo 'default_storage_engine=Columnstore' >> /etc/my.cnf.d/columnstore.cnf
+    echo 'enforce_storage_engine=Columnstore' >> /etc/my.cnf.d/columnstore.cnf
+fi
+
+# Verify All Programs Are Available
+for i in "${PROGS[@]}" ; do
+    if [ ! -x $MCS_INSTALL_BIN/$i ] ; then
+        echo "$i doesn't exist."
+        exit 1
+    fi
+done
+
+# Conditional Provisioning
+if [[ $(hostname -s) == "$PM1" ]]; then
+
+    # Start Primary Node
+    echo 'Starting primary node...'
+
+    echo 'Starting StorageManager'
+    touch $LOG_PREFIX/storagemanager.log && chmod 666 $LOG_PREFIX/storagemanager.log
+    $MCS_INSTALL_BIN/StorageManager &> $LOG_PREFIX/storagemanager.log &
+    echo "StorageManager PID = $!"
+
+    sleep 1
+
+    echo 'Loading BRM'
+    $MCS_INSTALL_BIN/mcs-loadbrm.py no > /dev/null 2>&1
+
+    echo 'Starting workernode'
+    touch $LOG_PREFIX/workernode.log && chmod 666 $LOG_PREFIX/workernode.log
+    $MCS_INSTALL_BIN/workernode DBRM_Worker1 &> $LOG_PREFIX/workernode.log &
+    echo "workernode PID = $!"
+
+    echo 'Starting controllernode'
+    touch $LOG_PREFIX/controllernode.log && chmod 666 $LOG_PREFIX/controllernode.log
+    $MCS_INSTALL_BIN/controllernode &> $LOG_PREFIX/controllernode.log &
+    echo "controllernode PID = $!"
+
+    sleep 2
+
+    echo 'Starting PrimProc'
+    touch $LOG_PREFIX/primproc.log && chmod 666 $LOG_PREFIX/primproc.log
+    $MCS_INSTALL_BIN/PrimProc &> $LOG_PREFIX/primproc.log &
+    echo "PrimProc PID = $!"
+
+    sleep 1
+
+    echo 'Starting ExeMgr'
+    touch $LOG_PREFIX/exemgr.log && chmod 666 $LOG_PREFIX/exemgr.log
+    $MCS_INSTALL_BIN/ExeMgr &> $LOG_PREFIX/exemgr.log &
+    echo "ExeMgr PID = $!"
+
+    echo 'Starting WriteEngineServer'
+    touch $LOG_PREFIX/writeengineserver.log && chmod 666 $LOG_PREFIX/writeengineserver.log
+    $MCS_INSTALL_BIN/WriteEngineServer &> $LOG_PREFIX/writeengineserver.log &
+    echo "WriteEngineServer PID = $!"
+
+    sleep 2
+
+    echo 'Starting DMLProc'
+    touch $LOG_PREFIX/dmlproc.log && chmod 666 $LOG_PREFIX/dmlproc.log
+    $MCS_INSTALL_BIN/DMLProc &> $LOG_PREFIX/dmlproc.log &
+    echo "DMLProc PID = $!"
+
+    echo 'Starting DDLProc'
+    touch $LOG_PREFIX/ddlproc.log && chmod 666 $LOG_PREFIX/ddlproc.log
+    $MCS_INSTALL_BIN/DDLProc &> $LOG_PREFIX/ddlproc.log &
+    echo "DDLProc PID = $!"
+
+    echo 'Running dbbuilder'
+    $MCS_INSTALL_BIN/dbbuilder 7 &> $LOG_PREFIX/dbbuilder.log
+
+    /usr/share/mysql/mysql.server start
+
+    # Set Up MariaDB Cross Engine Join & Replication
+    MARIADB_RUNNING=$(mariadb-admin ping)
+    if [[ $MARIADB_RUNNING == *"alive"* ]]; then
+
+        # Set Up Cross Engine Join User
+        $MCS_INSTALL_BIN/mariadb -e "
+            GRANT SELECT
+            ON *.* TO '$CEJ_USER'@'$CEJ_HOST'
+            IDENTIFIED BY '$CEJ_PASS';
+        "
+        if [ $? -ne 0 ]; then
+            echo 'ERROR: During cross engine join user creation.'
+            exit 1
+        fi
+        $MCS_INSTALL_BIN/mcsSetConfig CrossEngineSupport User "$CEJ_USER"
+        $MCS_INSTALL_BIN/mcsSetConfig CrossEngineSupport Password "$CEJ_PASS"
+        $MCS_INSTALL_BIN/mcsSetConfig CrossEngineSupport Host "$CEJ_HOST"
+        echo 'Cross engine join user created'
+
+        # Set Up Admin User
+        if [ ! -z $ADMIN_USER ] && [ ! -z $ADMIN_PASS ]; then
+            $MCS_INSTALL_BIN/mariadb -e "
+                GRANT ALL PRIVILEGES
+                ON *.* TO '$ADMIN_USER'@'$ADMIN_HOST'
+                IDENTIFIED BY '$ADMIN_PASS'
+                WITH GRANT OPTION;
+            "
+            if [ $? -ne 0 ]; then
+                echo "ERROR: During replication user creation."
+                exit 1
+            fi
+            echo 'Administration user created'
+        fi
+
+        # Set Up Replication User
+        $MCS_INSTALL_BIN/mariadb -e "
+            GRANT REPLICATION SLAVE ADMIN,
+            REPLICATION SLAVE,
+            REPLICATION CLIENT,
+            REPLICATION MASTER ADMIN
+            ON *.* TO '$REP_USER'@'$REP_HOST'
+            IDENTIFIED BY '$REP_PASS';
+        "
+        if [ $? -ne 0 ]; then
+            echo "ERROR: During replication user creation."
+            exit 1
+        fi
+        echo 'Replication user created'
+
+        # Set Up MaxScale User
+        $MCS_INSTALL_BIN/mariadb -e "
+            GRANT BINLOG ADMIN,
+            READ_ONLY ADMIN,
+            RELOAD,
+            REPLICATION CLIENT,
+            REPLICATION MASTER ADMIN,
+            REPLICATION SLAVE ADMIN,
+            REPLICATION SLAVE,
+            SHOW DATABASES
+            ON *.* TO '$MAX_USER'@'$MAX_HOST' IDENTIFIED BY '$MAX_PASS';
+        "
+        if [ $? -ne 0 ]; then
+            echo "ERROR: Creating user '$MAX_USER'@'$MAX_HOST'."
+            exit 1
+        fi
+        $MCS_INSTALL_BIN/mariadb -e "
+            GRANT SELECT ON mysql.user TO '$MAX_USER'@'$MAX_HOST';
+            GRANT SELECT ON mysql.db TO '$MAX_USER'@'$MAX_HOST';
+            GRANT SELECT ON mysql.tables_priv TO '$MAX_USER'@'$MAX_HOST';
+            GRANT SELECT ON mysql.columns_priv TO '$MAX_USER'@'$MAX_HOST';
+            GRANT SELECT ON mysql.proxies_priv TO '$MAX_USER'@'$MAX_HOST';
+            GRANT SELECT ON mysql.roles_mapping TO '$MAX_USER'@'$MAX_HOST';
+        "
+        if [ $? -ne 0 ]; then
+            echo "ERROR: Granting SELECT to '$MAX_USER'@'$MAX_HOST'."
+            exit 1
+        fi
+        echo 'MaxScale user created'
+
+        if [ $SKYSQL_INITIALIZATION -eq 1 ] && [ -d "/mnt/skysql/columnstore-container-scripts" ]; then
+            for f in /mnt/skysql/columnstore-container-scripts/*; do
+                case "$f" in
+                    *.sql)
+                        echo "$0: running $f"
+                        "$MCS_INSTALL_BIN/mariadb" < "$f"
+                        if [ $? -ne 0 ]; then
+                            echo "ERROR: Wasn't able to initialize SkySQL specific users."
+                            exit 1
+                        fi
+                        echo
+                        ;;
+                esac
+            echo
+            done
+        fi
+
+        # Securing MariaDB Installation
+        $MCS_INSTALL_BIN/mariadb -e "
+            DROP DATABASE IF EXISTS test;
+            DELETE FROM mysql.user WHERE User='';
+        "
+        if [ $? -ne 0 ]; then
+            echo 'ERROR: Securing MariaDB'
+            exit 1
+        fi
+    fi
+
+    # Stop Primary Node
+    echo 'Stopping primary node...'
+
+    /usr/share/mysql/mysql.server stop
+
+    if [ ! -z "$(pidof "${PROGS[@]}")" ]; then
+        $MCS_INSTALL_BIN/mcs-savebrm.py
+    fi
+    for i in "${PROGS[@]}"; do
+        if [ ! -z "$(pidof $i)" ]; then
+            echo "Sending SIGTERM to $i"
+            kill "$(pidof $i)" > /dev/null
+            sleep 3
+            counter=1
+            while [[ -n $(pidof StorageManager) ]] && [[ $counter -le 60 ]]
+            do
+                sleep 1
+                ((counter++))
+            done
+        fi
+    done
+    for i in "${PROGS[@]}"; do
+        if [ ! -z "$(pidof $i)" ]; then
+            echo "Sending SIGKILL to $i"
+            kill -9 "$(pidof $i)" > /dev/null
+            sleep 3
+            counter=1
+            while [[ -n $(pidof StorageManager) ]] && [[ $counter -le 60 ]]
+            do
+                sleep 1
+                ((counter++))
+            done
+        fi
+    done
+
+    echo 'Clearing shared memory...'
+    $MCS_INSTALL_BIN/clearShm
+
+else
+
+    # Start Replicas
+    echo 'Starting replicas...'
+
+    /usr/share/mysql/mysql.server start
+
+    # Configure Replication On Slaves
+    echo 'Setting up replication...'
+
+    $MCS_INSTALL_BIN/mariadb -e "
+        STOP SLAVE;
+        CHANGE MASTER TO MASTER_HOST='$PM1_DNS',
+        MASTER_USER='$REP_USER',
+        MASTER_PASSWORD='$REP_PASS',
+        MASTER_USE_GTID=slave_pos,
+        MASTER_CONNECT_RETRY=10;
+        START SLAVE;
+    "
+    if [ $? -ne 0 ]; then
+        echo 'ERROR: Performing CHANGE MASTER on replica'
+        exit 1
+    fi
+
+    # Stop Replicas
+    echo 'Stopping replicas...'
+
+    /usr/share/mysql/mysql.server stop
+
+fi
+
+# Clean Remnants
+rm -f /var/lib/mysql/*.err
+
+# Mark Container Initialized
+touch $IFLAG
+
+# Return To cmapi-start
+exit 0
