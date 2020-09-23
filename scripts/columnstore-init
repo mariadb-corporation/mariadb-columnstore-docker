@@ -26,6 +26,7 @@ REP_PASS="${REP_PASS:-C0lumnStore!}"
 REP_HOST="${REP_HOST:-%}"
 
 # Set network defaults for SkySQL
+SKYSQL_INITIALIZATION="${SKYSQL_INITIALIZATION:-0}"
 if [ -z $PM1_DNS ]; then
     PM1_DNS=$PM1
 fi
@@ -54,7 +55,7 @@ columnstore_use_import_for_batchinsert=ALWAYS$RET
 EOT
 
 # Add API Key To 'cmapi_server.conf'
-sed -i "s|^x-api-key.*|x-api-key = '${CMAPI_KEY//&/\\&}'|" /etc/columnstore/cmapi_server.conf
+sed -i "s@^x-api-key.*@x-api-key = '${CMAPI_KEY//&/\\&}'@" /etc/columnstore/cmapi_server.conf
 
 # Storagemanager Configuration
 if [ $USE_S3_STORAGE -eq 1 ]; then
