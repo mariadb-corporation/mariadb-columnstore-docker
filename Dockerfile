@@ -120,15 +120,12 @@ RUN dnf -y install \
 
 # Add, Unpack & Clean CMAPI Package
 RUN mkdir -p /opt/cmapi
-ADD https://cspkg.s3.amazonaws.com/cmapi/master/256/mariadb-columnstore-cmapi.tar.gz /opt/cmapi
+ADD https://cspkg.s3.amazonaws.com/cmapi/master/265/mariadb-columnstore-cmapi.tar.gz /opt/cmapi
 WORKDIR /opt/cmapi
 RUN tar -xvzf mariadb-columnstore-cmapi.tar.gz && \
     rm -f mariadb-columnstore-cmapi.tar.gz && \
     rm -rf /opt/cmapi/service*
 WORKDIR /
-
-## MCOL-4322 TEMPORARY FIX
-COPY scripts/node_manipulation.py /opt/cmapi/cmapi_server/node_manipulation.py
 
 ### END TEMPORARY BUILD
 
