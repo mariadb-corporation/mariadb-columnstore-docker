@@ -127,6 +127,9 @@ RUN tar -xvzf mariadb-columnstore-cmapi.tar.gz && \
     rm -rf /opt/cmapi/service*
 WORKDIR /
 
+## MCOL-4322 TEMPORARY FIX
+COPY scripts/node_manipulation.py /opt/cmapi/cmapi_server/node_manipulation.py
+
 ### END TEMPORARY BUILD
 
 # Copy Config Files & Scripts To Image

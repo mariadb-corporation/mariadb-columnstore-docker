@@ -167,7 +167,10 @@ if [[ $(hostname -s) == "$PM1" ]]; then
         # Set Up Cross Engine Join User
         $MCS_INSTALL_BIN/mariadb -e "
             GRANT SELECT
-            ON *.* TO '$CEJ_USER'@'$CEJ_HOST'
+            ON *.* TO '$CEJ_USER'@'%'
+            IDENTIFIED BY '$CEJ_PASS';
+            GRANT SELECT
+            ON *.* TO '$CEJ_USER'@'localhost'
             IDENTIFIED BY '$CEJ_PASS';
         "
         if [ $? -ne 0 ]; then
