@@ -71,7 +71,14 @@ function add-node-to-cluster() {
 # Main program
 ##
 
+NODES_COUNT=`cat /mnt/skysql/t-shirt-and-custom-config/columnstore.nodes`
+echo NODES_COUNT: $NODES_COUNT
 # 1. initialize the ColumnStore node if not already done
 if [ ! -e $SKY_IFLAG ]; then
+    echo "SkySQL init flag missing"
+    echo "Starting for the fist time"
     add-node-to-cluster
+else
+    echo "SkySQL init flag exists"
+    curl -s -X PUT https://$PM1_DNS:8640/cmapi/0.4.0/cluster/start --header 'Content-Type:application/json' --header "x-api-key:$CMAPI_KEY" --data '{"timeout":60}' -k | jq .
 fi
