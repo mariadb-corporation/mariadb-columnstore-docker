@@ -110,17 +110,17 @@ ENV LANGUAGE=en_US.UTF-8
 
 # Install MariaDB Packages
 RUN dnf -y install \
-     https://cspkg.s3.amazonaws.com/columnstore-1.5.4-1/cron/631/centos8/MariaDB-shared-10.5.5_3-1.el8.x86_64.rpm \
-     https://cspkg.s3.amazonaws.com/columnstore-1.5.4-1/cron/631/centos8/MariaDB-common-10.5.5_3-1.el8.x86_64.rpm \
-     https://cspkg.s3.amazonaws.com/columnstore-1.5.4-1/cron/631/centos8/MariaDB-client-10.5.5_3-1.el8.x86_64.rpm \
-     https://cspkg.s3.amazonaws.com/columnstore-1.5.4-1/cron/631/centos8/MariaDB-server-10.5.5_3-1.el8.x86_64.rpm \
-     https://cspkg.s3.amazonaws.com/columnstore-1.5.4-1/cron/631/centos8/MariaDB-backup-10.5.5_3-1.el8.x86_64.rpm \
-     https://cspkg.s3.amazonaws.com/columnstore-1.5.4-1/cron/631/centos8/MariaDB-cracklib-password-check-10.5.5_3-1.el8.x86_64.rpm \
-     https://cspkg.s3.amazonaws.com/columnstore-1.5.4-1/cron/631/centos8/MariaDB-columnstore-engine-10.5.5_3-1.el8.x86_64.rpm
+     https://cspkg.s3.amazonaws.com/columnstore-1.5.4-1/push/781/centos8/MariaDB-shared-10.5.5_3-1.el8.x86_64.rpm \
+     https://cspkg.s3.amazonaws.com/columnstore-1.5.4-1/push/781/centos8/MariaDB-common-10.5.5_3-1.el8.x86_64.rpm \
+     https://cspkg.s3.amazonaws.com/columnstore-1.5.4-1/push/781/centos8/MariaDB-client-10.5.5_3-1.el8.x86_64.rpm \
+     https://cspkg.s3.amazonaws.com/columnstore-1.5.4-1/push/781/centos8/MariaDB-server-10.5.5_3-1.el8.x86_64.rpm \
+     https://cspkg.s3.amazonaws.com/columnstore-1.5.4-1/push/781/centos8/MariaDB-backup-10.5.5_3-1.el8.x86_64.rpm \
+     https://cspkg.s3.amazonaws.com/columnstore-1.5.4-1/push/781/centos8/MariaDB-cracklib-password-check-10.5.5_3-1.el8.x86_64.rpm \
+     https://cspkg.s3.amazonaws.com/columnstore-1.5.4-1/push/781/centos8/MariaDB-columnstore-engine-10.5.5_3-1.el8.x86_64.rpm
 
 # Add, Unpack & Clean CMAPI Package
 RUN mkdir -p /opt/cmapi
-ADD https://cspkg.s3.amazonaws.com/cmapi/master/265/mariadb-columnstore-cmapi.tar.gz /opt/cmapi
+ADD https://cspkg.s3.amazonaws.com/cmapi/master/271/mariadb-columnstore-cmapi.tar.gz /opt/cmapi
 WORKDIR /opt/cmapi
 RUN tar -xvzf mariadb-columnstore-cmapi.tar.gz && \
     rm -f mariadb-columnstore-cmapi.tar.gz && \

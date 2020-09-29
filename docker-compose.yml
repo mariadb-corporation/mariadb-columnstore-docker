@@ -3,7 +3,7 @@ version: '3'
 services:
 
   pm1:
-    image: mariadb/skysql-enterprise-columnstore-handoff:sky-5.4.1-RC3
+    image: mariadb/skysql-enterprise-columnstore-handoff:sky-5.4.1-GA
     hostname: ${PM1}
     container_name: ${PM1}
     volumes:
@@ -23,7 +23,7 @@ services:
       - 8641:8640
 
   pm2:
-    image: mariadb/skysql-enterprise-columnstore-handoff:sky-5.4.1-RC3
+    image: mariadb/skysql-enterprise-columnstore-handoff:sky-5.4.1-GA
     hostname: ${PM2}
     container_name: ${PM2}
     volumes:
@@ -42,7 +42,7 @@ services:
       - 8642:8640
 
   pm3:
-    image: mariadb/skysql-enterprise-columnstore-handoff:sky-5.4.1-RC3
+    image: mariadb/skysql-enterprise-columnstore-handoff:sky-5.4.1-GA
     hostname: ${PM3}
     container_name: ${PM3}
     volumes:
