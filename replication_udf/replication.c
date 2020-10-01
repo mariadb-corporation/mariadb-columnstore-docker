@@ -135,7 +135,7 @@ int restart_slave_replication(const char * server_username, const char * server_
       return 1;
     }
 
-    if (mysql_real_connect(con, "127.0.0.1", server_username, server_password, NULL, 3306, NULL, 0) == NULL) {
+    if (mysql_real_connect(con, NULL, server_username, server_password, NULL, 3306, "/var/lib/mysql/mysql.sock", 0) == NULL) {
       mysql_close(con);
       return 2;
     }
