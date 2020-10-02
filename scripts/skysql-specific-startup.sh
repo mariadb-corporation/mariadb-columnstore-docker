@@ -10,8 +10,8 @@ SKY_IFLAG='/etc/columnstore/skysql-initialization-completed'
 # Getting the needed variables
 CMAPI_KEY="${CMAPI_KEY:-somekey123}"
 NAMESPACE=$(cat /mnt/skysql/podinfo/namespace)
-DNS_NAME="${HOSTNAME}.${RELEASE_NAME}-cs-cluster.${NAMESPACE}.svc.cluster.local"
-SHORT_DNS_NAME="${HOSTNAME}.${RELEASE_NAME}-cs-cluster"
+DNS_NAME="${HOSTNAME}.cs-cluster.${NAMESPACE}.svc.cluster.local"
+SHORT_DNS_NAME="${HOSTNAME}.cs-cluster"
 
 if [ -z $PM1_DNS ]; then
     PM1_DNS=$PM1
