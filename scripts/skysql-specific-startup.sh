@@ -92,6 +92,7 @@ else
             sleep 3
             NUM_NODES=$(curl -s https://$PM1_DNS:8640/cmapi/0.4.0/cluster/status --header 'Content-Type:application/json' --header "x-api-key:$CMAPI_KEY" -k --fail | jq .num_nodes -j)
         done
+        echo ""
         
         # Start the ColumnStore cluster
         echo "Starting the ColumnStore cluster"
@@ -118,8 +119,13 @@ else
             sleep 3
             DBRM_MODE=$(curl -s https://localhost:8640/cmapi/0.4.0/cluster/status --header 'Content-Type:application/json' --header "x-api-key:$CMAPI_KEY" -k --fail | jq .\"$DNS_NAME\".dbrm_mode -j)
         done
+        echo ""
 
+        # give the cmapi service some time to update its status
+        sleep 5
+        
         # in case the DBRM mode is offline start the cluster
+        DBRM_MODE=$(curl -s https://localhost:8640/cmapi/0.4.0/cluster/status --header 'Content-Type:application/json' --header "x-api-key:$CMAPI_KEY" -k --fail | jq .\"$DNS_NAME\".dbrm_mode -j)
         if [ "$DBRM_MODE" == 'offline' ]; then
             echo "Starting the ColumnStore cluster"
             curl -s -X PUT https://localhost:8640/cmapi/0.4.0/cluster/start --header 'Content-Type:application/json' --header "x-api-key:$CMAPI_KEY" --data '{"timeout":60}' -k | jq .
