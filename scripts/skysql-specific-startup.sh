@@ -79,26 +79,26 @@ if [ ! -e $SKY_IFLAG ]; then
     echo "Starting for the fist time"
     add-node-to-cluster
 else
-    echo "SkySQL init flag exists"
-    # Check if we are in a single node deployment (HTAP or CS)
-    if [ $NODES_COUNT -eq 1 ]; then
-        echo "Single node deployment detected"
+    # Wait for cmapi to be available
+    echo "Waiting for cmapi to be available"
+    DBRM_MODE=$(curl -s https://localhost:8640/cmapi/0.4.0/cluster/status --header 'Content-Type:application/json' --header "x-api-key:$CMAPI_KEY" -k --fail | jq .\"$DNS_NAME\".dbrm_mode -j)
+    while [ $? -ne 0 ] || { [ "$DBRM_MODE" != "offline" ] && [ "$DBRM_MODE" != "master" ] && [ "$DBRM_MODE" != "slave" ]; }; do
+        echo -n "."
+        sleep 3
+        DBRM_MODE=$(curl -s https://localhost:8640/cmapi/0.4.0/cluster/status --header 'Content-Type:application/json' --header "x-api-key:$CMAPI_KEY" -k --fail | jq .\"$DNS_NAME\".dbrm_mode -j)
+    done
+    echo ""
 
-        # Wait for cmapi to be available (unfortunately it isn't directly available after start)
-        echo "Waiting for cmapi to be available"
-        NUM_NODES=$(curl -s https://$PM1_DNS:8640/cmapi/0.4.0/cluster/status --header 'Content-Type:application/json' --header "x-api-key:$CMAPI_KEY" -k --fail | jq .num_nodes -j)
-        while [ $? -ne 0 ] || [ "$NUM_NODES" != "1" ]; do
-            echo -n "."
-            sleep 3
-            NUM_NODES=$(curl -s https://$PM1_DNS:8640/cmapi/0.4.0/cluster/status --header 'Content-Type:application/json' --header "x-api-key:$CMAPI_KEY" -k --fail | jq .num_nodes -j)
-        done
-        echo ""
-        
-        # Start the ColumnStore cluster
+    # in case the DBRM mode is offline start the cluster
+    DBRM_MODE=$(curl -s https://localhost:8640/cmapi/0.4.0/cluster/status --header 'Content-Type:application/json' --header "x-api-key:$CMAPI_KEY" -k --fail | jq .\"$DNS_NAME\".dbrm_mode -j)
+    if [ "$DBRM_MODE" == 'offline' ]; then
         echo "Starting the ColumnStore cluster"
-        curl -s -X PUT https://$PM1_DNS:8640/cmapi/0.4.0/cluster/start --header 'Content-Type:application/json' --header "x-api-key:$CMAPI_KEY" --data '{"timeout":60}' -k | jq .
+        curl -s -X PUT https://localhost:8640/cmapi/0.4.0/cluster/start --header 'Content-Type:application/json' --header "x-api-key:$CMAPI_KEY" --data '{"timeout":60}' -k | jq .
+    fi
 
-        # Put the node into read/write mode again
+    # Put the node into read/write mode again
+    DBRM_MODE=$(curl -s https://localhost:8640/cmapi/0.4.0/cluster/status --header 'Content-Type:application/json' --header "x-api-key:$CMAPI_KEY" -k --fail | jq .\"$DNS_NAME\".dbrm_mode -j)
+    if [ "$DBRM_MODE" != 'offline' ]; then
         echo "Setting the node back into read/write mode"
         columnstoreDBWrite -c resume
 
@@ -107,35 +107,6 @@ else
             echo "Re-adding the HTAP UDF"
             mariadb -e 'CREATE OR REPLACE FUNCTION set_htap_replication RETURNS STRING SONAME "replication.so";'
             echo "$?"
-        fi
-    else
-        echo "Multi node deployment detected"
-
-        # Wait for cmapi to be available
-        echo "Waiting for cmapi to be available"
-        DBRM_MODE=$(curl -s https://localhost:8640/cmapi/0.4.0/cluster/status --header 'Content-Type:application/json' --header "x-api-key:$CMAPI_KEY" -k --fail | jq .\"$DNS_NAME\".dbrm_mode -j)
-        while [ $? -ne 0 ] || { [ "$DBRM_MODE" != "offline" ] && [ "$DBRM_MODE" != "master" ] && [ "$DBRM_MODE" != "slave" ]; }; do
-            echo -n "."
-            sleep 3
-            DBRM_MODE=$(curl -s https://localhost:8640/cmapi/0.4.0/cluster/status --header 'Content-Type:application/json' --header "x-api-key:$CMAPI_KEY" -k --fail | jq .\"$DNS_NAME\".dbrm_mode -j)
-        done
-        echo ""
-
-        # give the cmapi service some time to update its status
-        sleep 30
-        
-        # in case the DBRM mode is offline start the cluster
-        DBRM_MODE=$(curl -s https://localhost:8640/cmapi/0.4.0/cluster/status --header 'Content-Type:application/json' --header "x-api-key:$CMAPI_KEY" -k --fail | jq .\"$DNS_NAME\".dbrm_mode -j)
-        if [ "$DBRM_MODE" == 'offline' ]; then
-            echo "Starting the ColumnStore cluster"
-            curl -s -X PUT https://localhost:8640/cmapi/0.4.0/cluster/start --header 'Content-Type:application/json' --header "x-api-key:$CMAPI_KEY" --data '{"timeout":60}' -k | jq .
-        fi
-
-        # Put the node into read/write mode again
-        DBRM_MODE=$(curl -s https://localhost:8640/cmapi/0.4.0/cluster/status --header 'Content-Type:application/json' --header "x-api-key:$CMAPI_KEY" -k --fail | jq .\"$DNS_NAME\".dbrm_mode -j)
-        if [ "$DBRM_MODE" != 'offline' ]; then
-            echo "Setting the node back into read/write mode"
-            columnstoreDBWrite -c resume
         fi
     fi
 fi
