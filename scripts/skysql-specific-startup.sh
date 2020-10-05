@@ -122,7 +122,7 @@ else
         echo ""
 
         # give the cmapi service some time to update its status
-        sleep 5
+        sleep 30
         
         # in case the DBRM mode is offline start the cluster
         DBRM_MODE=$(curl -s https://localhost:8640/cmapi/0.4.0/cluster/status --header 'Content-Type:application/json' --header "x-api-key:$CMAPI_KEY" -k --fail | jq .\"$DNS_NAME\".dbrm_mode -j)
