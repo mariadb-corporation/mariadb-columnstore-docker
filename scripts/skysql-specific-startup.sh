@@ -10,8 +10,8 @@ SKY_IFLAG='/etc/columnstore/skysql-initialization-completed'
 # Getting the needed variables
 CMAPI_KEY="${CMAPI_KEY:-somekey123}"
 NAMESPACE=$(cat /mnt/skysql/podinfo/namespace)
-DNS_NAME="${HOSTNAME}.${RELEASE_NAME}-cs-cluster.${NAMESPACE}.svc.cluster.local"
-SHORT_DNS_NAME="${HOSTNAME}.${RELEASE_NAME}-cs-cluster"
+DNS_NAME="${HOSTNAME}.cs-cluster.${NAMESPACE}.svc.cluster.local"
+SHORT_DNS_NAME="${HOSTNAME}.cs-cluster"
 
 if [ -z $PM1_DNS ]; then
     PM1_DNS=$PM1
@@ -79,6 +79,34 @@ if [ ! -e $SKY_IFLAG ]; then
     echo "Starting for the fist time"
     add-node-to-cluster
 else
-    echo "SkySQL init flag exists"
-    curl -s -X PUT https://$PM1_DNS:8640/cmapi/0.4.0/cluster/start --header 'Content-Type:application/json' --header "x-api-key:$CMAPI_KEY" --data '{"timeout":60}' -k | jq .
+    # Wait for cmapi to be available
+    echo "Waiting for cmapi to be available"
+    DBRM_MODE=$(curl -s https://localhost:8640/cmapi/0.4.0/cluster/status --header 'Content-Type:application/json' --header "x-api-key:$CMAPI_KEY" -k --fail | jq .\"$DNS_NAME\".dbrm_mode -j)
+    while [ $? -ne 0 ] || { [ "$DBRM_MODE" != "offline" ] && [ "$DBRM_MODE" != "master" ] && [ "$DBRM_MODE" != "slave" ]; }; do
+        echo -n "."
+        sleep 3
+        DBRM_MODE=$(curl -s https://localhost:8640/cmapi/0.4.0/cluster/status --header 'Content-Type:application/json' --header "x-api-key:$CMAPI_KEY" -k --fail | jq .\"$DNS_NAME\".dbrm_mode -j)
+    done
+    echo ""
+
+    # in case the DBRM mode is offline start the cluster
+    DBRM_MODE=$(curl -s https://localhost:8640/cmapi/0.4.0/cluster/status --header 'Content-Type:application/json' --header "x-api-key:$CMAPI_KEY" -k --fail | jq .\"$DNS_NAME\".dbrm_mode -j)
+    if [ "$DBRM_MODE" == 'offline' ]; then
+        echo "Starting the ColumnStore cluster"
+        curl -s -X PUT https://localhost:8640/cmapi/0.4.0/cluster/start --header 'Content-Type:application/json' --header "x-api-key:$CMAPI_KEY" --data '{"timeout":60}' -k | jq .
+    fi
+
+    # Put the node into read/write mode again
+    DBRM_MODE=$(curl -s https://localhost:8640/cmapi/0.4.0/cluster/status --header 'Content-Type:application/json' --header "x-api-key:$CMAPI_KEY" -k --fail | jq .\"$DNS_NAME\".dbrm_mode -j)
+    if [ "$DBRM_MODE" != 'offline' ]; then
+        echo "Setting the node back into read/write mode"
+        columnstoreDBWrite -c resume
+
+        # In case of HTAP re-add the HTAP UDF
+        if [[ "$CLUSTER_TOPOLOGY" == "htap" ]]; then
+            echo "Re-adding the HTAP UDF"
+            mariadb -e 'CREATE OR REPLACE FUNCTION set_htap_replication RETURNS STRING SONAME "replication.so";'
+            echo "$?"
+        fi
+    fi
 fi
