@@ -39,7 +39,7 @@ echo 'Starting Cluster Manager API...'
 
 touch $LOG_PREFIX/cmapi_server.log && chmod 666 $LOG_PREFIX/cmapi_server.log
 cd /opt/cmapi || exit
-PYTHONPATH=/opt/cmapi/deps /opt/cmapi/python/bin/python3 -m cmapi_server &> $LOG_PREFIX/cmapi_server.log &
+nohup PYTHONPATH=/opt/cmapi/deps /opt/cmapi/python/bin/python3 -m cmapi_server &> $LOG_PREFIX/cmapi_server.log &
 echo CMAPI PID = $!
 
 # Start MariaDB
