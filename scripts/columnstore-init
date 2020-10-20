@@ -170,9 +170,11 @@ if [[ $(hostname -s) == "$PM1" ]]; then
             GRANT SELECT
             ON *.* TO '$CEJ_USER'@'%'
             IDENTIFIED BY '$CEJ_PASS';
+            ALTER USER '$CEJ_USER'@'%' PASSWORD EXPIRE NEVER;
             GRANT SELECT
             ON *.* TO '$CEJ_USER'@'localhost'
             IDENTIFIED BY '$CEJ_PASS';
+            ALTER USER '$CEJ_USER'@'localhost' PASSWORD EXPIRE NEVER;
         "
         if [ $? -ne 0 ]; then
             echo 'ERROR: During cross engine join user creation.'
@@ -190,6 +192,7 @@ if [[ $(hostname -s) == "$PM1" ]]; then
                 ON *.* TO '$ADMIN_USER'@'$ADMIN_HOST'
                 IDENTIFIED BY '$ADMIN_PASS'
                 WITH GRANT OPTION;
+                ALTER USER '$ADMIN_USER'@'$ADMIN_HOST' PASSWORD EXPIRE NEVER;
             "
             if [ $? -ne 0 ]; then
                 echo "ERROR: During replication user creation."
@@ -206,6 +209,7 @@ if [[ $(hostname -s) == "$PM1" ]]; then
             REPLICATION MASTER ADMIN
             ON *.* TO '$REP_USER'@'$REP_HOST'
             IDENTIFIED BY '$REP_PASS';
+            ALTER USER '$REP_USER'@'$REP_HOST' PASSWORD EXPIRE NEVER;
         "
         if [ $? -ne 0 ]; then
             echo "ERROR: During replication user creation."
@@ -224,6 +228,7 @@ if [[ $(hostname -s) == "$PM1" ]]; then
             REPLICATION SLAVE,
             SHOW DATABASES
             ON *.* TO '$MAX_USER'@'$MAX_HOST' IDENTIFIED BY '$MAX_PASS';
+            ALTER USER '$MAX_USER'@'$MAX_HOST' PASSWORD EXPIRE NEVER;
         "
         if [ $? -ne 0 ]; then
             echo "ERROR: Creating user '$MAX_USER'@'$MAX_HOST'."
