@@ -62,11 +62,17 @@ ENV PATH="/mnt/skysql/columnstore-container-scripts:${PATH}"
 # Copy The Google Cloud SDK Repo To Image
 COPY config/*.repo /etc/yum.repos.d/
 
+# Add MariaDB Enterprise Repo
+ADD https://dlm.mariadb.com/enterprise-release-helpers/mariadb_es_repo_setup /tmp
+
+RUN chmod +x /tmp/mariadb_es_repo_setup && \
+    /tmp/mariadb_es_repo_setup --mariadb-server-version=${MARIADB_VERSION} --token=${MARIADB_ENTERPRISE_TOKEN} --apply
+
 # Update System
 RUN dnf -y install epel-release && \
     dnf -y upgrade
 
-# Install Some Other Dependencies
+# Install Various Packages/Tools
 RUN dnf -y install bind-utils \
     bc \
     boost \
@@ -113,7 +119,7 @@ RUN dnf -y install \
 RUN mkdir -p /opt/cmapi
 ADD https://dlm.mariadb.com/${MARIADB_ENTERPRISE_TOKEN}/mariadb-enterprise-server/10.5.6-4/cmapi/mariadb-columnstore-cmapi-1.1.tar.gz /opt/cmapi
 WORKDIR /opt/cmapi
-RUN tar -xvzf mariadb-columnstore-cmapi.tar.gz && \
+RUN tar -xvzf mariadb-columnstore-cmapi-1.1.tar.gz && \
     rm -f mariadb-columnstore-cmapi.tar.gz && \
     rm -rf /opt/cmapi/service*
 WORKDIR /
