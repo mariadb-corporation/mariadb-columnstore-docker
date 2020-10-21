@@ -1,20 +1,20 @@
 # vim:set ft=dockerfile:
 
-# setup a template image
+# Setup A Template Image
 FROM centos:8 as template
 
-# Default Env Variables
+# Default ENV Variables
 ENV MARIADB_VERSION=10.5
 ENV MARIADB_ENTERPRISE_TOKEN=deaa8829-2a00-4b1a-a99c-847e772f6833
 
-# build the replication UDFs
+# Build The Replication UDF
 ################################################################################
 FROM template as udf_builder
 
-# Change the workdir
+# Change The WORKDIR
 WORKDIR /udf
 
-# Install needed software to compile the UDF
+# Install Needed Software To Compile The UDF
 ADD https://dlm.mariadb.com/enterprise-release-helpers/mariadb_es_repo_setup /tmp
 
 RUN chmod +x /tmp/mariadb_es_repo_setup && \
@@ -23,13 +23,13 @@ RUN chmod +x /tmp/mariadb_es_repo_setup && \
 RUN dnf -y update && \
     dnf -y install gcc MariaDB-devel libcurl-devel
 
-# Copy the UDF'es source
+# Copy The UDF's Source
 COPY replication_udf/* /udf/
 
-# Compile the UDF
+# Compile The UDF
 RUN gcc -fPIC -shared -o replication.so cJSON.c replication.c `mariadb_config --include` -lcurl -lm `mariadb_config --libs`
 
-# compile pcre2grep as it's needed for HTAP's backup/restore
+# Compile pcre2grep As It's Needed Ror HTAP's Backup/Restore
 ################################################################################
 FROM template as pcre2grep-builder
 
@@ -37,11 +37,11 @@ USER root
 WORKDIR /opt
 ARG PCRE2_VERSION=10.35
 
-# install the build dependencies
+# Install The Build Dependencies
 RUN dnf -y update && \
     dnf group install -y "Development Tools"
 
-# compile pcre2grep
+# Compile pcre2grep
 RUN curl https://ftp.pcre.org/pub/pcre/pcre2-${PCRE2_VERSION}.tar.gz -o pcre2.tar.gz && \
     tar -xf pcre2.tar.gz && \
     cd pcre2-${PCRE2_VERSION} && \
@@ -49,11 +49,11 @@ RUN curl https://ftp.pcre.org/pub/pcre/pcre2-${PCRE2_VERSION}.tar.gz -o pcre2.ta
     make && \
     cp pcre2grep /opt
 
-# build the ColumnStore image
+# Build The ColumnStore Image
 ################################################################################
 FROM template as main
 
-# Default Env Variables
+# Default ENV Variables
 ENV TINI_VERSION=v0.18.0
 
 # Add A SkySQL Specific PATH Entry
@@ -66,7 +66,7 @@ COPY config/*.repo /etc/yum.repos.d/
 RUN dnf -y install epel-release && \
     dnf -y upgrade
 
-# Install Some Dependencies
+# Install Some Other Dependencies
 RUN dnf -y install bind-utils \
     bc \
     boost \
@@ -100,34 +100,23 @@ ENV LC_ALL=en_US.UTF-8
 ENV LANG=en_US.UTF-8
 ENV LANGUAGE=en_US.UTF-8
 
-### BEGIN TEMPORARY BUILD
-
-# Add MariaDB Repo
-#ADD https://dlm.mariadb.com/enterprise-release-helpers/mariadb_es_repo_setup /tmp
-#
-#RUN chmod +x /tmp/mariadb_es_repo_setup && \
-#    /tmp/mariadb_es_repo_setup --mariadb-server-version=${MARIADB_VERSION} --token=${MARIADB_ENTERPRISE_TOKEN} --apply
-
 # Install MariaDB Packages
 RUN dnf -y install \
-     https://cspkg.s3.amazonaws.com/columnstore-1.5.4-1/push/843/centos8/MariaDB-shared-10.5.5_3-1.el8.x86_64.rpm \
-     https://cspkg.s3.amazonaws.com/columnstore-1.5.4-1/push/843/centos8/MariaDB-common-10.5.5_3-1.el8.x86_64.rpm \
-     https://cspkg.s3.amazonaws.com/columnstore-1.5.4-1/push/843/centos8/MariaDB-client-10.5.5_3-1.el8.x86_64.rpm \
-     https://cspkg.s3.amazonaws.com/columnstore-1.5.4-1/push/843/centos8/MariaDB-server-10.5.5_3-1.el8.x86_64.rpm \
-     https://cspkg.s3.amazonaws.com/columnstore-1.5.4-1/push/843/centos8/MariaDB-backup-10.5.5_3-1.el8.x86_64.rpm \
-     https://cspkg.s3.amazonaws.com/columnstore-1.5.4-1/push/843/centos8/MariaDB-cracklib-password-check-10.5.5_3-1.el8.x86_64.rpm \
-     https://cspkg.s3.amazonaws.com/columnstore-1.5.4-1/push/843/centos8/MariaDB-columnstore-engine-10.5.5_3-1.el8.x86_64.rpm
+     MariaDB-shared \
+     MariaDB-client \
+     MariaDB-server \
+     MariaDB-backup \
+     MariaDB-cracklib-password-check \
+     MariaDB-columnstore-engine
 
 # Add, Unpack & Clean CMAPI Package
 RUN mkdir -p /opt/cmapi
-ADD https://cspkg.s3.amazonaws.com/cmapi/master/283/mariadb-columnstore-cmapi.tar.gz /opt/cmapi
+ADD https://dlm.mariadb.com/${MARIADB_ENTERPRISE_TOKEN}/mariadb-enterprise-server/10.5.6-4/cmapi/mariadb-columnstore-cmapi-1.1.tar.gz /opt/cmapi
 WORKDIR /opt/cmapi
 RUN tar -xvzf mariadb-columnstore-cmapi.tar.gz && \
     rm -f mariadb-columnstore-cmapi.tar.gz && \
     rm -rf /opt/cmapi/service*
 WORKDIR /
-
-### END TEMPORARY BUILD
 
 # Copy Config Files & Scripts To Image
 COPY config/etc/ /etc/
