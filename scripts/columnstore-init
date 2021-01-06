@@ -206,6 +206,7 @@ if [[ $(hostname -s) == "$PM1" ]]; then
             GRANT REPLICATION SLAVE ADMIN,
             REPLICATION SLAVE,
             BINLOG MONITOR,
+            SLAVE MONITOR,
             REPLICATION MASTER ADMIN
             ON *.* TO '$REP_USER'@'$REP_HOST'
             IDENTIFIED BY '$REP_PASS';
@@ -223,6 +224,7 @@ if [[ $(hostname -s) == "$PM1" ]]; then
             READ_ONLY ADMIN,
             RELOAD,
             BINLOG MONITOR,
+            SLAVE MONITOR,
             REPLICATION MASTER ADMIN,
             REPLICATION SLAVE ADMIN,
             REPLICATION SLAVE,
