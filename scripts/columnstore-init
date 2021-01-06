@@ -205,7 +205,7 @@ if [[ $(hostname -s) == "$PM1" ]]; then
         $MCS_INSTALL_BIN/mariadb -e "
             GRANT REPLICATION SLAVE ADMIN,
             REPLICATION SLAVE,
-            REPLICATION CLIENT,
+            BINLOG MONITOR,
             REPLICATION MASTER ADMIN
             ON *.* TO '$REP_USER'@'$REP_HOST'
             IDENTIFIED BY '$REP_PASS';
@@ -222,7 +222,7 @@ if [[ $(hostname -s) == "$PM1" ]]; then
             GRANT BINLOG ADMIN,
             READ_ONLY ADMIN,
             RELOAD,
-            REPLICATION CLIENT,
+            BINLOG MONITOR,
             REPLICATION MASTER ADMIN,
             REPLICATION SLAVE ADMIN,
             REPLICATION SLAVE,
