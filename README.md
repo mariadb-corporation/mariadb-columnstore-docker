@@ -1,4 +1,4 @@
-# INTERNAL TESTING ONLY
+# Columnstore Cluster (SkySQL Version)
 
 ### Setup Instructions
 
