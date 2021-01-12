@@ -29,7 +29,7 @@ COPY replication_udf/* /udf/
 # Compile The UDF
 RUN gcc -fPIC -shared -o replication.so cJSON.c replication.c `mariadb_config --include` -lcurl -lm `mariadb_config --libs`
 
-# Compile pcre2grep As It's Needed Ror HTAP's Backup/Restore
+# Compile pcre2grep As It's Needed For HTAP's Backup/Restore
 ################################################################################
 FROM template as pcre2grep-builder
 
@@ -134,12 +134,16 @@ COPY scripts/demo \
      scripts/cmapi-start \
      scripts/cmapi-stop \
      scripts/cmapi-restart \
-     scripts/columnstore-backup.sh \
-     scripts/columnstore-restore.sh \
-     scripts/htap-backup.sh \
-     scripts/htap-restore.sh \
      scripts/skysql-specific-startup.sh \
-     scripts/mcs-process /usr/bin/
+     scripts/mcs-process \
+     backup_restore/columnstore-backup.sh \
+     backup_restore/columnstore_engine_restore.sh \
+     backup_restore/columnstore-restore.sh \
+     backup_restore/htap-backup.sh \
+     backup_restore/htap-restore.sh \
+     backup_restore/innodb_engine_restore.sh \
+     backup_restore/mariabackup-10.4 \
+     backup_restore/restore_user_credentials.sh /usr/bin/
 
 COPY --from=udf_builder /udf/replication.so /usr/lib64/mysql/plugin/replication.so
 COPY --from=pcre2grep-builder /opt/pcre2grep /usr/bin/pcre2grep
@@ -154,12 +158,16 @@ RUN chmod +x /usr/bin/tini \
     /usr/bin/cmapi-start \
     /usr/bin/cmapi-stop \
     /usr/bin/cmapi-restart \
+    /usr/bin/skysql-specific-startup.sh \
+    /usr/bin/mcs-process \
     /usr/bin/columnstore-backup.sh \
+    /usr/bin/columnstore_engine_restore.sh \
     /usr/bin/columnstore-restore.sh \
     /usr/bin/htap-backup.sh \
     /usr/bin/htap-restore.sh \
-    /usr/bin/skysql-specific-startup.sh \
-    /usr/bin/mcs-process
+    /usr/bin/innodb_engine_restore.sh \
+    /usr/bin/mariabackup-10.4 \
+    /usr/bin/restore_user_credentials.sh
 
 # Stream Edit Monit Config
 RUN sed -i 's|set daemon\s.30|set daemon 5|g' /etc/monitrc && \
