@@ -7,6 +7,21 @@ FROM centos:8 as template
 ENV MARIADB_VERSION=10.5
 ENV MARIADB_ENTERPRISE_TOKEN=deaa8829-2a00-4b1a-a99c-847e772f6833
 
+# Compile skysql-backup To Be Added As It's Needed For Backup/Restore
+################################################################################
+FROM golang:1.13.7-alpine as mariadb_skysql_backup-builder
+
+ARG SKYSQL_BACKUP_GITHUB_TOKEN
+ARG REPO=skysql-backup
+ARG OWNER=mariadb-corporation
+ARG SKYSQL_BACKUP_VERSION=0.2.6
+
+WORKDIR /opt/mariadb/
+COPY build_scripts/gh-dl-release.go /opt/gh-dl-release.go
+RUN go run /opt/gh-dl-release.go -token=${SKYSQL_BACKUP_GITHUB_TOKEN} -repo=${OWNER}/${REPO} -version=v${SKYSQL_BACKUP_VERSION} -file="${REPO}_${SKYSQL_BACKUP_VERSION}_linux_amd64.tar.gz"\
+  && tar -xvf ${REPO}_${SKYSQL_BACKUP_VERSION}_linux_amd64.tar.gz \
+  && rm ${REPO}_${SKYSQL_BACKUP_VERSION}_linux_amd64.tar.gz /opt/gh-dl-release.go
+
 # Build The Replication UDF
 ################################################################################
 FROM template as udf_builder
@@ -55,9 +70,6 @@ FROM template as main
 
 # Default ENV Variables
 ENV TINI_VERSION=v0.18.0
-
-# Add A SkySQL Specific PATH Entry
-ENV PATH="/mnt/skysql/columnstore-container-scripts:${PATH}"
 
 # Copy The Google Cloud SDK Repo To Image
 COPY config/*.repo /etc/yum.repos.d/
@@ -147,6 +159,7 @@ COPY scripts/demo \
 
 COPY --from=udf_builder /udf/replication.so /usr/lib64/mysql/plugin/replication.so
 COPY --from=pcre2grep-builder /opt/pcre2grep /usr/bin/pcre2grep
+COPY --from=mariadb_skysql_backup-builder /opt/mariadb/skysql-backup /opt/bin/skysql-backup
 
 # Add Tini Init Process
 ADD https://github.com/krallin/tini/releases/download/${TINI_VERSION}/tini /usr/bin/tini
