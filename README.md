@@ -7,14 +7,13 @@ This GitHub personal access token shall **not** be hard coded in this repository
 
 Instead the GitHub personal access token should be provided as build argument:
 ```bash
-# e.g.:
 docker build . -t "<<DockerHub_Repository>>:<<Tag>>" --build-arg SKYSQL_BACKUP_GITHUB_TOKEN="<<GitHub_Personal_Access_Token>>"
 ```
 
 We would be happy to share a GitHub personal access token of one of our functional build accounts through 1password if desired. [2]  
 It is at your discretion to alternatively hard code any `skysql-backup` binary directly in this repository, create and use GitHub personal access tokens of your own accounts, or alter the backup/restore procedure completely.
 
-[1] https://github.com/mariadb-corporation/skysql-backup
+[1] https://github.com/mariadb-corporation/skysql-backup  
 [2] https://mariadb.1password.com/
 
 ### Setup Instructions
