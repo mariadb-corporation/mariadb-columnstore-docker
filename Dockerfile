@@ -3,10 +3,11 @@
 # Setup A Template Image
 FROM centos:8 as template
 
-# Default ENV Variables
+# Define ENV Variables
 ENV TINI_VERSION=v0.18.0
 ENV MARIADB_VERSION=10.5
 ENV MARIADB_ENTERPRISE_TOKEN=deaa8829-2a00-4b1a-a99c-847e772f6833
+ENV PATH="/mnt/skysql/columnstore-container-scripts:${PATH}"
 
 # Add MariaDB Enterprise Repo
 ADD https://dlm.mariadb.com/enterprise-release-helpers/mariadb_es_repo_setup /tmp
@@ -14,16 +15,12 @@ ADD https://dlm.mariadb.com/enterprise-release-helpers/mariadb_es_repo_setup /tm
 RUN chmod +x /tmp/mariadb_es_repo_setup && \
     /tmp/mariadb_es_repo_setup --mariadb-server-version=${MARIADB_VERSION} --token=${MARIADB_ENTERPRISE_TOKEN} --apply
 
-# Update System
-RUN dnf -y install epel-release && \
-    dnf -y upgrade
-
-# Install Some Build Dependencies
-RUN dnf group install -y "Development Tools"
-
 # Build The Replication UDF
 ################################################################################
 FROM template as udf_builder
+
+# Install Some Build Dependencies
+RUN dnf install -y gcc
 
 # Change The WORKDIR
 WORKDIR /udf
@@ -44,6 +41,8 @@ USER root
 WORKDIR /opt
 ARG PCRE2_VERSION=10.35
 
+RUN dnf install -y gcc make
+
 # Compile pcre2grep
 RUN curl https://ftp.pcre.org/pub/pcre/pcre2-${PCRE2_VERSION}.tar.gz -o pcre2.tar.gz && \
     tar -xf pcre2.tar.gz && \
@@ -56,8 +55,9 @@ RUN curl https://ftp.pcre.org/pub/pcre/pcre2-${PCRE2_VERSION}.tar.gz -o pcre2.ta
 ################################################################################
 FROM template as main
 
-# Add A SkySQL Specific PATH Entry
-ENV PATH="/mnt/skysql/columnstore-container-scripts:${PATH}"
+# Update System
+RUN dnf -y install epel-release && \
+    dnf -y upgrade
 
 # Copy The Google Cloud SDK Repo To Image
 COPY config/*.repo /etc/yum.repos.d/
