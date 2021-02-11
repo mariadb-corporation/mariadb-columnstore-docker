@@ -1,6 +1,6 @@
 # Columnstore Cluster (SkySQL Version)
 
-### Setup Instructions
+#### Setup Instructions
 
 *   ```git clone https://github.com/mariadb-corporation/columnstore-docker-cluster.git```
 *   ```cd columnstore-docker-cluster```
@@ -21,7 +21,7 @@ Adding listener ... done
 Adding monitor ... done
 ```
 
-### Access Containers
+#### Access Containers
 
 *   PM1: ```docker exec -it mcs1 bash```
 *   PM2: ```docker exec -it mcs2 bash```
@@ -95,7 +95,7 @@ curl -s -X PUT https://127.0.0.1:8640/cmapi/0.4.0/cluster/remove-node --header '
 curl -s -X PUT https://127.0.0.1:8640/cmapi/0.4.0/cluster/mode-set --header 'Content-Type:application/json' --header 'x-api-key:somekey123' --data '{"timeout":20, "mode": "readwrite"}' -k | jq .
 ```
 
-## MaxScale GUI Info
+#### MaxScale GUI Info
 
 *   url: `http://127.0.0.1:8989`
 *   username: `admin`
