@@ -6,6 +6,7 @@
 *   ```cd columnstore-docker-cluster```
 *   Customize the ```.env``` file
 *   ```docker-compose up -d && docker exec -it mcs1 demo```
+
 ```
 Waiting for PM1 to be initialized ................... done
 Adding PM1 to cluster ... done
@@ -19,7 +20,6 @@ Adding service ... done
 Adding listener ... done
 Adding monitor ... done
 ```
-
 
 ### Access Containers
 

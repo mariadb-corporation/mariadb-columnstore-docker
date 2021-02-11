@@ -1,10 +1,10 @@
 #!/bin/bash
 
-export PYTHONPATH=/opt/cmapi/deps
+export PYTHONPATH=/usr/share/columnstore/cmapi/deps
 export LD_PRELOAD=/usr/lib64/libjemalloc.so.2
 
 cmapi_server(){
-    /opt/cmapi/python/bin/python3 -m cmapi_server &> /var/log/mariadb/columnstore/cmapi_server.log &
+    /usr/share/columnstore/cmapi/python/bin/python3 -m cmapi_server &> /var/log/mariadb/columnstore/cmapi_server.log &
 }
 
 StorageManager(){
