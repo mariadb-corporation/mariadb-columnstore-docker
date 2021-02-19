@@ -77,11 +77,6 @@ if [ $USE_S3_STORAGE -eq 1 ]; then
     sed -i "s|# aws_secret_access_key =.*|aws_secret_access_key = $S3_SECRET_ACCESS_KEY|" /etc/columnstore/storagemanager.cnf
     sed -i "s|^gs_access_key_id =.*|gs_access_key_id = $S3_ACCESS_KEY_ID|" /root/.boto
     sed -i "s|^gs_secret_access_key =.*|gs_secret_access_key = $S3_SECRET_ACCESS_KEY|" /root/.boto
-
-    # Clean Out Bucket From Previous Tests (TO BE REMOVED)
-    if [[ $(hostname -s) == "$PM1" ]]; then
-        gsutil -m rm gs://$S3_BUCKET/* > /dev/null 2>&1
-    fi
 fi
 
 # Set Instance Type
