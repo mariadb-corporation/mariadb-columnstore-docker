@@ -340,6 +340,9 @@ fi
 # Clean Remnants
 rm -f /var/lib/mysql/*.err
 
+# Standardize Log Ownership
+chown -R mysql:mysql /var/log/mariadb
+
 # Mark Container Initialized
 touch $IFLAG
 
