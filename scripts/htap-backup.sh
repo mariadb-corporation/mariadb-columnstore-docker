@@ -20,7 +20,7 @@ else
 fi
 
 # Check that we are using S3 storage
-if [ ${USE_S3_STORAGE} -eq 1 ]; then
+if [ ${USE_S3_STORAGE} = true ]; then
     # Set up the correct service account for gsutil
     gcloud auth activate-service-account --key-file /mnt/backup-secrets/backup_admin_account.json
 else
@@ -102,7 +102,7 @@ if [[ $BACKUP_COLUMNSTORE_TABLES == "true" ]]; then
         exit 9
     fi
     echo $RESPONSE
-    
+
     # Stop the replication slave
     mariadb -e 'STOP SLAVE;'
 

@@ -11,13 +11,12 @@ export LD_PRELOAD=$JEMALLOC_PATH
 # Set StorageManager Defaults If Missing
 ASYNC_CONN="${ASYNC_CONN:-0}"
 ANALYTICS_ONLY="${ANALYTICS_ONLY:-0}"
-USE_S3_STORAGE="${USE_S3_STORAGE:-0}"
+USE_S3_STORAGE="${USE_S3_STORAGE:-false}"
 
 # Set Credential Defaults If Missing
 CMAPI_KEY="${CMAPI_KEY:-somekey123}"
 CEJ_USER="${CEJ_USER:-cej}"
 CEJ_PASS="${CEJ_PASS:-C0lumnStore!}"
-CEJ_HOST="${CEJ_HOST:-127.0.0.1}"
 MAX_USER="${MAX_USER:-maxscale}"
 MAX_PASS="${MAX_PASS:-C0lumnStore!}"
 MAX_HOST="${MAX_HOST:-%}"
@@ -59,7 +58,7 @@ EOT
 sed -i "s@^x-api-key.*@x-api-key = '${CMAPI_KEY//&/\\&}'@" /etc/columnstore/cmapi_server.conf
 
 # Storagemanager Configuration
-if [ $USE_S3_STORAGE -eq 1 ]; then
+if [ $USE_S3_STORAGE = true ]; then
     $MCS_INSTALL_BIN/mcsSetConfig Installation DBRootStorageType "storagemanager"
     $MCS_INSTALL_BIN/mcsSetConfig StorageManager Enabled "Y"
     $MCS_INSTALL_BIN/mcsSetConfig SystemConfig DataFilePlugin "libcloudio.so"
@@ -68,13 +67,13 @@ if [ $USE_S3_STORAGE -eq 1 ]; then
         sed -i "s|max_concurrent_uploads = 21|max_concurrent_uploads = 2|" /etc/columnstore/storagemanager.cnf
         sed -i "s|max_concurrent_downloads = 21|max_concurrent_downloads = 10|" /etc/columnstore/storagemanager.cnf
     fi
-    sed -i "s|cache_size = 2g|cache_size = 8g|" /etc/columnstore/storagemanager.cnf
-    sed -i "s|service =.*|service = S3|" /etc/columnstore/storagemanager.cnf
-    sed -i "s|region =.*|region = $S3_REGION|" /etc/columnstore/storagemanager.cnf
-    sed -i "s|bucket =.*|bucket = $S3_BUCKET|" /etc/columnstore/storagemanager.cnf
-    sed -i "s|# endpoint =.*|endpoint = $S3_ENDPOINT|" /etc/columnstore/storagemanager.cnf
-    sed -i "s|# aws_access_key_id =.*|aws_access_key_id = $S3_ACCESS_KEY_ID|" /etc/columnstore/storagemanager.cnf
-    sed -i "s|# aws_secret_access_key =.*|aws_secret_access_key = $S3_SECRET_ACCESS_KEY|" /etc/columnstore/storagemanager.cnf
+    sed -i "s|cache_size = 2g|cache_size = 4g|" /etc/columnstore/storagemanager.cnf
+    sed -i "s|^service =.*|service = S3|" /etc/columnstore/storagemanager.cnf
+    sed -i "s|^region =.*|region = $S3_REGION|" /etc/columnstore/storagemanager.cnf
+    sed -i "s|^bucket =.*|bucket = $S3_BUCKET|" /etc/columnstore/storagemanager.cnf
+    sed -i "s|^# endpoint =.*|endpoint = $S3_ENDPOINT|" /etc/columnstore/storagemanager.cnf
+    sed -i "s|^# aws_access_key_id =.*|aws_access_key_id = $S3_ACCESS_KEY_ID|" /etc/columnstore/storagemanager.cnf
+    sed -i "s|^# aws_secret_access_key =.*|aws_secret_access_key = $S3_SECRET_ACCESS_KEY|" /etc/columnstore/storagemanager.cnf
     sed -i "s|^gs_access_key_id =.*|gs_access_key_id = $S3_ACCESS_KEY_ID|" /root/.boto
     sed -i "s|^gs_secret_access_key =.*|gs_secret_access_key = $S3_SECRET_ACCESS_KEY|" /root/.boto
 fi
@@ -163,13 +162,9 @@ if [[ $(hostname -s) == "$PM1" ]]; then
         # Set Up Cross Engine Join User
         $MCS_INSTALL_BIN/mariadb -e "
             GRANT SELECT
-            ON *.* TO '$CEJ_USER'@'%'
+            ON *.* TO '$CEJ_USER'@'127.0.0.1'
             IDENTIFIED BY '$CEJ_PASS';
-            ALTER USER '$CEJ_USER'@'%' PASSWORD EXPIRE NEVER;
-            GRANT SELECT
-            ON *.* TO '$CEJ_USER'@'localhost'
-            IDENTIFIED BY '$CEJ_PASS';
-            ALTER USER '$CEJ_USER'@'localhost' PASSWORD EXPIRE NEVER;
+            ALTER USER '$CEJ_USER'@'127.0.0.1' PASSWORD EXPIRE NEVER;
         "
         if [ $? -ne 0 ]; then
             echo 'ERROR: During cross engine join user creation.'
@@ -177,7 +172,7 @@ if [[ $(hostname -s) == "$PM1" ]]; then
         fi
         $MCS_INSTALL_BIN/mcsSetConfig CrossEngineSupport User "$CEJ_USER"
         $MCS_INSTALL_BIN/mcsSetConfig CrossEngineSupport Password "$CEJ_PASS"
-        $MCS_INSTALL_BIN/mcsSetConfig CrossEngineSupport Host "$CEJ_HOST"
+        $MCS_INSTALL_BIN/mcsSetConfig CrossEngineSupport Host "127.0.0.1"
         echo 'Cross engine join user created'
 
         # Set Up Admin User
@@ -284,7 +279,7 @@ if [[ $(hostname -s) == "$PM1" ]]; then
     for i in "${PROGS[@]}"; do
         if [ ! -z "$(pidof $i)" ]; then
             echo "Sending SIGTERM to $i"
-            kill "$(pidof $i)" > /dev/null
+            pkill -15 $i > /dev/null
             sleep 3
             counter=1
             while [[ -n $(pidof StorageManager) ]] && [[ $counter -le 60 ]]
@@ -297,7 +292,7 @@ if [[ $(hostname -s) == "$PM1" ]]; then
     for i in "${PROGS[@]}"; do
         if [ ! -z "$(pidof $i)" ]; then
             echo "Sending SIGKILL to $i"
-            kill -9 "$(pidof $i)" > /dev/null
+            pkill -9 $i > /dev/null
             sleep 3
             counter=1
             while [[ -n $(pidof StorageManager) ]] && [[ $counter -le 60 ]]
