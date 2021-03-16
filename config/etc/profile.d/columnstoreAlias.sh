@@ -15,3 +15,5 @@ alias mcsModule='cat /var/lib/columnstore/local/module'
 alias mcsStatus="curl -s https://$mcspm1host:8640/cmapi/0.4.0/cluster/status --header 'Content-Type:application/json' --header 'x-api-key:$mcsapikey' -k | jq ."
 alias mcsStart="curl -s -X PUT https://$mcspm1host:8640/cmapi/0.4.0/cluster/start --header 'Content-Type:application/json' --header 'x-api-key:$mcsapikey' --data '{\"timeout\":60}' -k | jq ."
 alias mcsShutdown="curl -s -X PUT https://$mcspm1host:8640/cmapi/0.4.0/cluster/shutdown --header 'Content-Type:application/json' --header 'x-api-key:$mcsapikey' --data '{\"timeout\":60}' -k | jq ."
+alias mcsReadOnly="curl -s -X PUT https://$mcspm1host:8640/cmapi/0.4.0/cluster/mode-set --header 'Content-Type:application/json' --header 'x-api-key:$mcsapikey' --data '{\"timeout\":20, \"mode\": \"readonly\"}' -k | jq ."
+alias mcsReadWrite="curl -s -X PUT https://$mcspm1host:8640/cmapi/0.4.0/cluster/mode-set --header 'Content-Type:application/json' --header 'x-api-key:$mcsapikey' --data '{\"timeout\":20, \"mode\": \"readwrite\"}' -k | jq ."
