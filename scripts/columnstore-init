@@ -227,12 +227,13 @@ if [[ $(hostname -s) == "$PM1" ]]; then
             exit 1
         fi
         $MCS_INSTALL_BIN/mariadb -e "
-            GRANT SELECT ON mysql.user TO '$MAX_USER'@'$MAX_HOST';
-            GRANT SELECT ON mysql.db TO '$MAX_USER'@'$MAX_HOST';
-            GRANT SELECT ON mysql.tables_priv TO '$MAX_USER'@'$MAX_HOST';
             GRANT SELECT ON mysql.columns_priv TO '$MAX_USER'@'$MAX_HOST';
+            GRANT SELECT ON mysql.db TO '$MAX_USER'@'$MAX_HOST';
+            GRANT SELECT ON mysql.procs_priv TO '$MAX_USER'@'$MAX_HOST';
             GRANT SELECT ON mysql.proxies_priv TO '$MAX_USER'@'$MAX_HOST';
             GRANT SELECT ON mysql.roles_mapping TO '$MAX_USER'@'$MAX_HOST';
+            GRANT SELECT ON mysql.tables_priv TO '$MAX_USER'@'$MAX_HOST';
+            GRANT SELECT ON mysql.user TO '$MAX_USER'@'$MAX_HOST';
         "
         if [ $? -ne 0 ]; then
             echo "ERROR: Granting SELECT to '$MAX_USER'@'$MAX_HOST'."
