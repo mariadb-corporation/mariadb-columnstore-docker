@@ -9,8 +9,8 @@ JEMALLOC_PATH='/usr/lib64/libjemalloc.so.2'
 export LD_PRELOAD=$JEMALLOC_PATH
 
 # Set StorageManager Defaults If Missing
-ASYNC_CONN="${ASYNC_CONN:-0}"
-ANALYTICS_ONLY="${ANALYTICS_ONLY:-0}"
+ASYNC_CONN="${ASYNC_CONN:-false}"
+ANALYTICS_ONLY="${ANALYTICS_ONLY:-false}"
 USE_S3_STORAGE="${USE_S3_STORAGE:-false}"
 
 # Set Credential Defaults If Missing
@@ -58,11 +58,11 @@ EOT
 sed -i "s@^x-api-key.*@x-api-key = '${CMAPI_KEY//&/\\&}'@" /etc/columnstore/cmapi_server.conf
 
 # Storagemanager Configuration
-if [ $USE_S3_STORAGE = true ]; then
+if [ $USE_S3_STORAGE = true ] || [ $USE_S3_STORAGE -eq 1 ]; then
     $MCS_INSTALL_BIN/mcsSetConfig Installation DBRootStorageType "storagemanager"
     $MCS_INSTALL_BIN/mcsSetConfig StorageManager Enabled "Y"
     $MCS_INSTALL_BIN/mcsSetConfig SystemConfig DataFilePlugin "libcloudio.so"
-    if [ $ASYNC_CONN -eq 1 ]; then
+    if [ $ASYNC_CONN = true ] || [ $ASYNC_CONN -eq 1 ]; then
         sed -i "s|object_size = 5M|object_size = 2M|" /etc/columnstore/storagemanager.cnf
         sed -i "s|max_concurrent_uploads = 21|max_concurrent_uploads = 2|" /etc/columnstore/storagemanager.cnf
         sed -i "s|max_concurrent_downloads = 21|max_concurrent_downloads = 10|" /etc/columnstore/storagemanager.cnf
@@ -79,7 +79,7 @@ if [ $USE_S3_STORAGE = true ]; then
 fi
 
 # Set Instance Type
-if [ $ANALYTICS_ONLY -eq 1 ]; then
+if [ $ANALYTICS_ONLY = true ] || [ $ANALYTICS_ONLY -eq 1 ]; then
     echo '' >> /etc/my.cnf.d/columnstore.cnf
     echo 'default_storage_engine=Columnstore' >> /etc/my.cnf.d/columnstore.cnf
     echo 'enforce_storage_engine=Columnstore' >> /etc/my.cnf.d/columnstore.cnf

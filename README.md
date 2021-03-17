@@ -34,9 +34,11 @@ Adding monitor ... done
 *   `dbrm` Change directory to /var/lib/columnstore/data1/systemFiles/dbrm
 *   `extentSave` Backup extent map
 *   `mcsModule` View current module name
+*   `mcsReadOnly` Set cluster to Read-Only mode via CMAPI
+*   `mcsReadWrite` Set cluster to Read-Write mode via CMAPI
+*   `mcsShutdown` Shutdown cluster via CMAPI
 *   `mcsStart` Start cluster via CMAPI
 *   `mcsStatus` Get cluster status via CMAPI
-*   `mcsShutdown` Shutdown cluster via CMAPI
 *   `tcrit` Tail crit.log
 *   `tdebug` Tail debug.log
 *   `terror` Tail error.log
