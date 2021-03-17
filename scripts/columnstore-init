@@ -342,7 +342,7 @@ rm -f /var/lib/mysql/*.err
 
 # Standardize Log Ownership
 chown -R root:mysql /var/log/mariadb
-chmod g+ws /var/log/mariadb
+find /var/log/mariadb/ -type d -exec chmod g+ws {} \;
 
 # Mark Container Initialized
 touch $IFLAG
