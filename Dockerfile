@@ -122,7 +122,7 @@ RUN dnf -y install \
 # Copy Config Files & Scripts To Image
 COPY --from=udf_builder /udf/replication.so /usr/lib64/mysql/plugin/replication.so
 COPY --from=pcre2grep-builder /opt/pcre2grep /usr/bin/pcre2grep
-COPY --from=mariadb_skysql_backup-builder /opt/mariadb/skysql-backup /opt/bin/skysql-backup
+COPY --from=mariadb_skysql_backup-builder /opt/mariadb/skysql-backup /usr/bin/skysql-backup
 COPY config/etc/ /etc/
 COPY config/.boto /root/.boto
 COPY scripts/demo \
