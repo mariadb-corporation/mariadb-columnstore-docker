@@ -15,20 +15,9 @@ ADD https://dlm.mariadb.com/enterprise-release-helpers/mariadb_es_repo_setup /tm
 RUN chmod +x /tmp/mariadb_es_repo_setup && \
     /tmp/mariadb_es_repo_setup --mariadb-server-version=${MARIADB_VERSION} --token=${MARIADB_ENTERPRISE_TOKEN} --apply
 
-# Compile skysql-backup To Be Added As It's Needed For Backup/Restore
+# skysql-backup To Be Added As It's Needed For InnoDB's Backup/Restore
 ################################################################################
-FROM golang:1.13.7-alpine as mariadb_skysql_backup-builder
-
-ARG SKYSQL_BACKUP_GITHUB_TOKEN
-ARG REPO=skysql-backup
-ARG OWNER=mariadb-corporation
-ARG SKYSQL_BACKUP_VERSION=0.2.6
-
-WORKDIR /opt/mariadb/
-COPY build_scripts/gh-dl-release.go /opt/gh-dl-release.go
-RUN go run /opt/gh-dl-release.go -token=${SKYSQL_BACKUP_GITHUB_TOKEN} -repo=${OWNER}/${REPO} -version=v${SKYSQL_BACKUP_VERSION} -file="${REPO}_${SKYSQL_BACKUP_VERSION}_linux_amd64.tar.gz"\
-  && tar -xvf ${REPO}_${SKYSQL_BACKUP_VERSION}_linux_amd64.tar.gz \
-  && rm ${REPO}_${SKYSQL_BACKUP_VERSION}_linux_amd64.tar.gz /opt/gh-dl-release.go
+FROM mariadb/skysql-backup:v0.2.8 as mariadb_skysql_backup-builder
 
 # Build The Replication UDF
 ################################################################################
@@ -122,7 +111,7 @@ RUN dnf -y install \
 # Copy Config Files & Scripts To Image
 COPY --from=udf_builder /udf/replication.so /usr/lib64/mysql/plugin/replication.so
 COPY --from=pcre2grep-builder /opt/pcre2grep /usr/bin/pcre2grep
-COPY --from=mariadb_skysql_backup-builder /opt/mariadb/skysql-backup /usr/bin/skysql-backup
+COPY --from=mariadb_skysql_backup-builder /bin/skysql-backup /usr/bin/skysql-backup
 COPY config/etc/ /etc/
 COPY config/.boto /root/.boto
 COPY scripts/demo \
