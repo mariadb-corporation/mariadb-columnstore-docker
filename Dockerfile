@@ -15,6 +15,10 @@ ADD https://dlm.mariadb.com/enterprise-release-helpers/mariadb_es_repo_setup /tm
 RUN chmod +x /tmp/mariadb_es_repo_setup && \
     /tmp/mariadb_es_repo_setup --mariadb-server-version=${MARIADB_VERSION} --token=${MARIADB_ENTERPRISE_TOKEN} --apply
 
+# skysql-backup To Be Added As It's Needed For InnoDB's Backup/Restore
+################################################################################
+FROM mariadb/skysql-backup:v0.2.8 as mariadb_skysql_backup-builder
+
 # Build The Replication UDF
 ################################################################################
 FROM template as udf_builder
@@ -33,7 +37,7 @@ COPY replication_udf/* /udf/
 # Compile The UDF
 RUN gcc -fPIC -shared -o replication.so cJSON.c replication.c `mariadb_config --include` -lcurl -lm `mariadb_config --libs`
 
-# Compile pcre2grep As It's Needed Ror HTAP's Backup/Restore
+# Compile pcre2grep As It's Needed For HTAP's Backup/Restore
 ################################################################################
 FROM template as pcre2grep-builder
 
@@ -107,6 +111,7 @@ RUN dnf -y install \
 # Copy Config Files & Scripts To Image
 COPY --from=udf_builder /udf/replication.so /usr/lib64/mysql/plugin/replication.so
 COPY --from=pcre2grep-builder /opt/pcre2grep /usr/bin/pcre2grep
+COPY --from=mariadb_skysql_backup-builder /bin/skysql-backup /usr/bin/skysql-backup
 COPY config/etc/ /etc/
 COPY config/.boto /root/.boto
 COPY scripts/demo \
@@ -114,12 +119,16 @@ COPY scripts/demo \
      scripts/cmapi-start \
      scripts/cmapi-stop \
      scripts/cmapi-restart \
-     scripts/columnstore-backup.sh \
-     scripts/columnstore-restore.sh \
-     scripts/htap-backup.sh \
-     scripts/htap-restore.sh \
      scripts/skysql-specific-startup.sh \
-     scripts/mcs-process /usr/bin/
+     scripts/mcs-process \
+     backup_restore/columnstore-backup.sh \
+     backup_restore/columnstore_engine_restore.sh \
+     backup_restore/columnstore-restore.sh \
+     backup_restore/htap-backup.sh \
+     backup_restore/htap-restore.sh \
+     backup_restore/innodb_engine_restore.sh \
+     backup_restore/mariabackup-10.4 \
+     backup_restore/restore_user_credentials.sh /usr/bin/
 
 # Add Tini Init Process
 ADD https://github.com/krallin/tini/releases/download/${TINI_VERSION}/tini /usr/bin/tini
@@ -131,12 +140,16 @@ RUN chmod +x /usr/bin/tini \
     /usr/bin/cmapi-start \
     /usr/bin/cmapi-stop \
     /usr/bin/cmapi-restart \
+    /usr/bin/skysql-specific-startup.sh \
+    /usr/bin/mcs-process \
     /usr/bin/columnstore-backup.sh \
+    /usr/bin/columnstore_engine_restore.sh \
     /usr/bin/columnstore-restore.sh \
     /usr/bin/htap-backup.sh \
     /usr/bin/htap-restore.sh \
-    /usr/bin/skysql-specific-startup.sh \
-    /usr/bin/mcs-process
+    /usr/bin/innodb_engine_restore.sh \
+    /usr/bin/mariabackup-10.4 \
+    /usr/bin/restore_user_credentials.sh
 
 # Stream Edit Monit Config
 RUN sed -i 's|set daemon\s.30|set daemon 5|g' /etc/monitrc && \
