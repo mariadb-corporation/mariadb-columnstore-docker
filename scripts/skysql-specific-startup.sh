@@ -60,7 +60,7 @@ function add-node-to-cluster() {
         curl -X GET -u ${MAXSCALE_API_USERNAME}:${MAXSCALE_API_PASSWORD} ${RELEASE_NAME}-mariadb-maxscale:8989/v1/servers/$SHORT_DNS_NAME --fail 2>/dev/null >/dev/null
         if [ $? -ne 0 ]; then
             echo "Adding server $SHORT_DNS_NAME to MaxScale"
-            curl -X POST -u ${MAXSCALE_API_USERNAME}:${MAXSCALE_API_PASSWORD} ${RELEASE_NAME}-mariadb-maxscale:8989/v1/servers -d '{"data":{"id":"'$SHORT_DNS_NAME'","type":"servers","attributes":{"parameters":{"address":"'$SHORT_DNS_NAME'","protocol":"MariaDBBackend","proxy_protocol":"true"}},"relationships":{"services":{"data":[{"id":"Read-Write-Service","type":"services"}]},"monitors":{"data":[{"id":"MariaDB-Monitor","type":"monitors"}]}}}}'
+            curl -X POST -u ${MAXSCALE_API_USERNAME}:${MAXSCALE_API_PASSWORD} ${RELEASE_NAME}-mariadb-maxscale:8989/v1/servers -d '{"data":{"id":"'$SHORT_DNS_NAME'","type":"servers","attributes":{"parameters":{"address":"'$SHORT_DNS_NAME'","protocol":"MariaDBBackend","proxy_protocol":true}},"relationships":{"services":{"data":[{"id":"Read-Write-Service","type":"services"}]},"monitors":{"data":[{"id":"MariaDB-Monitor","type":"monitors"}]}}}}'
         fi
     fi
 
