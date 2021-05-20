@@ -161,7 +161,7 @@ if [[ $(hostname -s) == "$PM1" ]]; then
 
         # Set Up Cross Engine Join User
         $MCS_INSTALL_BIN/mariadb -e "
-            GRANT SELECT
+            GRANT SELECT, PROCESS
             ON *.* TO '$CEJ_USER'@'127.0.0.1'
             IDENTIFIED BY '$CEJ_PASS';
             ALTER USER '$CEJ_USER'@'127.0.0.1' PASSWORD EXPIRE NEVER;
