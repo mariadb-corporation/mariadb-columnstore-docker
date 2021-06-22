@@ -40,7 +40,7 @@ function add-node-to-cluster() {
     # Adding node to ColumnStore cluster
     echo ""
     echo "Adding node $DNS_NAME to the ColumnStore cluster"
-    curl -s -X PUT "https://$PM1_DNS:8640/cmapi/0.4.0/cluster/add-node" --header 'Content-Type:application/json' --header "x-api-key:$CMAPI_KEY" --data "{\"timeout\":60, \"node\": \"$DNS_NAME\"}" -k | jq .
+    curl -s -X PUT "https://$PM1_DNS:8640/cmapi/0.4.0/cluster/node" --header 'Content-Type:application/json' --header "x-api-key:$CMAPI_KEY" --data "{\"timeout\":60, \"node\": \"$DNS_NAME\"}" -k | jq .
     curl -s https://$PM1_DNS:8640/cmapi/0.4.0/cluster/status --header 'Content-Type:application/json' --header "x-api-key:$CMAPI_KEY" -k | jq .
 
     if [ $CLUSTER_TOPOLOGY == "columnstore" ]; then
