@@ -28,7 +28,7 @@ PAYLOAD7='{"data":{"id":"mcs_service","type":"services","attributes":{"router":"
 PAYLOAD8='{"data":{"id":"mcs_listener","type":"listeners","attributes":{"parameters":{"protocol":"MariaDBClient","port":3306}},"relationships":{"services":{"data":[{"id":"mcs_service","type":"services"}]}}}}'
 PAYLOAD9='{"data":{"id":"mcs_monitor","type":"monitors","attributes":{"module":"mariadbmon","parameters":{"monitor_interval":1000,"user":"'$MAX_USER'","password":"'$MAX_PASS'","replication_user":"'$REP_USER'","replication_password":"'$REP_PASS'","detect_replication_lag":true,"enforce_read_only_slaves":true,"auto_failover":true,"auto_rejoin":true}},"relationships":{"servers":{"data":[{"id":"pm1","type":"servers"},{"id":"pm2","type":"servers"},{"id":"pm3","type":"servers"}]}}}}'
 
-RESOURCE1='add-node'
+RESOURCE1='node'
 RESOURCE2='servers'
 RESOURCE3='services'
 RESOURCE4='listeners'
