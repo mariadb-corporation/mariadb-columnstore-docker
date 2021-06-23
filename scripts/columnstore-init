@@ -12,6 +12,7 @@ export LD_PRELOAD=$JEMALLOC_PATH
 ASYNC_CONN="${ASYNC_CONN:-false}"
 ANALYTICS_ONLY="${ANALYTICS_ONLY:-false}"
 USE_S3_STORAGE="${USE_S3_STORAGE:-false}"
+PM1="${PM1:-127.0.0.1}"
 
 # Set Credential Defaults If Missing
 CMAPI_KEY="${CMAPI_KEY:-somekey123}"
