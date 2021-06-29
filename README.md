@@ -58,8 +58,7 @@ https://{server}:{port}/cmapi/{version}/{route}/{command}
 *   `https://127.0.0.1:8640/cmapi/0.4.0/cluster/status`
 *   `https://127.0.0.1:8640/cmapi/0.4.0/cluster/start`
 *   `https://127.0.0.1:8640/cmapi/0.4.0/cluster/shutdown`
-*   `https://127.0.0.1:8640/cmapi/0.4.0/cluster/add-node`
-*   `https://127.0.0.1:8640/cmapi/0.4.0/cluster/remove-node`
+*   `https://127.0.0.1:8640/cmapi/0.4.0/cluster/node`
 *   `https://127.0.0.1:8640/cmapi/0.4.0/cluster/mode-set`
 
 ##### Request Headers Needed:

@@ -11,7 +11,7 @@ export LD_PRELOAD=$JEMALLOC_PATH
 # Set StorageManager Defaults If Missing
 ASYNC_CONN="${ASYNC_CONN:-false}"
 ANALYTICS_ONLY="${ANALYTICS_ONLY:-false}"
-USE_S3_STORAGE="${USE_S3_STORAGE:-false}"
+USE_S3_STORAGE="${USE_S3_STORAGE:-true}"
 
 # Set Credential Defaults If Missing
 CMAPI_KEY="${CMAPI_KEY:-somekey123}"
@@ -26,6 +26,7 @@ REP_HOST="${REP_HOST:-%}"
 
 # Set network defaults for SkySQL
 SKYSQL_INITIALIZATION="${SKYSQL_INITIALIZATION:-0}"
+
 if [ -z $PM1_DNS ]; then
     PM1_DNS=$PM1
 fi
@@ -58,11 +59,11 @@ EOT
 sed -i "s@^x-api-key.*@x-api-key = '${CMAPI_KEY//&/\\&}'@" /etc/columnstore/cmapi_server.conf
 
 # Storagemanager Configuration
-if [ $USE_S3_STORAGE = true ] || [ $USE_S3_STORAGE -eq 1 ]; then
+if [ $USE_S3_STORAGE = true ]; then
     $MCS_INSTALL_BIN/mcsSetConfig Installation DBRootStorageType "storagemanager"
     $MCS_INSTALL_BIN/mcsSetConfig StorageManager Enabled "Y"
     $MCS_INSTALL_BIN/mcsSetConfig SystemConfig DataFilePlugin "libcloudio.so"
-    if [ $ASYNC_CONN = true ] || [ $ASYNC_CONN -eq 1 ]; then
+    if [ $ASYNC_CONN = true ]; then
         sed -i "s|object_size = 5M|object_size = 2M|" /etc/columnstore/storagemanager.cnf
         sed -i "s|max_concurrent_uploads = 21|max_concurrent_uploads = 2|" /etc/columnstore/storagemanager.cnf
         sed -i "s|max_concurrent_downloads = 21|max_concurrent_downloads = 10|" /etc/columnstore/storagemanager.cnf
@@ -79,7 +80,7 @@ if [ $USE_S3_STORAGE = true ] || [ $USE_S3_STORAGE -eq 1 ]; then
 fi
 
 # Set Instance Type
-if [ $ANALYTICS_ONLY = true ] || [ $ANALYTICS_ONLY -eq 1 ]; then
+if [ $ANALYTICS_ONLY = true ]; then
     echo '' >> /etc/my.cnf.d/columnstore.cnf
     echo 'default_storage_engine=Columnstore' >> /etc/my.cnf.d/columnstore.cnf
     echo 'enforce_storage_engine=Columnstore' >> /etc/my.cnf.d/columnstore.cnf
