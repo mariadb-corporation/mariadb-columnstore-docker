@@ -153,8 +153,7 @@ RUN chmod +x /usr/bin/tini \
 
 # Stream Edit Some Configs
 RUN sed -i 's|set daemon\s.30|set daemon 5|g' /etc/monitrc && \
-    sed -i 's|#.*with start delay\s.*240|  with start delay 60|' /etc/monitrc && \
-    sed -i '126s/smcat/SMCAT/g' /usr/bin/mcs-loadbrm.py
+    sed -i 's|#.*with start delay\s.*240|  with start delay 60|' /etc/monitrc
 
 # Add A Configuration Directory To my.cnf That Can Be Mounted By SkySQL & Disable The ed25519 Auth Plugin (DBAAS-2701)
 RUN echo '!includedir /mnt/skysql/columnstore-container-configuration' >> /etc/my.cnf && \
