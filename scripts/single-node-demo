@@ -1,0 +1,58 @@
+#!/bin/bash
+
+CMAPI_KEY="${CMAPI_KEY:-somekey123}"
+IFLAG='/etc/columnstore/container-initialized'
+
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+NC='\033[0m'
+
+CMAPI="curl --write-out '%{http_code}' --silent --output /dev/null -X PUT https://${PM1}:8640/cmapi/0.4.0/cluster"
+
+HEADER1="'Content-Type:application/json'"
+HEADER2="'x-api-key:$CMAPI_KEY'"
+
+PAYLOAD1='{"timeout":60, "node": "'$PM1'"}'
+
+RESOURCE1='node'
+
+MODULES=("$CMAPI/$RESOURCE1 --header $HEADER1 --header $HEADER2 --data '$PAYLOAD1' -k")
+
+# Wait For Primary Node To Start
+if [ ! -f $IFLAG ]; then
+    echo -n 'Waiting for PM1 to be initialized '
+    while [ ! -f $IFLAG ]
+    do
+        printf "."
+        sleep 2
+    done
+    printf " ${GREEN}done${NC}\n"
+fi
+
+sleep 3
+
+# Add Node To Cluster
+count=1
+for i in "${MODULES[@]}"
+do
+    RESULT1=$(bash -c "$i")
+    if [[ "$RESULT1" == 200 ]]; then
+        printf "Adding PM$count to cluster ... ${GREEN}done${NC}\n"
+    else
+        printf "Adding PM$count to cluster ... ${RED}fail${NC}\n"
+        exit 1
+    fi
+    (( count++ ))
+done
+
+sleep 5
+
+# Validate
+QUERY=$(mariadb -sN -e "DROP DATABASE IF EXISTS validate; CREATE DATABASE validate; CREATE TABLE validate.sample (id INT) ENGINE=columnstore; INSERT INTO validate.sample VALUES (99); SELECT id FROM validate.sample;" 2>&1)
+if [ $? = 0 ] && [ $QUERY = 99 ]; then
+    printf "Validating ... ${GREEN}done${NC}\n"
+    mariadb -e "DROP DATABASE IF EXISTS validate;" 2>&1
+else
+    printf "Validating ... ${RED}fail${NC}\n"
+    exit 1
+fi

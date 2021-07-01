@@ -114,7 +114,8 @@ COPY --from=pcre2grep-builder /opt/pcre2grep /usr/bin/pcre2grep
 COPY --from=mariadb_skysql_backup-builder /bin/skysql-backup /usr/bin/skysql-backup
 COPY config/etc/ /etc/
 COPY config/.boto /root/.boto
-COPY scripts/demo \
+COPY scripts/single-node-demo \
+     scripts/cluster-demo \
      scripts/columnstore-init \
      scripts/cmapi-start \
      scripts/cmapi-stop \
@@ -135,7 +136,8 @@ ADD https://github.com/krallin/tini/releases/download/${TINI_VERSION}/tini /usr/
 
 # Make Scripts Executable
 RUN chmod +x /usr/bin/tini \
-    /usr/bin/demo \
+    /usr/bin/single-node-demo \
+    /usr/bin/cluster-demo \
     /usr/bin/columnstore-init \
     /usr/bin/cmapi-start \
     /usr/bin/cmapi-stop \
