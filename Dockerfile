@@ -106,7 +106,8 @@ RUN dnf -y install \
      MariaDB-backup \
      MariaDB-cracklib-password-check \
      MariaDB-columnstore-engine \
-     mariadb-columnstore-cmapi
+     #mariadb-columnstore-cmapi
+     https://cspkg.s3.amazonaws.com/cmapi/pr/523/MariaDB-columnstore-cmapi-1.4.x86_64.rpm
 
 # Copy Config Files & Scripts To Image
 COPY --from=udf_builder /udf/replication.so /usr/lib64/mysql/plugin/replication.so

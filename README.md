@@ -5,7 +5,7 @@
 *   ```git clone https://github.com/mariadb-corporation/columnstore-docker-cluster.git```
 *   ```cd columnstore-docker-cluster```
 *   Customize the ```.env``` file
-*   ```docker-compose up -d && docker exec -it mcs1 demo```
+*   ```docker-compose up -d && docker exec -it mcs1 cluster-demo```
 
 ```
 Waiting for PM1 to be initialized ................... done
