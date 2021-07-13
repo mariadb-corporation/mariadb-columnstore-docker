@@ -1,6 +1,7 @@
 #!/bin/bash
 
 # Set Variables
+COLXML='/etc/columnstore/Columnstore.xml'
 IFLAG='/etc/columnstore/container-initialized'
 LOG_PREFIX='/var/log/mariadb/columnstore'
 MCS_INSTALL_BIN='/usr/bin'
@@ -28,8 +29,8 @@ if [ -f /sys/fs/cgroup/memory/memory.limit_in_bytes ] && [ "$(cat /sys/fs/cgroup
 fi
 
 # Performance Tuning
-$MCS_INSTALL_BIN/mcsSetConfig HashJoin TotalUmMemory "$TOTALUMMEMORY" 2> /dev/null
-$MCS_INSTALL_BIN/mcsSetConfig DBBC NumBlocksPct "$NUMBLOCKSPCT" 2> /dev/null
+xmlstarlet ed -L -u '/Columnstore/HashJoin/TotalUmMemory' -v "$TOTALUMMEMORY" $COLXML
+xmlstarlet ed -L -u '/Columnstore/DBBC/NumBlocksPct' -v "$NUMBLOCKSPCT" $COLXML
 
 # Workaround for MCOL-4265
 chmod 755 /tmp/columnstore_tmp_files

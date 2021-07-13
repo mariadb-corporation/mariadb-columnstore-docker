@@ -91,7 +91,8 @@ RUN dnf -y install bind-utils \
     sudo \
     tcl \
     vim \
-    wget
+    wget \
+    xmlstarlet
 
 # Default Locale Variables
 ENV LC_ALL=en_US.UTF-8
