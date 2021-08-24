@@ -5,7 +5,7 @@ FROM centos:8 as template
 
 # Define ENV Variables
 ENV TINI_VERSION=v0.18.0
-ENV MARIADB_VERSION=10.5
+ENV MARIADB_VERSION=10.6
 ENV MARIADB_ENTERPRISE_TOKEN=deaa8829-2a00-4b1a-a99c-847e772f6833
 ENV PATH="/mnt/skysql/columnstore-container-scripts:${PATH}"
 
@@ -13,7 +13,8 @@ ENV PATH="/mnt/skysql/columnstore-container-scripts:${PATH}"
 ADD https://dlm.mariadb.com/enterprise-release-helpers/mariadb_es_repo_setup /tmp
 
 RUN chmod +x /tmp/mariadb_es_repo_setup && \
-    /tmp/mariadb_es_repo_setup --mariadb-server-version=${MARIADB_VERSION} --token=${MARIADB_ENTERPRISE_TOKEN} --apply
+    /tmp/mariadb_es_repo_setup --mariadb-server-version=${MARIADB_VERSION} --token=${MARIADB_ENTERPRISE_TOKEN} --apply && \
+    sed -i "s/enterprise-server/enterprise-staging/" /etc/yum.repos.d/mariadb.repo
 
 # skysql-backup To Be Added As It's Needed For InnoDB's Backup/Restore
 ################################################################################
@@ -76,6 +77,7 @@ RUN dnf -y install bind-utils \
     git \
     glibc-langpack-en \
     google-cloud-sdk \
+    htop \
     jemalloc \
     jq \
     less \
@@ -107,8 +109,7 @@ RUN dnf -y install \
      MariaDB-backup \
      MariaDB-cracklib-password-check \
      MariaDB-columnstore-engine \
-     #mariadb-columnstore-cmapi
-     https://cspkg.s3.amazonaws.com/cmapi/pr/523/MariaDB-columnstore-cmapi-1.4.x86_64.rpm
+     MariaDB-columnstore-cmapi
 
 # Copy Config Files & Scripts To Image
 COPY --from=udf_builder /udf/replication.so /usr/lib64/mysql/plugin/replication.so

@@ -1,6 +1,6 @@
 # Columnstore Cluster (SkySQL Version)
 
-#### Setup Instructions
+#### Cluster Setup Instructions
 
 *   ```git clone https://github.com/mariadb-corporation/columnstore-docker-cluster.git```
 *   ```cd columnstore-docker-cluster```
@@ -19,6 +19,17 @@ Adding PM1 to MaxScale ... done
 Adding service ... done
 Adding listener ... done
 Adding monitor ... done
+```
+
+#### Single Node Setup Instructions
+
+*   ```docker run -d -e PM1=mcs1 --hostname=mcs1 --name mcs1 mariadb/skysql-enterprise-columnstore-handoff:sky-6.1.1-GA```
+*   ```docker exec -it mcs1 single-node-demo```
+
+```
+Waiting for PM1 to be initialized ..... done
+Adding PM1 to cluster ... done
+Validating ... done
 ```
 
 #### Access Containers
