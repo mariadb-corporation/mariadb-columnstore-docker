@@ -101,7 +101,7 @@ ENV LC_ALL=en_US.UTF-8
 ENV LANG=en_US.UTF-8
 ENV LANGUAGE=en_US.UTF-8
 
-# Install MariaDB Packages
+# Install MariaDB Packages & Load Time Zone Info
 RUN dnf -y install \
      MariaDB-shared \
      MariaDB-client \
@@ -109,7 +109,10 @@ RUN dnf -y install \
      MariaDB-backup \
      MariaDB-cracklib-password-check \
      MariaDB-columnstore-engine \
-     MariaDB-columnstore-cmapi
+     MariaDB-columnstore-cmapi && \
+     /usr/share/mysql/mysql.server start && \
+     mysql_tzinfo_to_sql /usr/share/zoneinfo | mariadb mysql && \
+     /usr/share/mysql/mysql.server stop
 
 # Copy Config Files & Scripts To Image
 COPY --from=udf_builder /udf/replication.so /usr/lib64/mysql/plugin/replication.so
