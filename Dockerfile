@@ -68,7 +68,8 @@ RUN dnf -y install epel-release && \
 COPY config/*.repo /etc/yum.repos.d/
 
 # Install Various Packages/Tools
-RUN dnf -y install bind-utils \
+RUN dnf -y install awscli \
+    bind-utils \
     bc \
     boost \
     cracklib \
