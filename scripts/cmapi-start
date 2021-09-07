@@ -44,7 +44,7 @@ PYTHONPATH=/usr/share/columnstore/cmapi/deps /usr/share/columnstore/cmapi/python
 echo CMAPI PID = $!
 
 # Start MariaDB
-/usr/share/mysql/mysql.server start
+/usr/share/mysql/mysql.server restart
 
 if [ $SKYSQL_INITIALIZATION -eq 1 ]; then
     # Execute the SkySQL specific startup and initialization steps
