@@ -7,7 +7,7 @@ PM1=$(mcsGetConfig PMS1 IPaddr)
 CMAPI_KEY=$(grep -r 'x-api-key' $CMAPICFG | cut -d= -f2- | xargs)
 CMAPI="curl --write-out '%{http_code}' --silent --output /dev/null -X PUT https://${PM1}:8640/cmapi/0.4.0/cluster"
 HEADER="--header 'Content-Type:application/json' --header 'x-api-key:$CMAPI_KEY'"
-PAYLOAD="--data {\"timeout\":60}"
+PAYLOAD="--data '{\"timeout\":60}'"
 MCSSTART="$CMAPI/start $HEADER $PAYLOAD -k"
 IFLAG='/etc/columnstore/container-initialized'
 LOG_PREFIX='/var/log/mariadb/columnstore'
