@@ -1,7 +1,14 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
-# Set Variables
+# Set Some Variables
 COLXML='/etc/columnstore/Columnstore.xml'
+CMAPICFG='/etc/columnstore/cmapi_server.conf'
+PM1=$(mcsGetConfig PMS1 IPaddr)
+CMAPI_KEY=$(grep -r 'x-api-key' $CMAPICFG | cut -d= -f2- | xargs)
+CMAPI="curl --write-out '%{http_code}' --silent --output /dev/null -X PUT https://${PM1}:8640/cmapi/0.4.0/cluster"
+HEADER="--header 'Content-Type:application/json' --header 'x-api-key:$CMAPI_KEY'"
+PAYLOAD="--data {\"timeout\":60}"
+MCSSTART="$CMAPI/start $HEADER $PAYLOAD -k"
 IFLAG='/etc/columnstore/container-initialized'
 LOG_PREFIX='/var/log/mariadb/columnstore'
 MCS_INSTALL_BIN='/usr/bin'
@@ -32,23 +39,23 @@ fi
 xmlstarlet ed -L -u '/Columnstore/HashJoin/TotalUmMemory' -v "$TOTALUMMEMORY" $COLXML
 xmlstarlet ed -L -u '/Columnstore/DBBC/NumBlocksPct' -v "$NUMBLOCKSPCT" $COLXML
 
-# Workaround for MCOL-4265
-chmod 755 /tmp/columnstore_tmp_files
-
-# Start cmapi
-echo 'Starting Cluster Manager API...'
-
+# Start CMAPI
 touch $LOG_PREFIX/cmapi_server.log && chmod 666 $LOG_PREFIX/cmapi_server.log
 cd /usr/share/columnstore/cmapi || exit
 PYTHONPATH=/usr/share/columnstore/cmapi/deps /usr/share/columnstore/cmapi/python/bin/python3 -m cmapi_server &> $LOG_PREFIX/cmapi_server.log &
 echo CMAPI PID = $!
 
-# Start MariaDB
-/usr/share/mysql/mysql.server restart
+# Start MariaDB & Columnstore
+/usr/share/mysql/mysql.server start
 
+# Calling Start Function Of API
+if [ -e $IFLAG ]; then
+    bash -c "$MCSSTART"
+fi
+
+# Execute The SkySQL Specific Startup Script
 if [ $SKYSQL_INITIALIZATION -eq 1 ]; then
-    # Execute the SkySQL specific startup and initialization steps
-    /usr/bin/skysql-specific-startup.sh
+    $MCS_INSTALL_BIN/skysql-specific-startup.sh
 fi
 
 exit 0
