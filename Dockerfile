@@ -1,7 +1,7 @@
 # vim:set ft=dockerfile:
 
 # Setup A Template Image
-FROM centos:8 as template
+FROM rockylinux/rockylinux:8 as template
 
 # Define ENV Variables
 ENV TINI_VERSION=v0.18.0
