@@ -3,12 +3,6 @@
 # Set Some Variables
 COLXML='/etc/columnstore/Columnstore.xml'
 CMAPICFG='/etc/columnstore/cmapi_server.conf'
-PM1=$(mcsGetConfig PMS1 IPaddr)
-CMAPI_KEY=$(grep -r 'x-api-key' $CMAPICFG | cut -d= -f2- | xargs)
-CMAPI="curl --write-out '%{http_code}' --silent --output /dev/null -X PUT https://${PM1}:8640/cmapi/0.4.0/cluster"
-HEADER="--header 'Content-Type:application/json' --header 'x-api-key:$CMAPI_KEY'"
-PAYLOAD="--data '{\"timeout\":60}'"
-MCSSTART="$CMAPI/start $HEADER $PAYLOAD -k"
 IFLAG='/etc/columnstore/container-initialized'
 LOG_PREFIX='/var/log/mariadb/columnstore'
 MCS_INSTALL_BIN='/usr/bin'
@@ -49,8 +43,15 @@ echo CMAPI PID = $!
 /usr/share/mysql/mysql.server start
 
 # Calling Start Function Of API
-if [ -e $IFLAG ]; then
-    bash -c "$MCSSTART"
+CMAPI="curl --write-out '%{http_code}' --silent --output /dev/null -X PUT https://$(mcsGetConfig PMS1 IPaddr):8640/cmapi/0.4.0/cluster"
+CMAPI_KEY=$(grep -r 'x-api-key' $CMAPICFG | cut -d= -f2- | xargs)
+HEADER="--header 'Content-Type:application/json' --header 'x-api-key:$CMAPI_KEY'"
+PAYLOAD="--data '{\"timeout\":60}'"
+
+if [[ $(hostname -s) == $(mcsGetConfig PMS1 IPaddr) ]]; then
+    if [ -e $IFLAG ]; then
+        bash -c "$CMAPI/start $HEADER $PAYLOAD -k"
+    fi
 fi
 
 # Execute The SkySQL Specific Startup Script

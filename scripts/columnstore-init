@@ -13,6 +13,7 @@ export LD_PRELOAD=$JEMALLOC_PATH
 ASYNC_CONN="${ASYNC_CONN:-false}"
 ANALYTICS_ONLY="${ANALYTICS_ONLY:-false}"
 USE_S3_STORAGE="${USE_S3_STORAGE:-false}"
+PM1_DNS="${PM1_DNS:-mcs1}"
 
 # Set Credential Defaults If Missing
 CMAPI_KEY="${CMAPI_KEY:-somekey123}"
@@ -27,10 +28,6 @@ REP_HOST="${REP_HOST:-%}"
 
 # Set network defaults for SkySQL
 SKYSQL_INITIALIZATION="${SKYSQL_INITIALIZATION:-0}"
-
-if [ -z $PM1_DNS ]; then
-    PM1_DNS=$PM1
-fi
 
 # Miscellaneous Variables
 SERVER_ID=$(hostname -i | cut -d "." -f 4)
@@ -97,7 +94,7 @@ for i in "${PROGS[@]}" ; do
 done
 
 # Conditional Provisioning
-if [[ $(hostname -s) == "$PM1" ]]; then
+if [[ $(hostname -s) == "$PM1_DNS" ]]; then
 
     # Start Primary Node
     echo 'Starting primary node...'
