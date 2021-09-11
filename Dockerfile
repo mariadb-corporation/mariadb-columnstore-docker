@@ -13,8 +13,7 @@ ENV PATH="/mnt/skysql/columnstore-container-scripts:${PATH}"
 ADD https://dlm.mariadb.com/enterprise-release-helpers/mariadb_es_repo_setup /tmp
 
 RUN chmod +x /tmp/mariadb_es_repo_setup && \
-    /tmp/mariadb_es_repo_setup --mariadb-server-version=${MARIADB_VERSION} --token=${MARIADB_ENTERPRISE_TOKEN} --apply && \
-    sed -i "s/enterprise-server/enterprise-staging/" /etc/yum.repos.d/mariadb.repo
+    /tmp/mariadb_es_repo_setup --mariadb-server-version=${MARIADB_VERSION} --token=${MARIADB_ENTERPRISE_TOKEN} --apply
 
 # skysql-backup To Be Added As It's Needed For InnoDB's Backup/Restore
 ################################################################################
