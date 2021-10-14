@@ -94,7 +94,7 @@ for i in "${PROGS[@]}" ; do
 done
 
 # Conditional Provisioning
-if [[ $(hostname -s) == "$PM1_DNS" ]]; then
+if [[ "$PM1_DNS" == "$(hostname -s)"* ]]; then
 
     # Start Primary Node
     echo 'Starting primary node...'
