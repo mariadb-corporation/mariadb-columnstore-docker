@@ -64,6 +64,9 @@ function add-node-to-cluster() {
         fi
     fi
 
+    # fix for https://jira.mariadb.org/browse/DBAAS-7726
+    /usr/share/mysql/mysql.server restart
+
     touch $SKY_IFLAG
 }
 
