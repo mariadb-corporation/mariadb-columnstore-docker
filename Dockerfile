@@ -37,18 +37,19 @@ COPY replication_udf/* /udf/
 # Compile The UDF
 RUN gcc -fPIC -shared -o replication.so cJSON.c replication.c `mariadb_config --include` -lcurl -lm `mariadb_config --libs`
 
-# Compile pcre2grep As It's Needed For HTAP's Backup/Restore
+# Compile pcre2grep As It's Needed For HTAP's Backup/Restore - DEPRECATED: WILL BE REMOVED IN FUTURE VERSION
 ################################################################################
 FROM template as pcre2grep-builder
 
 USER root
 WORKDIR /opt
-ARG PCRE2_VERSION=10.35
+ARG PCRE2_VERSION=10.39
 
-RUN dnf install -y gcc make
+RUN dnf install -y gcc make wget
 
 # Compile pcre2grep
-RUN curl https://ftp.pcre.org/pub/pcre/pcre2-${PCRE2_VERSION}.tar.gz -o pcre2.tar.gz && \
+
+RUN wget https://github.com/PhilipHazel/pcre2/releases/download/pcre2-${PCRE2_VERSION}/pcre2-${PCRE2_VERSION}.tar.gz -O pcre2.tar.gz && \
     tar -xf pcre2.tar.gz && \
     cd pcre2-${PCRE2_VERSION} && \
     ./configure --disable-shared --with-heap-limit=1024 --with-match-limit=500000 --with-match-limit-depth=5000 && \
@@ -88,6 +89,7 @@ RUN dnf -y install awscli \
     openssl \
     perl \
     perl-DBI \
+    procps-ng \
     rsyslog \
     snappy \
     sudo \
@@ -103,16 +105,16 @@ ENV LANGUAGE=en_US.UTF-8
 
 # Install MariaDB Packages & Load Time Zone Info
 RUN dnf -y install \
-     MariaDB-shared \
-     MariaDB-client \
-     MariaDB-server \
-     MariaDB-backup \
-     MariaDB-cracklib-password-check \
-     MariaDB-columnstore-engine \
-     MariaDB-columnstore-cmapi && \
-     /usr/share/mysql/mysql.server start && \
-     mysql_tzinfo_to_sql /usr/share/zoneinfo | mariadb mysql && \
-     /usr/share/mysql/mysql.server stop
+    MariaDB-shared \
+    MariaDB-client \
+    MariaDB-server \
+    MariaDB-backup \
+    MariaDB-cracklib-password-check \
+    MariaDB-columnstore-engine \
+    MariaDB-columnstore-cmapi && \
+    /usr/share/mysql/mysql.server start && \
+    mysql_tzinfo_to_sql /usr/share/zoneinfo | mariadb mysql && \
+    /usr/share/mysql/mysql.server stop
 
 # Copy Config Files & Scripts To Image
 COPY --from=udf_builder /udf/replication.so /usr/lib64/mysql/plugin/replication.so
@@ -121,21 +123,21 @@ COPY --from=mariadb_skysql_backup-builder /bin/skysql-backup /usr/bin/skysql-bac
 COPY config/etc/ /etc/
 COPY config/.boto /root/.boto
 COPY scripts/single-node-demo \
-     scripts/cluster-demo \
-     scripts/columnstore-init \
-     scripts/cmapi-start \
-     scripts/cmapi-stop \
-     scripts/cmapi-restart \
-     scripts/skysql-specific-startup.sh \
-     scripts/mcs-process \
-     backup_restore/columnstore-backup.sh \
-     backup_restore/columnstore_engine_restore.sh \
-     backup_restore/columnstore-restore.sh \
-     backup_restore/htap-backup.sh \
-     backup_restore/htap-restore.sh \
-     backup_restore/innodb_engine_restore.sh \
-     backup_restore/mariabackup-10.4 \
-     backup_restore/restore_user_credentials.sh /usr/bin/
+    scripts/cluster-demo \
+    scripts/columnstore-init \
+    scripts/cmapi-start \
+    scripts/cmapi-stop \
+    scripts/cmapi-restart \
+    scripts/skysql-specific-startup.sh \
+    scripts/mcs-process \
+    backup_restore/columnstore-backup.sh \
+    backup_restore/columnstore_engine_restore.sh \
+    backup_restore/columnstore-restore.sh \
+    backup_restore/htap-backup.sh \
+    backup_restore/htap-restore.sh \
+    backup_restore/innodb_engine_restore.sh \
+    backup_restore/mariabackup-10.4 \
+    backup_restore/restore_user_credentials.sh /usr/bin/
 
 # Add Tini Init Process
 ADD https://github.com/krallin/tini/releases/download/${TINI_VERSION}/tini /usr/bin/tini
