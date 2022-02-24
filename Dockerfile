@@ -4,7 +4,7 @@
 FROM rockylinux/rockylinux:8 as template
 
 # Define ENV Variables
-ENV TINI_VERSION=v0.18.0
+ENV TINI_VERSION=v0.19.0
 ENV MARIADB_VERSION=10.6
 ENV MARIADB_ENTERPRISE_TOKEN=deaa8829-2a00-4b1a-a99c-847e772f6833
 ENV PATH="/mnt/skysql/columnstore-container-scripts:${PATH}"
@@ -90,13 +90,16 @@ RUN dnf -y install awscli \
     perl \
     perl-DBI \
     procps-ng \
+    redhat-lsb-core \
     rsyslog \
     snappy \
-    sudo \
     tcl \
+    tzdata \
     vim \
     wget \
-    xmlstarlet
+    xmlstarlet && \
+    ln -s /usr/lib/lsb/init-functions /etc/init.d/functions && \
+    rm -rf /usr/share/zoneinfo/tzdata.zi /usr/share/zoneinfo/leapseconds
 
 # Default Locale Variables
 ENV LC_ALL=en_US.UTF-8
@@ -109,12 +112,13 @@ RUN dnf -y install \
     MariaDB-client \
     MariaDB-server \
     MariaDB-backup \
-    MariaDB-cracklib-password-check \
-    MariaDB-columnstore-engine \
-    MariaDB-columnstore-cmapi && \
-    /usr/share/mysql/mysql.server start && \
+    MariaDB-cracklib-password-check && \
+    cp /usr/share/mysql/mysql.server /etc/init.d/mariadb && \
+    /etc/init.d/mariadb start && \
     mysql_tzinfo_to_sql /usr/share/zoneinfo | mariadb mysql && \
-    /usr/share/mysql/mysql.server stop
+    /etc/init.d/mariadb stop && \
+    dnf -y install MariaDB-columnstore-engine \
+    MariaDB-columnstore-cmapi
 
 # Copy Config Files & Scripts To Image
 COPY --from=udf_builder /udf/replication.so /usr/lib64/mysql/plugin/replication.so
@@ -186,6 +190,7 @@ RUN chmod +x /usr/bin/docker-entrypoint.sh && \
     dnf clean all && \
     rm -rf /var/cache/dnf && \
     find /var/log -type f -exec cp /dev/null {} \; && \
+    rm -rf /var/lib/mysql/*.err && \
     cat /dev/null > ~/.bash_history && \
     history -c
 

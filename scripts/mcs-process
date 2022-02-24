@@ -44,7 +44,7 @@ DDLProc() {
 }
 
 mysqld_safe() {
-    /usr/share/mysql/mysql.server start
+    /etc/init.d/mariadb start
 }
 
 "$@"

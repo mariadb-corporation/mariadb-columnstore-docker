@@ -40,7 +40,7 @@ PYTHONPATH=/usr/share/columnstore/cmapi/deps /usr/share/columnstore/cmapi/python
 echo CMAPI PID = $!
 
 # Start MariaDB & Columnstore
-/usr/share/mysql/mysql.server start
+/etc/init.d/mariadb start
 
 # Calling Start Function Of API
 CMAPI="curl --write-out '%{http_code}' --silent --output /dev/null -X PUT https://$(mcsGetConfig PMS1 IPaddr):8640/cmapi/0.4.0/cluster"

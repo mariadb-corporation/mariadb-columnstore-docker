@@ -153,7 +153,7 @@ if [[ "$PM1_DNS" == "$(hostname -s)"* || "$PM1_DNS" == "$(hostname -s)" ]]; then
     echo 'Running dbbuilder'
     $MCS_INSTALL_BIN/dbbuilder 7 &> $LOG_PREFIX/dbbuilder.log
 
-    /usr/share/mysql/mysql.server start
+    /etc/init.d/mariadb start
 
     # Set Up MariaDB Cross Engine Join & Replication
     MARIADB_RUNNING=$(mariadb-admin ping)
@@ -272,7 +272,7 @@ if [[ "$PM1_DNS" == "$(hostname -s)"* || "$PM1_DNS" == "$(hostname -s)" ]]; then
     # Stop Primary Node
     echo 'Stopping primary node...'
 
-    /usr/share/mysql/mysql.server stop
+    /etc/init.d/mariadb stop
 
     if [ ! -z "$(pidof "${PROGS[@]}")" ]; then
         $MCS_INSTALL_BIN/mcs-savebrm.py
@@ -312,7 +312,7 @@ else
     # Start Replicas
     echo 'Starting replicas...'
 
-    /usr/share/mysql/mysql.server start
+    /etc/init.d/mariadb start
 
     # Configure Replication On Slaves
     echo 'Setting up replication...'
@@ -334,12 +334,9 @@ else
     # Stop Replicas
     echo 'Stopping replicas...'
 
-    /usr/share/mysql/mysql.server stop
+    /etc/init.d/mariadb stop
 
 fi
-
-# Clean Remnants
-rm -f /var/lib/mysql/*.err
 
 # Standardize Log Ownership
 chown -R root:mysql /var/log/mariadb
