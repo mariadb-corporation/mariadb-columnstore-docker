@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+
+cmapi-start
+monit -I
