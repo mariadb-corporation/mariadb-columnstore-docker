@@ -23,7 +23,7 @@ Adding monitor ... done
 
 #### Single Node Setup Instructions
 
-*   ```docker run -d -e PM1=mcs1 --hostname=mcs1 --name mcs1 mariadb/skysql-enterprise-columnstore-handoff```
+*   ```docker run -d --shm-size=512m -e PM1=mcs1 --hostname=mcs1 --name mcs1 mariadb/skysql-enterprise-columnstore-handoff```
 *   ```docker exec -it mcs1 single-node-demo```
 
 ```
