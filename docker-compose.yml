@@ -4,6 +4,7 @@ services:
 
   pm1:
     image: mariadb/skysql-enterprise-columnstore-handoff
+    shm_size: '512mb'
     hostname: ${PM1}
     container_name: ${PM1}
     volumes:
@@ -24,6 +25,7 @@ services:
 
   pm2:
     image: mariadb/skysql-enterprise-columnstore-handoff
+    shm_size: '512mb'
     hostname: ${PM2}
     container_name: ${PM2}
     volumes:
@@ -43,6 +45,7 @@ services:
 
   pm3:
     image: mariadb/skysql-enterprise-columnstore-handoff
+    shm_size: '512mb'
     hostname: ${PM3}
     container_name: ${PM3}
     volumes:
