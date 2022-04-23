@@ -4,6 +4,7 @@
 
 *   ```git clone https://github.com/mariadb-corporation/columnstore-docker-cluster.git```
 *   ```cd columnstore-docker-cluster```
+*   ```$ cp .env_example .env```
 *   Customize the ```.env``` file
 *   ```docker-compose up -d && docker exec -it mcs1 cluster-demo```
 

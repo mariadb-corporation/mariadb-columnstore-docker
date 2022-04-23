@@ -1,7 +1,2 @@
 .DS_Store
-.env_bak
-.env_local
-.env2
-switch
-rebuild
-push
+.env
