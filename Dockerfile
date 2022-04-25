@@ -5,7 +5,11 @@ FROM rockylinux
 
 # Define ARG Variables
 ARG TOKEN=${TOKEN}
-ARG VERSION=${VERSION}
+ARG VERSION=${VERSION:-10.6}
+ARG DEV=${DEV:-false}
+ARG BRANCH=${BRANCH:-develop-6}
+ARG BUILD=${BUILD:-latest}
+ARG ARCH=${ARCH:-amd64}
 
 # Define SkySQL Specific Path
 ENV PATH="/mnt/skysql/columnstore-container-scripts:${PATH}"
@@ -13,6 +17,9 @@ ENV PATH="/mnt/skysql/columnstore-container-scripts:${PATH}"
 # Add MariaDB Enterprise Repo
 RUN curl -LsS https://dlm.mariadb.com/enterprise-release-helpers/mariadb_es_repo_setup | \
     bash -s -- --mariadb-server-version=${VERSION} --token=${TOKEN} --apply
+
+# Add Drone Repo (Development Use Only)
+RUN if [ ${DEV} = true ]; then printf "[Columnstore-Internal-Testing]\nname = Columnstore Drone Builds\nbaseurl = https://cspkg.s3.amazonaws.com/${BRANCH}/${BUILD}/${ARCH}/rockylinux8\ngpgcheck = 0\nenabled = 1\nmodule_hotfixes = 1" > /etc/yum.repos.d/drone.repo; fi
 
 # Update System
 RUN dnf -y install epel-release && \
