@@ -1,0 +1,3 @@
+#!/usr/bin/env bash
+
+docker build --rm -t $IMAGE_NAME --build-arg VERSION=$VERSION --build-arg TOKEN=$TOKEN .
