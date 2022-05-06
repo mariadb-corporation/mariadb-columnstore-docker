@@ -19,7 +19,7 @@ RUN curl -LsS https://dlm.mariadb.com/enterprise-release-helpers/mariadb_es_repo
     bash -s -- --mariadb-server-version=${VERSION} --token=${TOKEN} --apply
 
 # Add Drone Repo (Development Use Only)
-RUN if [ ${DEV} = true ]; then printf "[Columnstore-Internal-Testing]\nname = Columnstore Drone Builds\nbaseurl = https://cspkg.s3.amazonaws.com/${BRANCH}/${BUILD}/${ARCH}/rockylinux8\ngpgcheck = 0\nenabled = 1\nmodule_hotfixes = 1" > /etc/yum.repos.d/drone.repo; fi
+RUN if [ "${DEV}" = true ]; then printf "[Columnstore-Internal-Testing]\nname = Columnstore Drone Builds\nbaseurl = https://cspkg.s3.amazonaws.com/${BRANCH}/${BUILD}/${ARCH}/rockylinux8\ngpgcheck = 0\nenabled = 1\nmodule_hotfixes = 1" > /etc/yum.repos.d/drone.repo; fi
 
 # Update System
 RUN dnf -y install epel-release && \
