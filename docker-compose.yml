@@ -3,7 +3,7 @@ version: '3'
 services:
 
   pm1:
-    image: mariadb/skysql-enterprise-columnstore-handoff
+    image: ${IMAGE_NAME}
     shm_size: '512mb'
     hostname: ${PM1}
     container_name: ${PM1}
@@ -24,7 +24,7 @@ services:
       - 8641:8640
 
   pm2:
-    image: mariadb/skysql-enterprise-columnstore-handoff
+    image: ${IMAGE_NAME}
     shm_size: '512mb'
     hostname: ${PM2}
     container_name: ${PM2}
@@ -44,7 +44,7 @@ services:
       - 8642:8640
 
   pm3:
-    image: mariadb/skysql-enterprise-columnstore-handoff
+    image: ${IMAGE_NAME}
     shm_size: '512mb'
     hostname: ${PM3}
     container_name: ${PM3}
