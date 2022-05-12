@@ -7,8 +7,10 @@ FROM rockylinux
 ARG TOKEN=${TOKEN}
 ARG VERSION=${VERSION:-10.6}
 ARG DEV=${DEV:-false}
-ARG BRANCH=${BRANCH:-develop-6}
-ARG BUILD=${BUILD:-latest}
+ARG MCSBRANCH=${BRANCH:-develop-6}
+ARG MCSBUILD=${MCSBUILD:-latest}
+ARG CMAPIBRANCH=${CMAPIBRANCH:-cmapi}
+ARG CMAPIBUILD=${CMAPIBUILD:-latest}
 ARG ARCH=${ARCH:-amd64}
 
 # Define SkySQL Specific Path
@@ -19,7 +21,21 @@ RUN curl -LsS https://dlm.mariadb.com/enterprise-release-helpers/mariadb_es_repo
     bash -s -- --mariadb-server-version=${VERSION} --token=${TOKEN} --apply
 
 # Add Drone Repo (Development Use Only)
-RUN if [ "${DEV}" = true ]; then printf "[Columnstore-Internal-Testing]\nname = Columnstore Drone Builds\nbaseurl = https://cspkg.s3.amazonaws.com/${BRANCH}/${BUILD}/${ARCH}/rockylinux8\ngpgcheck = 0\nenabled = 1\nmodule_hotfixes = 1" > /etc/yum.repos.d/drone.repo; fi
+RUN if [ "${DEV}" = true ]; then \
+    printf '%s\n' \
+    '[Columnstore-Internal-Testing]' \
+    'name = Columnstore Drone Build' \
+    "baseurl = https://cspkg.s3.amazonaws.com/${MCSBRANCH}/${MCSBUILD}/${ARCH}/rockylinux8" \
+    'gpgcheck = 0' \
+    'enabled = 1' \
+    'module_hotfixes = 1' \
+    '' \
+    '[CMAPI-Internal-Testing]' \
+    'name = CMAPI Drone Build' \
+    "baseurl = https://cspkg.s3.amazonaws.com/${CMAPIBRANCH}/${CMAPIBUILD}" \
+    'gpgcheck = 0' \
+    'enabled = 1' \
+    'module_hotfixes = 1' > /etc/yum.repos.d/drone.repo; fi
 
 # Update System
 RUN dnf -y install epel-release && \
