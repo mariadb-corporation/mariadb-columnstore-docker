@@ -3,7 +3,7 @@ version: '3'
 services:
 
   pm1:
-    image: ${IMAGE_NAME}
+    image: ${MCS_IMAGE_NAME}
     shm_size: '512mb'
     hostname: ${PM1}
     container_name: ${PM1}
@@ -21,10 +21,9 @@ services:
       - "pm3"
     ports:
       - 3307:3306
-      - 8641:8640
 
   pm2:
-    image: ${IMAGE_NAME}
+    image: ${MCS_IMAGE_NAME}
     shm_size: '512mb'
     hostname: ${PM2}
     container_name: ${PM2}
@@ -41,10 +40,9 @@ services:
       - "pm3"
     ports:
       - 3308:3306
-      - 8642:8640
 
   pm3:
-    image: ${IMAGE_NAME}
+    image: ${MCS_IMAGE_NAME}
     shm_size: '512mb'
     hostname: ${PM3}
     container_name: ${PM3}
@@ -57,12 +55,13 @@ services:
       - .env
     ports:
       - 3309:3306
-      - 8643:8640
 
   mx1:
-    image: mariadb/maxscale
+    image: ${MX_IMAGE_NAME}
     hostname: ${MX1}
     container_name: ${MX1}
+    volumes:
+      - ${PWD}/etc/maxscale.cnf:/etc/maxscale.cnf
     depends_on:
       - "pm1"
     env_file:
