@@ -1,7 +1,7 @@
 # vim:set ft=dockerfile:
 
 # Setup A Template Image
-FROM rockylinux
+FROM rockylinux:8
 
 # Define ARG Variables
 ARG TOKEN=${TOKEN}
