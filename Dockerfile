@@ -101,8 +101,7 @@ RUN dnf -y install \
 # Copy Config Files & Scripts To Image
 COPY config/etc/ /etc/
 COPY config/.boto /root/.boto
-COPY scripts/single-node-demo \
-    scripts/cluster-demo \
+COPY scripts/provision \
     scripts/columnstore-init \
     scripts/cmapi-start \
     scripts/cmapi-stop \
@@ -112,8 +111,7 @@ COPY scripts/single-node-demo \
     scripts/mcs-process /usr/bin/
 
 # Make Scripts Executable
-RUN chmod +x /usr/bin/single-node-demo \
-    /usr/bin/cluster-demo \
+RUN chmod +x /usr/bin/provision \
     /usr/bin/columnstore-init \
     /usr/bin/cmapi-start \
     /usr/bin/cmapi-stop \
