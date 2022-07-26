@@ -31,7 +31,13 @@ SKYSQL_INITIALIZATION="${SKYSQL_INITIALIZATION:-0}"
 
 # Miscellaneous Variables
 SERVER_ID=$(hostname -i | cut -d "." -f 4)
-PROGS=('StorageManager' 'load_brm' 'workernode' 'controllernode' 'PrimProc' 'ExeMgr' 'DMLProc' 'DDLProc' 'WriteEngineServer')
+VERSION=`rpm -q --queryformat '%{VERSION}' MariaDB-columnstore-engine | cut -d'.' -f2`
+if [[ $VERSION -lt 8 ]]
+then
+    PROGS=('StorageManager' 'load_brm' 'workernode' 'controllernode' 'PrimProc' 'ExeMgr' 'DMLProc' 'DDLProc' 'WriteEngineServer')
+else
+    PROGS=('StorageManager' 'load_brm' 'workernode' 'controllernode' 'PrimProc' 'DMLProc' 'DDLProc' 'WriteEngineServer')
+fi
 RET=$'\n'
 
 # Adjust Columnstore Cluster Configuration
@@ -128,10 +134,13 @@ if [[ "$PM1_DNS" == "$(hostname -s)"* || "$PM1_DNS" == "$(hostname -s)" ]]; then
 
     sleep 1
 
-    echo 'Starting ExeMgr'
-    touch $LOG_PREFIX/exemgr.log && chmod 666 $LOG_PREFIX/exemgr.log
-    $MCS_INSTALL_BIN/ExeMgr &> $LOG_PREFIX/exemgr.log &
-    echo "ExeMgr PID = $!"
+    if [[ $VERSION -lt 8 ]]
+    then
+        echo 'Starting ExeMgr'
+        touch $LOG_PREFIX/exemgr.log && chmod 666 $LOG_PREFIX/exemgr.log
+        $MCS_INSTALL_BIN/ExeMgr &> $LOG_PREFIX/exemgr.log &
+        echo "ExeMgr PID = $!"
+    fi
 
     echo 'Starting WriteEngineServer'
     touch $LOG_PREFIX/writeengineserver.log && chmod 666 $LOG_PREFIX/writeengineserver.log
@@ -153,7 +162,8 @@ if [[ "$PM1_DNS" == "$(hostname -s)"* || "$PM1_DNS" == "$(hostname -s)" ]]; then
     echo 'Running dbbuilder'
     $MCS_INSTALL_BIN/dbbuilder 7 &> $LOG_PREFIX/dbbuilder.log
 
-    /etc/init.d/mariadb start
+    mariadbd-safe &
+    sleep 5
 
     # Set Up MariaDB Cross Engine Join & Replication
     MARIADB_RUNNING=$(mariadb-admin ping)
@@ -254,7 +264,7 @@ if [[ "$PM1_DNS" == "$(hostname -s)"* || "$PM1_DNS" == "$(hostname -s)" ]]; then
                         echo
                         ;;
                 esac
-            echo
+                echo
             done
         fi
 
@@ -272,7 +282,8 @@ if [[ "$PM1_DNS" == "$(hostname -s)"* || "$PM1_DNS" == "$(hostname -s)" ]]; then
     # Stop Primary Node
     echo 'Stopping primary node...'
 
-    /etc/init.d/mariadb stop
+    #/etc/init.d/mariadb stop
+    mysqladmin shutdown
 
     if [ ! -z "$(pidof "${PROGS[@]}")" ]; then
         $MCS_INSTALL_BIN/mcs-savebrm.py
@@ -312,7 +323,8 @@ else
     # Start Replicas
     echo 'Starting replicas...'
 
-    /etc/init.d/mariadb start
+    mariadbd-safe &
+    sleep 5
 
     # Configure Replication On Slaves
     echo 'Setting up replication...'
@@ -334,7 +346,7 @@ else
     # Stop Replicas
     echo 'Stopping replicas...'
 
-    /etc/init.d/mariadb stop
+    mariadb-admin shutdown
 
 fi
 
