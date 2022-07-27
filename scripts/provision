@@ -85,6 +85,9 @@ else
         (( count++ ))
     done
 
+    sleep 15
+    printf "Waiting for CMAPI configuration sync ... ${GREEN}done${NC}\n"
+
     # Add Servers To MaxScale 1
     count=1
     for i in "${SERVERS1[@]}"
@@ -199,9 +202,6 @@ else
         fi
     fi
 fi
-
-sleep 20
-printf "Waiting for CMAPI configuration restart ... ${GREEN}done${NC}\n"
 
 # Validate
 QUERY=$(mariadb -sN -e "DROP DATABASE IF EXISTS validate; CREATE DATABASE validate; CREATE TABLE validate.sample (id INT) ENGINE=columnstore; INSERT INTO validate.sample VALUES (99); SELECT id FROM validate.sample;" 2>&1)
