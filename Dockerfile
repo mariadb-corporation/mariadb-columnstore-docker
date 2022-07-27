@@ -76,8 +76,8 @@ RUN dnf -y install awscli \
     vim \
     wget \
     xmlstarlet && \
-    ln -s /usr/lib/lsb/init-functions /etc/init.d/functions && \
-    \cp /etc/redhat-lsb/lsb_log_message /bin/lsb_log_message && \
+    #    ln -s /usr/lib/lsb/init-functions /etc/init.d/functions && \
+    #    \cp /etc/redhat-lsb/lsb_log_message /bin/lsb_log_message && \
     rm -rf /usr/share/zoneinfo/tzdata.zi /usr/share/zoneinfo/leapseconds
 
 # Define ENV Variables

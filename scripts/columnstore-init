@@ -1,11 +1,12 @@
 #!/bin/bash
 
 # Set Path Variables
-COLXML='/etc/columnstore/Columnstore.xml'
-IFLAG='/etc/columnstore/container-initialized'
-LOG_PREFIX='/var/log/mariadb/columnstore'
-MCS_INSTALL_BIN='/usr/bin'
-JEMALLOC_PATH='/usr/lib64/libjemalloc.so.2'
+COLXML="/etc/columnstore/Columnstore.xml"
+IFLAG="/etc/columnstore/container-initialized"
+LOG_PREFIX="/var/log/mariadb/columnstore"
+MCS_INSTALL_BIN="/usr/bin"
+LEGACY="$MCS_INSTALL_BIN/ExeMgr"
+JEMALLOC_PATH="/usr/lib64/libjemalloc.so.2"
 
 export LD_PRELOAD=$JEMALLOC_PATH
 
@@ -31,13 +32,14 @@ SKYSQL_INITIALIZATION="${SKYSQL_INITIALIZATION:-0}"
 
 # Miscellaneous Variables
 SERVER_ID=$(hostname -i | cut -d "." -f 4)
-VERSION=`rpm -q --queryformat '%{VERSION}' MariaDB-columnstore-engine | cut -d'.' -f2`
-if [[ $VERSION -lt 8 ]]
+
+if [ -f $LEGACY ]
 then
     PROGS=('StorageManager' 'load_brm' 'workernode' 'controllernode' 'PrimProc' 'ExeMgr' 'DMLProc' 'DDLProc' 'WriteEngineServer')
 else
     PROGS=('StorageManager' 'load_brm' 'workernode' 'controllernode' 'PrimProc' 'DMLProc' 'DDLProc' 'WriteEngineServer')
 fi
+
 RET=$'\n'
 
 # Adjust Columnstore Cluster Configuration
@@ -134,7 +136,7 @@ if [[ "$PM1_DNS" == "$(hostname -s)"* || "$PM1_DNS" == "$(hostname -s)" ]]; then
 
     sleep 1
 
-    if [[ $VERSION -lt 8 ]]
+    if [ -f $LEGACY ]
     then
         echo 'Starting ExeMgr'
         touch $LOG_PREFIX/exemgr.log && chmod 666 $LOG_PREFIX/exemgr.log
@@ -282,8 +284,7 @@ if [[ "$PM1_DNS" == "$(hostname -s)"* || "$PM1_DNS" == "$(hostname -s)" ]]; then
     # Stop Primary Node
     echo 'Stopping primary node...'
 
-    #/etc/init.d/mariadb stop
-    mysqladmin shutdown
+    mariadb-admin shutdown
 
     if [ ! -z "$(pidof "${PROGS[@]}")" ]; then
         $MCS_INSTALL_BIN/mcs-savebrm.py
