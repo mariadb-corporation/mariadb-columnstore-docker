@@ -85,7 +85,7 @@ else
         (( count++ ))
     done
 
-    sleep 15
+    sleep 20
     printf "Waiting for CMAPI configuration sync ... ${GREEN}done${NC}\n"
 
     # Add Servers To MaxScale 1
