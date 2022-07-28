@@ -40,7 +40,7 @@ RUN if [[ "${DEV}" == true ]]; then \
     'module_hotfixes = 1' > /etc/yum.repos.d/drone.repo; fi
 
 # Copy The Google Cloud SDK Repo To Image
-COPY config/etc/yum.repods.d/google-sdk-${ARCH}.repo /etc/yum.repos.d/
+COPY config/etc/yum.repos.d/google-sdk-${ARCH}.repo /etc/yum.repos.d/
 
 # Update System
 RUN dnf -y install epel-release && \
