@@ -23,7 +23,7 @@ RUN curl -LsS https://dlm.mariadb.com/enterprise-release-helpers/mariadb_es_repo
     bash -s -- --mariadb-server-version=${VERSION} --token=${TOKEN} --apply
 
 # Add Drone Repo (Development Use Only)
-RUN if [ "${DEV}" = true ]; then \
+RUN if [[ "${DEV}" == true ]]; then \
     printf '%s\n' \
     '[Columnstore-Internal-Testing]' \
     'name = Columnstore Drone Build' \
@@ -39,12 +39,12 @@ RUN if [ "${DEV}" = true ]; then \
     'enabled = 1' \
     'module_hotfixes = 1' > /etc/yum.repos.d/drone.repo; fi
 
+# Copy The Google Cloud SDK Repo To Image
+COPY config/etc/yum.repods.d/google-sdk-${ARCH}.repo /etc/yum.repos.d/
+
 # Update System
 RUN dnf -y install epel-release && \
     dnf -y upgrade
-
-# Copy The Google Cloud SDK Repo To Image
-COPY config/*.repo /etc/yum.repos.d/
 
 # Install Various Packages/Tools
 RUN dnf -y install awscli \
@@ -104,7 +104,6 @@ RUN dnf -y install \
 
 # Copy Config Files & Scripts To Image
 COPY config/etc/ /etc/
-COPY config/.boto /root/.boto
 COPY scripts/provision \
     scripts/columnstore-init \
     scripts/cmapi-start \
