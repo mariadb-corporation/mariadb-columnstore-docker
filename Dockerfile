@@ -9,9 +9,11 @@ ARG VERSION=${VERSION:-10.6}
 
 # Define Development ARG Variables
 ARG DEV=${DEV:-false}
-ARG MCSBRANCH=${MCSBRANCH:-latest}
-ARG MCSBUILDPATH=${MCSBUILDPATH:-latest/10.9/amd64/rockylinux8}
-ARG CMAPIBUILDPATH=${CMAPIBUILDPATH:-cmapi/latest}
+ARG ARCH=${ARCH:-amd64}
+ARG MCSBRANCH=${MCSBRANCH:-develop}
+ARG MCSBUILDPATH=${MCSBUILDPATH:-latest/10.9}
+ARG CMAPIBRANCH=${CMAPIBRANCH:-develop}
+ARG CMAPIBUILDPATH=${CMAPIBUILDPATH:-latest/amd64}
 
 # Define SkySQL Specific Path
 ENV PATH="/mnt/skysql/columnstore-container-scripts:${PATH}"
@@ -25,14 +27,14 @@ RUN if [ "${DEV}" = true ]; then \
     printf '%s\n' \
     '[Columnstore-Internal-Testing]' \
     'name = Columnstore Drone Build' \
-    "baseurl = https://cspkg.s3.amazonaws.com/${MCSBRANCH}/${MCSBUILDPATH}" \
+    "baseurl = https://cspkg.s3.amazonaws.com/${MCSBRANCH}/${MCSBUILDPATH}/${ARCH}/rockylinux8" \
     'gpgcheck = 0' \
     'enabled = 1' \
     'module_hotfixes = 1' \
     '' \
     '[CMAPI-Internal-Testing]' \
     'name = CMAPI Drone Build' \
-    "baseurl = https://cspkg.s3.amazonaws.com/${CMAPIBUILDPATH}" \
+    "baseurl = https://cspkg.s3.amazonaws.com/cmapi/${CMAPIBRANCH}/${CMAPIBUILDPATH}/${ARCH}" \
     'gpgcheck = 0' \
     'enabled = 1' \
     'module_hotfixes = 1' > /etc/yum.repos.d/drone.repo; fi
@@ -83,7 +85,8 @@ RUN dnf -y install awscli \
 ENV LANG=en_US.UTF-8
 ENV LANGUAGE=en_US.UTF-8
 ENV LC_ALL=en_US.UTF-8
-ENV MCSBRANCH=${MCSBRANCH:-latest}
+ENV MCSBRANCH=${MCSBRANCH:-develop}
+ENV CMAPIBRANCH=${CMAPIBRANCH:-develop}
 
 # Install MariaDB Packages & Load Time Zone Info
 RUN dnf -y install \
