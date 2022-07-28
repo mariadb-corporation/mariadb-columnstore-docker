@@ -76,6 +76,7 @@ RUN dnf -y install awscli \
     vim \
     wget \
     xmlstarlet && \
+    ln -s /usr/lib/lsb/init-functions /etc/init.d/functions && \
     rm -rf /usr/share/zoneinfo/tzdata.zi /usr/share/zoneinfo/leapseconds
 
 # Define ENV Variables
