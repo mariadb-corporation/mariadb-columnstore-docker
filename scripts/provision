@@ -201,8 +201,13 @@ else
 fi
 
 # Wait For CMAPI To Do It's Thing
-echo -n 'Waiting for CMAPI to sync config '
-for i in {1..10}
+echo -n 'Waiting for CMAPI cluster start '
+until tail /var/log/mariadb/columnstore/cmapi_server.log | grep -q "cluster/start"
+do
+    printf "."
+    sleep 2
+done
+while [ "$(mariadb -sN -e 'SELECT mcsSystemReady()')" -eq 0 ]
 do
     printf "."
     sleep 2
