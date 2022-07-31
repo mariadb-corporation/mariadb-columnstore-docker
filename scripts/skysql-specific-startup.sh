@@ -1,5 +1,5 @@
 #!/bin/bash
-
+# shellcheck disable=SC2206
 ##
 # Variable initialization
 ##
