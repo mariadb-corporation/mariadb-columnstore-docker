@@ -2,7 +2,7 @@
 # shellcheck disable=SC2046
 # Columnstore Team Use Only
 
-[ ! -f .env ] || export $(grep -v '^#' .env | xargs)
+export $(grep -v '^#' .env | xargs)
 
 docker stop $(docker ps -a -q)
 
@@ -19,7 +19,8 @@ docker build --rm -t $MCS_IMAGE_NAME \
     --build-arg CMAPIBUILDPATH=$CMAPIBUILDPATH .
 
 if [ $CLUSTER == true ]; then
-    docker-compose up -d && docker exec -it $PM1 provision
+    docker-compose up -d
+    docker exec -it $PM1 provision
 else
     docker run -d --name $PM1 --hostname $PM1 --env PM1=$PM1 --shm-size=512mb $MCS_IMAGE_NAME
     docker exec -it $PM1 provision

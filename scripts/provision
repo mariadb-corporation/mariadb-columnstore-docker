@@ -6,7 +6,7 @@ MAX_USER="${MAX_USER:-maxscale}"
 MAX_PASS="${MAX_PASS:-C0lumnStore!}"
 REP_USER="${REP_USER:-idbrep}"
 REP_PASS="${REP_PASS:-C0lumnStore!}"
-CLUSTER="${CLUSTER:-false}"
+CLUSTER="${CLUSTER:-true}"
 
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -202,11 +202,30 @@ fi
 
 # Wait For CMAPI To Do It's Thing
 echo -n 'Waiting for CMAPI cluster start '
-until tail /var/log/mariadb/columnstore/cmapi_server.log | grep -q "cluster/start"
-do
-    printf "."
-    sleep 2
-done
+
+log_check() {
+    until tail /var/log/mariadb/columnstore/cmapi_server.log | grep -q "cluster/start"
+    do
+        printf "."
+        sleep 2
+    done
+}
+
+declare -fxr log_check
+
+timeout 30 bash -ce 'log_check'
+
+if [ $? -ne 0 ]; then
+    cmapi-restart > /dev/null 2>&1
+fi
+
+timeout 30 bash -ce 'log_check'
+
+if [ $? -ne 0 ]; then
+    printf " ${RED}fail${NC}\n"
+    exit 1
+fi
+
 while [ "$(mariadb -sN -e 'SELECT mcsSystemReady()')" -eq 0 ]
 do
     printf "."
