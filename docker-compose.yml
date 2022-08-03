@@ -56,49 +56,8 @@ services:
     ports:
       - 3309:3306
 
-  mx1:
-    image: ${MX_IMAGE_NAME}
-    hostname: ${MX1}
-    container_name: ${MX1}
-    volumes:
-      - maxscale1:/var/lib/maxscale
-      - ${PWD}/etc/maxscale.cnf:/etc/maxscale.cnf
-    depends_on:
-      - "pm1"
-    env_file:
-      - .env
-    links:
-      - "pm1"
-      - "pm2"
-      - "pm3"
-    ports:
-      - 3310:3306
-      - 8989:8989
-
-  mx2:
-    image: ${MX_IMAGE_NAME}
-    hostname: ${MX2}
-    container_name: ${MX2}
-    volumes:
-      - maxscale2:/var/lib/maxscale
-      - ${PWD}/etc/maxscale.cnf:/etc/maxscale.cnf
-    depends_on:
-      - "pm1"
-    env_file:
-      - .env
-    links:
-      - "mx1"
-      - "pm1"
-      - "pm2"
-      - "pm3"
-    ports:
-      - 3311:3306
-      - 8990:8989
-
 volumes:
   data1:
   data2:
   data3:
-  maxscale1:
-  maxscale2:
   storagemanager:
