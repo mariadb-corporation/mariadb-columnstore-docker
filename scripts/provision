@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 CMAPI_KEY="${CMAPI_KEY:-somekey123}"
 IFLAG='/etc/columnstore/container-initialized'
@@ -6,7 +6,7 @@ MAX_USER="${MAX_USER:-maxscale}"
 MAX_PASS="${MAX_PASS:-C0lumnStore!}"
 REP_USER="${REP_USER:-idbrep}"
 REP_PASS="${REP_PASS:-C0lumnStore!}"
-CLUSTER="${CLUSTER:-true}"
+CLUSTER="${CLUSTER:-false}"
 
 RED='\033[0;31m'
 GREEN='\033[0;32m'
