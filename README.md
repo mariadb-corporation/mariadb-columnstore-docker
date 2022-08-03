@@ -10,16 +10,11 @@
 
 ```
 Waiting for PM1 to be initialized ................... done
-Adding PM1 to cluster ... done
-Adding PM2 to cluster ... done
-Adding PM3 to cluster ... done
-Validating ... done
-Adding PM3 to MaxScale ... done
-Adding PM2 to MaxScale ... done
-Adding PM1 to MaxScale ... done
-Adding service ... done
-Adding listener ... done
-Adding monitor ... done
+Adding PM1 to CMAPI ... done
+Adding PM2 to CMAPI ... done
+Adding PM3 to CMAPI ... done
+Waiting for CMAPI cluster start ....... done
+Validating ColumnStore engine ... done
 ```
 
 #### Single Node Setup Instructions
@@ -28,9 +23,10 @@ Adding monitor ... done
 *   ```docker exec -it mcs1 provision```
 
 ```
-Waiting for PM1 to be initialized ..... done
-Adding PM1 to cluster ... done
-Validating ... done
+Waiting for PM1 to be initialized ................... done
+Adding PM1 to CMAPI ... done
+Waiting for CMAPI cluster start ........ done
+Validating ColumnStore engine ... done
 ```
 
 #### Access Containers
@@ -38,7 +34,6 @@ Validating ... done
 *   PM1: ```docker exec -it mcs1 bash```
 *   PM2: ```docker exec -it mcs2 bash```
 *   PM3: ```docker exec -it mcs3 bash```
-*   MaxScale: ```docker exec -it mx1 bash```
 
 #### Cluster Manipulation Tools
 
@@ -107,15 +102,3 @@ curl -s -X DELETE https://127.0.0.1:8640/cmapi/0.4.0/cluster/node --header 'Cont
 ```
 curl -s -X PUT https://127.0.0.1:8640/cmapi/0.4.0/cluster/mode-set --header 'Content-Type:application/json' --header 'x-api-key:somekey123' --data '{"timeout":20, "mode": "readwrite"}' -k | jq .
 ```
-
-#### MaxScale 1 GUI Info
-
-*   url: `http://127.0.0.1:8989`
-*   username: `admin`
-*   password: `mariadb`
-
-#### MaxScale 2 GUI Info
-
-*   url: `http://127.0.0.1:8990`
-*   username: `admin`
-*   password: `mariadb`
