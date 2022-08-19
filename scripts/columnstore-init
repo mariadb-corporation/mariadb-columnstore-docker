@@ -82,8 +82,6 @@ if [ $USE_S3_STORAGE = true ]; then
     sed -i "s|^# endpoint =.*|endpoint = $S3_ENDPOINT|" /etc/columnstore/storagemanager.cnf
     sed -i "s|^# aws_access_key_id =.*|aws_access_key_id = $S3_ACCESS_KEY_ID|" /etc/columnstore/storagemanager.cnf
     sed -i "s|^# aws_secret_access_key =.*|aws_secret_access_key = $S3_SECRET_ACCESS_KEY|" /etc/columnstore/storagemanager.cnf
-    sed -i "s|^gs_access_key_id =.*|gs_access_key_id = $S3_ACCESS_KEY_ID|" /root/.boto
-    sed -i "s|^gs_secret_access_key =.*|gs_secret_access_key = $S3_SECRET_ACCESS_KEY|" /root/.boto
 fi
 
 # Set Instance Type
