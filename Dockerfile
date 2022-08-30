@@ -54,6 +54,7 @@ RUN dnf -y install awscli \
     cracklib \
     cracklib-dicts \
     expect \
+    gcc \
     git \
     glibc-langpack-en \
     google-cloud-sdk \
@@ -62,10 +63,13 @@ RUN dnf -y install awscli \
     jq \
     less \
     libaio \
+    libxml2-devel \
+    libxslt-devel \
     monit \
     nano \
     net-tools \
     openssl \
+    platform-python-devel \
     perl \
     perl-DBI \
     procps-ng \
@@ -76,10 +80,11 @@ RUN dnf -y install awscli \
     tini \
     tzdata \
     vim \
-    wget \
-    xmlstarlet && \
+    wget && \
     ln -s /usr/lib/lsb/init-functions /etc/init.d/functions && \
     rm -rf /usr/share/zoneinfo/tzdata.zi /usr/share/zoneinfo/leapseconds
+
+RUN pip3 install --user xmlstarlet
 
 # Define ENV Variables
 ENV LANG=en_US.UTF-8
