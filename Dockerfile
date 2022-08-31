@@ -63,6 +63,7 @@ RUN dnf -y install awscli \
     jq \
     less \
     libaio \
+    libffi-devel \
     libxml2-devel \
     libxslt-devel \
     monit \
