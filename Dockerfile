@@ -42,6 +42,9 @@ RUN if [[ "${DEV}" == true ]]; then \
 # Copy The Google Cloud SDK Repo To Image
 COPY config/yum.repos.d/google-sdk-${ARCH}.repo /etc/yum.repos.d/
 
+# Copy XMLstarlet to Image
+COPY rpms/${ARCH}/xmlstarlet-1.6.1-20.el8.rpm /tmp/
+
 # Update System
 RUN dnf -y install epel-release && \
     dnf -y upgrade
@@ -70,7 +73,6 @@ RUN dnf -y install awscli \
     nano \
     net-tools \
     openssl \
-    platform-python-devel \
     perl \
     perl-DBI \
     procps-ng \
@@ -81,11 +83,10 @@ RUN dnf -y install awscli \
     tini \
     tzdata \
     vim \
-    wget && \
+    wget \
+    /tmp/xmlstarlet-1.6.1-20.el8.rpm && \
     ln -s /usr/lib/lsb/init-functions /etc/init.d/functions && \
     rm -rf /usr/share/zoneinfo/tzdata.zi /usr/share/zoneinfo/leapseconds
-
-RUN pip3 install --user xmlstarlet
 
 # Define ENV Variables
 ENV LANG=en_US.UTF-8
