@@ -5,7 +5,7 @@ FROM rockylinux:8
 
 # Define Production ARG Variables
 ARG TOKEN=${TOKEN}
-ARG VERSION=${VERSION:-10.6}
+ARG VERSION=${VERSION:-10.9}
 
 # Define Development ARG Variables
 ARG DEV=${DEV:-false}
