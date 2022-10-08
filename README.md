@@ -1,4 +1,4 @@
-# Columnstore Cluster (SkySQL Version)
+# Columnstore Cluster (SkySQL Version 22.08.2)
 
 #### Cluster Setup Instructions
 
