@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # shellcheck disable=SC2046
 # Columnstore Team Use Only
-
+set -x
 export $(grep -v '^#' .env | xargs)
 
 docker stop $(docker ps -a -q)
