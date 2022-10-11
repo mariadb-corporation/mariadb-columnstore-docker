@@ -38,6 +38,8 @@ RUN if [[ "${DEV}" == true ]]; then \
     'gpgcheck = 0' \
     'enabled = 1' \
     'module_hotfixes = 1' > /etc/yum.repos.d/drone.repo; fi
+    
+RUN cat /etc/yum.repos.d/drone.repo
 
 # Copy The Google Cloud SDK Repo To Image
 COPY config/yum.repos.d/google-sdk-${ARCH}.repo /etc/yum.repos.d/

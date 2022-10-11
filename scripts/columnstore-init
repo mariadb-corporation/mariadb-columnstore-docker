@@ -102,65 +102,65 @@ done
 # Conditional Provisioning
 if [[ "$PM1_DNS" == "$(hostname -s)"* || "$PM1_DNS" == "$(hostname -s)" ]]; then
 
-    # Start Primary Node
-    echo 'Starting primary node...'
+    # # Start Primary Node
+    # echo 'Starting primary node...'
 
-    echo 'Starting StorageManager'
-    touch $LOG_PREFIX/storagemanager.log && chmod 666 $LOG_PREFIX/storagemanager.log
-    $MCS_INSTALL_BIN/StorageManager &> $LOG_PREFIX/storagemanager.log &
-    echo "StorageManager PID = $!"
+    # echo 'Starting StorageManager'
+    # touch $LOG_PREFIX/storagemanager.log && chmod 666 $LOG_PREFIX/storagemanager.log
+    # $MCS_INSTALL_BIN/StorageManager &> $LOG_PREFIX/storagemanager.log &
+    # echo "StorageManager PID = $!"
 
-    sleep 1
+    # sleep 1
 
-    echo 'Loading BRM'
-    $MCS_INSTALL_BIN/mcs-loadbrm.py no > /dev/null 2>&1
+    # echo 'Loading BRM'
+    # $MCS_INSTALL_BIN/mcs-loadbrm.py no > /dev/null 2>&1
 
-    echo 'Starting workernode'
-    touch $LOG_PREFIX/workernode.log && chmod 666 $LOG_PREFIX/workernode.log
-    $MCS_INSTALL_BIN/workernode DBRM_Worker1 &> $LOG_PREFIX/workernode.log &
-    echo "workernode PID = $!"
+    # echo 'Starting workernode'
+    # touch $LOG_PREFIX/workernode.log && chmod 666 $LOG_PREFIX/workernode.log
+    # $MCS_INSTALL_BIN/workernode DBRM_Worker1 &> $LOG_PREFIX/workernode.log &
+    # echo "workernode PID = $!"
 
-    echo 'Starting controllernode'
-    touch $LOG_PREFIX/controllernode.log && chmod 666 $LOG_PREFIX/controllernode.log
-    $MCS_INSTALL_BIN/controllernode &> $LOG_PREFIX/controllernode.log &
-    echo "controllernode PID = $!"
+    # echo 'Starting controllernode'
+    # touch $LOG_PREFIX/controllernode.log && chmod 666 $LOG_PREFIX/controllernode.log
+    # $MCS_INSTALL_BIN/controllernode &> $LOG_PREFIX/controllernode.log &
+    # echo "controllernode PID = $!"
 
-    sleep 2
+    # sleep 2
 
-    echo 'Starting PrimProc'
-    touch $LOG_PREFIX/primproc.log && chmod 666 $LOG_PREFIX/primproc.log
-    $MCS_INSTALL_BIN/PrimProc &> $LOG_PREFIX/primproc.log &
-    echo "PrimProc PID = $!"
+    # echo 'Starting PrimProc'
+    # touch $LOG_PREFIX/primproc.log && chmod 666 $LOG_PREFIX/primproc.log
+    # $MCS_INSTALL_BIN/PrimProc &> $LOG_PREFIX/primproc.log &
+    # echo "PrimProc PID = $!"
 
-    sleep 1
+    # sleep 1
 
-    if [ -f $LEGACY ]
-    then
-        echo 'Starting ExeMgr'
-        touch $LOG_PREFIX/exemgr.log && chmod 666 $LOG_PREFIX/exemgr.log
-        $MCS_INSTALL_BIN/ExeMgr &> $LOG_PREFIX/exemgr.log &
-        echo "ExeMgr PID = $!"
-    fi
+    # if [ -f $LEGACY ]
+    # then
+    #     echo 'Starting ExeMgr'
+    #     touch $LOG_PREFIX/exemgr.log && chmod 666 $LOG_PREFIX/exemgr.log
+    #     $MCS_INSTALL_BIN/ExeMgr &> $LOG_PREFIX/exemgr.log &
+    #     echo "ExeMgr PID = $!"
+    # fi
 
-    echo 'Starting WriteEngineServer'
-    touch $LOG_PREFIX/writeengineserver.log && chmod 666 $LOG_PREFIX/writeengineserver.log
-    $MCS_INSTALL_BIN/WriteEngineServer &> $LOG_PREFIX/writeengineserver.log &
-    echo "WriteEngineServer PID = $!"
+    # echo 'Starting WriteEngineServer'
+    # touch $LOG_PREFIX/writeengineserver.log && chmod 666 $LOG_PREFIX/writeengineserver.log
+    # $MCS_INSTALL_BIN/WriteEngineServer &> $LOG_PREFIX/writeengineserver.log &
+    # echo "WriteEngineServer PID = $!"
 
-    sleep 2
+    # sleep 2
 
-    echo 'Starting DMLProc'
-    touch $LOG_PREFIX/dmlproc.log && chmod 666 $LOG_PREFIX/dmlproc.log
-    $MCS_INSTALL_BIN/DMLProc &> $LOG_PREFIX/dmlproc.log &
-    echo "DMLProc PID = $!"
+    # echo 'Starting DMLProc'
+    # touch $LOG_PREFIX/dmlproc.log && chmod 666 $LOG_PREFIX/dmlproc.log
+    # $MCS_INSTALL_BIN/DMLProc &> $LOG_PREFIX/dmlproc.log &
+    # echo "DMLProc PID = $!"
 
-    echo 'Starting DDLProc'
-    touch $LOG_PREFIX/ddlproc.log && chmod 666 $LOG_PREFIX/ddlproc.log
-    $MCS_INSTALL_BIN/DDLProc &> $LOG_PREFIX/ddlproc.log &
-    echo "DDLProc PID = $!"
+    # echo 'Starting DDLProc'
+    # touch $LOG_PREFIX/ddlproc.log && chmod 666 $LOG_PREFIX/ddlproc.log
+    # $MCS_INSTALL_BIN/DDLProc &> $LOG_PREFIX/ddlproc.log &
+    # echo "DDLProc PID = $!"
 
-    echo 'Running dbbuilder'
-    $MCS_INSTALL_BIN/dbbuilder 7 &> $LOG_PREFIX/dbbuilder.log
+    # echo 'Running dbbuilder'
+    # $MCS_INSTALL_BIN/dbbuilder 7 &> $LOG_PREFIX/dbbuilder.log
 
     mariadbd-safe &
     sleep 5
