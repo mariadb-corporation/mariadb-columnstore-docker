@@ -5,7 +5,6 @@ COLXML="/etc/columnstore/Columnstore.xml"
 IFLAG="/etc/columnstore/container-initialized"
 LOG_PREFIX="/var/log/mariadb/columnstore"
 MCS_INSTALL_BIN="/usr/bin"
-LEGACY="$MCS_INSTALL_BIN/ExeMgr"
 JEMALLOC_PATH="/usr/lib64/libjemalloc.so.2"
 
 export LD_PRELOAD=$JEMALLOC_PATH
@@ -33,12 +32,6 @@ SKYSQL_INITIALIZATION="${SKYSQL_INITIALIZATION:-0}"
 # Miscellaneous Variables
 SERVER_ID=$(hostname -i | cut -d "." -f 4)
 
-if [ -f $LEGACY ]
-then
-    PROGS=('StorageManager' 'load_brm' 'workernode' 'controllernode' 'PrimProc' 'ExeMgr' 'DMLProc' 'DDLProc' 'WriteEngineServer')
-else
-    PROGS=('StorageManager' 'load_brm' 'workernode' 'controllernode' 'PrimProc' 'DMLProc' 'DDLProc' 'WriteEngineServer')
-fi
 
 RET=$'\n'
 
@@ -91,13 +84,6 @@ if [ $ANALYTICS_ONLY = true ]; then
     echo 'enforce_storage_engine=Columnstore' >> /etc/my.cnf.d/columnstore.cnf
 fi
 
-# Verify All Programs Are Available
-for i in "${PROGS[@]}" ; do
-    if [ ! -x $MCS_INSTALL_BIN/$i ] ; then
-        echo "$i doesn't exist."
-        exit 1
-    fi
-done
 
 # Conditional Provisioning
 if [[ "$PM1_DNS" == "$(hostname -s)"* || "$PM1_DNS" == "$(hostname -s)" ]]; then
@@ -223,36 +209,6 @@ if [[ "$PM1_DNS" == "$(hostname -s)"* || "$PM1_DNS" == "$(hostname -s)" ]]; then
     echo 'Stopping primary node...'
 
     mariadb-admin shutdown
-
-    if [ ! -z "$(pidof "${PROGS[@]}")" ]; then
-        $MCS_INSTALL_BIN/mcs-savebrm.py
-    fi
-    for i in "${PROGS[@]}"; do
-        if [ ! -z "$(pidof $i)" ]; then
-            echo "Sending SIGTERM to $i"
-            pkill -15 $i > /dev/null
-            sleep 3
-            counter=1
-            while [[ -n $(pidof StorageManager) ]] && [[ $counter -le 60 ]]
-            do
-                sleep 1
-                ((counter++))
-            done
-        fi
-    done
-    for i in "${PROGS[@]}"; do
-        if [ ! -z "$(pidof $i)" ]; then
-            echo "Sending SIGKILL to $i"
-            pkill -9 $i > /dev/null
-            sleep 3
-            counter=1
-            while [[ -n $(pidof StorageManager) ]] && [[ $counter -le 60 ]]
-            do
-                sleep 1
-                ((counter++))
-            done
-        fi
-    done
 
     echo 'Clearing shared memory...'
     $MCS_INSTALL_BIN/clearShm
