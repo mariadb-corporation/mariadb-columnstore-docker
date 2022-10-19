@@ -7,6 +7,7 @@ LOG_PREFIX="/var/log/mariadb/columnstore"
 MCS_INSTALL_BIN="/usr/bin"
 LEGACY="$MCS_INSTALL_BIN/ExeMgr"
 JEMALLOC_PATH="/usr/lib64/libjemalloc.so.2"
+MCS_PATHS=("/etc/my.cnf.d" "/etc/columnstore" "/var/lib/columnstore" "/var/lib/mysql")
 
 export LD_PRELOAD=$JEMALLOC_PATH
 
@@ -42,8 +43,13 @@ fi
 
 RET=$'\n'
 
-# Adjust Columnstore Cluster Configuration
+# Copy Back MariaDB Folders
+for i in "${MCS_PATHS[@]}"
+do
+    echo "rsync -ravz --delete /opt/$i /$i/"
+done
 
+# Adjust Columnstore Cluster Configuration
 cat <<EOT >> /etc/my.cnf.d/columnstore.cnf
 $RET# Docker Settings
 server_id = $SERVER_ID

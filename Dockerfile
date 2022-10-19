@@ -24,20 +24,20 @@ RUN curl -LsS https://dlm.mariadb.com/enterprise-release-helpers/mariadb_es_repo
 
 # Add Drone Repo (Development Use Only)
 RUN if [[ "${DEV}" == true ]]; then \
-    printf '%s\n' \
-    '[Columnstore-Internal-Testing]' \
-    'name = Columnstore Drone Build' \
+    printf "%s\n" \
+    "[Columnstore-Internal-Testing]" \
+    "name = Columnstore Drone Build" \
     "baseurl = https://cspkg.s3.amazonaws.com/${MCSBRANCH}/${MCSBUILDPATH}/${ARCH}/rockylinux8" \
-    'gpgcheck = 0' \
-    'enabled = 1' \
-    'module_hotfixes = 1' \
-    '' \
-    '[CMAPI-Internal-Testing]' \
-    'name = CMAPI Drone Build' \
+    "gpgcheck = 0" \
+    "enabled = 1" \
+    "module_hotfixes = 1" \
+    "" \
+    "[CMAPI-Internal-Testing]" \
+    "name = CMAPI Drone Build" \
     "baseurl = https://cspkg.s3.amazonaws.com/cmapi/${CMAPIBRANCH}/${CMAPIBUILDPATH}/${ARCH}" \
-    'gpgcheck = 0' \
-    'enabled = 1' \
-    'module_hotfixes = 1' > /etc/yum.repos.d/drone.repo; fi
+    "gpgcheck = 0" \
+    "enabled = 1" \
+    "module_hotfixes = 1" > /etc/yum.repos.d/drone.repo; fi
 
 # Copy The Google Cloud SDK Repo To Image
 COPY config/yum.repos.d/google-sdk-${ARCH}.repo /etc/yum.repos.d/
@@ -86,6 +86,7 @@ RUN dnf -y install awscli \
     wget \
     /tmp/xmlstarlet-1.6.1-20.el8.rpm && \
     ln -s /usr/lib/lsb/init-functions /etc/init.d/functions && \
+    sed -i 's/-n $\*$/-n $\* \\/' /etc/redhat-lsb/lsb_log_message && \
     rm -rf /usr/share/zoneinfo/tzdata.zi /usr/share/zoneinfo/leapseconds
 
 # Define ENV Variables
@@ -139,6 +140,21 @@ RUN echo '!includedir /mnt/skysql/columnstore-container-configuration' >> /etc/m
     mkdir -p /mnt/skysql/columnstore-container-configuration && \
     touch /etc/my.cnf.d/mariadb-enterprise.cnf && \
     sed -i 's|plugin-load-add=auth_ed25519|#plugin-load-add=auth_ed25519|' /etc/my.cnf.d/mariadb-enterprise.cnf
+
+# Customize cmapi_server.conf
+RUN printf "%s\n" \
+    ""\
+    "[Dispatcher]"\
+    "name = 'container'"\
+    "path = '/usr/share/columnstore/cmapi/mcs_node_control/custom_dispatchers/container.sh'"\
+    ""\
+    "[application]"\
+    "auto_failover = True" >> /etc/columnstore/cmapi_server.conf
+
+# Make Copies Of MariaDB Related Folders
+RUN /etc/init.d/mariadb stop && \
+    #rm -rf /var/lib/mysql/mysql.sock && \
+    rsync -Rravz --quiet /var/lib/mysql/ /var/lib/columnstore /etc/columnstore /etc/my.cnf.d /opt/
 
 # Create Persistent Volumes
 VOLUME ["/etc/columnstore", "/etc/my.cnf.d","/var/lib/mysql","/var/lib/columnstore"]
