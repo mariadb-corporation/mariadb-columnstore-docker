@@ -1,0 +1,84 @@
+#!/usr/bin/env bash
+
+# function:
+# --issues necessaryty mcs cluster command to add nodes to cluster 
+# --  wait for the cluster to be operational
+
+# parameter :  list of hosts
+# must be itself run on the 1st host
+
+hosts=${1:-'mcs1 mcs2 mcs3'}
+
+IFLAG='/etc/columnstore/container-initialized'
+
+CMAPI_KEY="${CMAPI_KEY:-somekey123}"
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+NC='\033[0m'
+
+# Wait For Primary Node To Start  CMAPI
+if [ ! -f $IFLAG ]; then
+    echo -n 'Waiting for PM1 to be initialized '
+    while [ ! -f $IFLAG ]
+    do
+        printf "."
+        sleep 2
+    done
+    printf " ${GREEN}done${NC}\n"
+fi
+
+sleep 3
+
+# add all nodes to cluster
+for host in $hosts;
+     do 
+        mcs cluster node add --node $host
+        printf "Adding $host  to CMAPI ... ${GREEN}done${NC}\n"
+     done
+# this is redundant possibly (as the system should be running after last node add)
+mcs cluster status
+
+# Wait For CMAPI To Do It's Thing
+echo -n 'Waiting for CMAPI cluster start '
+
+log_check() {
+    until tail /var/log/mariadb/columnstore/cmapi_server.log | grep -q "cluster/start"
+    do
+        printf "."
+        sleep 2
+    done
+}
+
+declare -fxr log_check
+
+timeout 30 bash -ce 'log_check'
+
+if [ $? -ne 0 ]; then
+    cmapi-restart > /dev/null 2>&1
+fi
+
+timeout 30 bash -ce 'log_check'
+
+if [ $? -ne 0 ]; then
+    printf " ${RED}fail${NC}\n"
+    exit 1
+fi
+
+while [ "$(mariadb -sN -e 'SELECT mcsSystemReady()')" -eq 0 ]
+do
+    printf "."
+    sleep 2
+done
+printf " ${GREEN}done${NC}\n"
+
+# Validate
+QUERY=$(mariadb -sN -e "DROP DATABASE IF EXISTS validate; CREATE DATABASE validate; CREATE TABLE validate.sample (id INT) ENGINE=columnstore; INSERT INTO validate.sample VALUES (99); SELECT id FROM validate.sample;" 2>&1)
+if [ $? = 0 ] && [ $QUERY = 99 ]; then
+    printf "Validating ColumnStore engine ... ${GREEN}done${NC}\n"
+    mariadb -e "DROP DATABASE IF EXISTS validate;" 2>&1
+else
+    printf "Validating ColumnStore engine ... ${RED}fail${NC}\n"
+    exit 1
+fi
+printf " run cluster status "
+mcs cluster status

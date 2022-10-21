@@ -1,0 +1,18 @@
+#!/usr/bin/env bash
+# shellcheck disable=SC2046
+# Columnstore Team Use Only
+# replace provision in the container
+set -x
+export $(grep -v '^#' .env | xargs)
+
+docker-compose down
+docker stop $(docker ps -a -q)
+docker rm -f $(docker ps -a -q)
+docker volume rm $(docker volume ls -q)e
+
+
+docker-compose up -d
+# docker cp scripts/provision mcs1:/provision_new
+docker cp scripts/provision_mcs mcs1:/provision_new
+docker exec -it $PM1 bash -c "chmod +x /provision_new"
+docker exec -it $PM1 /provision_new
