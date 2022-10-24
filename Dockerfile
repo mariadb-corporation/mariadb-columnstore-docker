@@ -154,8 +154,8 @@ RUN printf "%s\n" \
 
 # Make Copies Of MariaDB Related Folders
 RUN /etc/init.d/mariadb stop && \
-    #rm -rf /var/lib/mysql/mysql.sock && \
-    rsync -Rravz --quiet /var/lib/mysql/ /var/lib/columnstore /etc/columnstore /etc/my.cnf.d /opt/
+    rsync -Rravz --quiet /var/lib/mysql/ /var/lib/columnstore /etc/columnstore /etc/my.cnf.d /opt/ && \
+    rm -f /opt/var/lib/mysql/mysql.sock
 
 # Create Persistent Volumes
 VOLUME ["/etc/columnstore", "/etc/my.cnf.d","/var/lib/mysql","/var/lib/columnstore"]
