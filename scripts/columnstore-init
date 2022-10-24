@@ -7,7 +7,6 @@ LOG_PREFIX="/var/log/mariadb/columnstore"
 MCS_INSTALL_BIN="/usr/bin"
 LEGACY="$MCS_INSTALL_BIN/ExeMgr"
 JEMALLOC_PATH="/usr/lib64/libjemalloc.so.2"
-MCS_PATHS=("etc/my.cnf.d" "etc/columnstore" "var/lib/columnstore" "var/lib/mysql")
 
 export LD_PRELOAD=$JEMALLOC_PATH
 
@@ -44,10 +43,10 @@ fi
 RET=$'\n'
 
 # Copy Back MariaDB Folders
-for i in "${MCS_PATHS[@]}"
-do
-    rsync -Rravz --delete /opt/$i /$i
-done
+rsync -ravz --delete /opt/var/lib/mysql /var/lib
+rsync -ravz --delete /opt/var/lib/columnstore /var/lib
+rsync -ravz --delete /etc/my.cnf.d /etc
+rsync -ravz --delete /etc/columnstore /etc
 
 # Adjust Columnstore Cluster Configuration
 cat <<EOT >> /etc/my.cnf.d/columnstore.cnf
