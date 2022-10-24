@@ -77,6 +77,7 @@ RUN dnf -y install awscli \
     perl-DBI \
     procps-ng \
     redhat-lsb-core \
+    rsync \
     rsyslog \
     snappy \
     tcl \
