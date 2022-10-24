@@ -7,6 +7,7 @@
 # parameter :  list of hosts
 # must be itself run on the 1st host
 
+CMAPI_KEY="${CMAPI_KEY:-somekey123}"
 hosts=${1:-'mcs1 mcs2 mcs3'}
 
 IFLAG='/etc/columnstore/container-initialized'
@@ -28,6 +29,8 @@ fi
 
 sleep 3
 
+printf "Running :  mcs cluster set api-key --key $CMAPI_KEY "
+mcs cluster set api-key --key $CMAPI_KEY
 # add all nodes to cluster
 for host in $hosts;
      do 
