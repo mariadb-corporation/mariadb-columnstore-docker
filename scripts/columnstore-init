@@ -15,7 +15,10 @@ ASYNC_CONN="${ASYNC_CONN:-false}"
 ANALYTICS_ONLY="${ANALYTICS_ONLY:-false}"
 USE_S3_STORAGE="${USE_S3_STORAGE:-false}"
 PM1_DNS="${PM1_DNS:-mcs1}"
-
+if [[ @PM1_DNS == *"-"* ]]
+   PM1_DNS="mariadb-sts-0"
+   Echo "switched to $PM1_DNS "
+fi
 # Set Credential Defaults If Missing
 CMAPI_KEY="${CMAPI_KEY:-somekey123}"
 CEJ_USER="${CEJ_USER:-cej}"
