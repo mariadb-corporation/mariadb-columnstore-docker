@@ -1,5 +1,6 @@
 #!/bin/bash
 
+set -x
 # Set Path Variables
 COLXML="/etc/columnstore/Columnstore.xml"
 IFLAG="/etc/columnstore/container-initialized"
@@ -15,10 +16,15 @@ ASYNC_CONN="${ASYNC_CONN:-false}"
 ANALYTICS_ONLY="${ANALYTICS_ONLY:-false}"
 USE_S3_STORAGE="${USE_S3_STORAGE:-false}"
 PM1_DNS="${PM1_DNS:-mcs1}"
-if [[ @PM1_DNS == *"-"* ]]
+HOST_CURRENT=$(hostname -s)
+if [[ $HOST_CURRENT == *"-"* ]]; then
+   #we are under k8s
+   #todo extract STS name and use it
    PM1_DNS="mariadb-sts-0"
-   Echo "switched to $PM1_DNS "
+   echo "switched to $PM1_DNS "
 fi
+echo "current PM1 is $PM1_DNS "
+
 # Set Credential Defaults If Missing
 CMAPI_KEY="${CMAPI_KEY:-somekey123}"
 CEJ_USER="${CEJ_USER:-cej}"
@@ -259,6 +265,7 @@ chown -R root:mysql /var/log/mariadb
 find /var/log/mariadb/ -type d -exec chmod g+ws {} \;
 
 # Mark Container Initialized
+echo "touch $IFLAG "
 touch $IFLAG
 
 # Return To cmapi-start

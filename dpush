@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+# shellcheck disable=SC2046
+# Columnstore Team Use Only
+set -x
+docker tag mylocal:latest mariadbalexeyvorovich/test:latest
+docker push mariadbalexeyvorovich/test:latest
