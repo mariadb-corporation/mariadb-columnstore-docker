@@ -34,6 +34,9 @@ MAX_HOST="${MAX_HOST:-%}"
 REP_USER="${REP_USER:-idbrep}"
 REP_PASS="${REP_PASS:-C0lumnStore!}"
 REP_HOST="${REP_HOST:-%}"
+ADMIN_USER="${ADMIN_USER:-pgmabv99}"
+ADMIN_PASS="${ADMIN_PASS:-C0lumnStore!}"
+ADMIN_HOST="${ADMIN_HOST:-%}"
 
 # Set network defaults for SkySQL
 SKYSQL_INITIALIZATION="${SKYSQL_INITIALIZATION:-0}"
