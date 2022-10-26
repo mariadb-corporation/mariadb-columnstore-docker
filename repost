@@ -16,3 +16,4 @@ docker cp scripts/provision mcs1:/provision_new
 docker exec -it $PM1 bash -c "chmod +x /provision_new"
 # docker exec -it $PM1 provision
 docker exec -it $PM1 /provision_new
+
