@@ -20,7 +20,7 @@ ENV PATH="/mnt/skysql/columnstore-container-scripts:${PATH}"
 
 # Add MariaDB Enterprise Repo
 RUN curl -LsS https://dlm.mariadb.com/enterprise-release-helpers/mariadb_es_repo_setup | \
-    bash -s -- --mariadb-server-version=${VERSION} --token=${TOKEN} --apply
+    bash -s -- --mariadb-server-version=${VERSION} --token=${TOKEN} --skip-enterprise-tools --apply
 
 # Add Drone Repo (Development Use Only)
 RUN if [[ "${DEV}" == true ]]; then \
