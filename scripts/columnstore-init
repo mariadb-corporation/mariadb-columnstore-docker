@@ -19,7 +19,7 @@ HOST_CURRENT=$(hostname -s)
 if [[ $HOST_CURRENT == *"-"* ]]; then
    #we are under k8s
    #todo extract STS name and use it
-   PM1_DNS="mariadb-sts-0"
+   PM1_DNS="mariadb-sts-0.mariadb-service.default.svc.cluster.local"
    echo "switched to $PM1_DNS "
 fi
 echo "current PM1 is $PM1_DNS "
