@@ -45,8 +45,8 @@ RET=$'\n'
 # Copy Back MariaDB Folders
 rsync -ravz --delete /opt/var/lib/mysql /var/lib
 rsync -ravz --delete /opt/var/lib/columnstore /var/lib
-rsync -ravz --delete /etc/my.cnf.d /etc
-rsync -ravz --delete /etc/columnstore /etc
+rsync -ravz --delete /opt/etc/my.cnf.d /etc
+rsync -ravz --delete /opt/etc/columnstore /etc
 
 # Adjust Columnstore Cluster Configuration
 cat <<EOT >> /etc/my.cnf.d/columnstore.cnf
