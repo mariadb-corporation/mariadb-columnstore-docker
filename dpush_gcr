@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+# shellcheck disable=SC2046
+# Columnstore Team Use Only
+set -x
+
+
+docker pull busybox
+docker tag busybox gcr.io/dmoe-avorovich-manual/busybox
+docker push gcr.io/dmoe-avorovich-manual/busybox

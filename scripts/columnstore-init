@@ -42,7 +42,20 @@ ADMIN_HOST="${ADMIN_HOST:-%}"
 SKYSQL_INITIALIZATION="${SKYSQL_INITIALIZATION:-0}"
 
 # Miscellaneous Variables
-SERVER_ID=$(hostname -i | cut -d "." -f 4)
+# SERVER_ID=$(hostname -i | cut -d "." -f 4)
+
+# server_id for replication based on host
+# take 1st part of dns name and extract last digit. Todo - handle more then 0-9  
+# this below should work for both
+#  docker demo host, i.e  mcs1
+#  k8s    host       i.e  mariadb-sts-1.mariadb-service.default.svc.cluster.local 
+#  k8s    host       i.e  mariadb-sts-1 
+tok1=$(hostname -s | cut -d '.' -f 1)
+echo "$tok1"
+SERVER_ID=${tok1: -1}
+#cannot be zero
+SERVER_ID=$(( $SERVER_ID + 1 ))
+echo "SERVER_ID  $SERVER_ID" 
 
 
 RET=$'\n'
