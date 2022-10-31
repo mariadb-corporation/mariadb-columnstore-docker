@@ -41,15 +41,17 @@ for host in $hosts;
 # this is redundant possibly (as the system should be running after last node add)
 mcs cluster status
 
+echo " start sleep"
+sleep 30
+echo " end sleep "
 
- 
-echo -n 'Waiting for SELECT mcsSystemReady() '
-while [ "$(mariadb -sN -e 'SELECT mcsSystemReady()')" -eq 0 ]
-do
-    printf "."
-    sleep 2
-done
-printf " ${GREEN}done${NC}\n"
+# echo -n 'Waiting for SELECT mcsSystemReady() '
+# while [ "$(mariadb -sN -e 'SELECT mcsSystemReady()')" -eq 0 ]
+# do
+#     printf "."
+#     sleep 2
+# done
+# printf " ${GREEN}done${NC}\n"
 
 # Validate
 
