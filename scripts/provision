@@ -32,13 +32,22 @@ sleep 3
 
 printf "Running :  mcs cluster set api-key --key $CMAPI_KEY "
 mcs cluster set api-key --key $CMAPI_KEY
+
 # add all nodes to cluster
+# for host in $hosts;
+#      do 
+#         printf "Running :  mcs cluster node add --node $host "
+#         mcs cluster node add --node $host
+#      done
+
+# add all nodes to cluster -one command
+cmd='mcs cluster node add '
 for host in $hosts;
      do 
-        printf "Running :  mcs cluster node add --node $host "
-        mcs cluster node add --node $host
+        cmd+=" --node $host"
      done
-# this is redundant possibly (as the system should be running after last node add)
+$cmd
+
 mcs cluster status
 
 echo " start sleep"
