@@ -8,19 +8,19 @@ ARG TOKEN=${TOKEN}
 ARG VERSION=${VERSION:-10.6}
 
 # Define Development ARG Variables
-ARG DEV=${DEV:-false}
 ARG ARCH=${ARCH:-amd64}
-ARG MCSBRANCH=${MCSBRANCH:-develop}
-ARG MCSBUILDPATH=${MCSBUILDPATH:-latest/10.9}
 ARG CMAPIBRANCH=${CMAPIBRANCH:-develop}
 ARG CMAPIBUILDPATH=${CMAPIBUILDPATH:-latest/amd64}
+ARG DEV=${DEV:-false}
+ARG MCSBRANCH=${MCSBRANCH:-develop}
+ARG MCSBUILDPATH=${MCSBUILDPATH:-latest/10.9}
 
 # Define SkySQL Specific Path
 ENV PATH="/mnt/skysql/columnstore-container-scripts:${PATH}"
 
 # Add MariaDB Enterprise Repo
 RUN curl -LsS https://dlm.mariadb.com/enterprise-release-helpers/mariadb_es_repo_setup | \
-    bash -s -- --mariadb-server-version=${VERSION} --token=${TOKEN} --skip-enterprise-tools --apply
+    bash -s -- --mariadb-server-version=${VERSION} --token=${TOKEN} --apply
 
 # Add Drone Repo (Development Use Only)
 RUN if [[ "${DEV}" == true ]]; then \
@@ -103,7 +103,9 @@ RUN dnf -y install \
     MariaDB-client \
     MariaDB-server \
     MariaDB-backup \
+    MariaDB-spider-engine \
     MariaDB-cracklib-password-check && \
+    rm -f /etc/my.cnf.d/spider.cnf && \
     cp /usr/share/mysql/mysql.server /etc/init.d/mariadb && \
     /etc/init.d/mariadb start && \
     mysql_tzinfo_to_sql /usr/share/zoneinfo | mariadb mysql && \

@@ -13,6 +13,7 @@ export LD_PRELOAD=$JEMALLOC_PATH
 # Set StorageManager Defaults If Missing
 ASYNC_CONN="${ASYNC_CONN:-false}"
 ANALYTICS_ONLY="${ANALYTICS_ONLY:-false}"
+SPIDER="${SPIDER:-false}"
 USE_S3_STORAGE="${USE_S3_STORAGE:-false}"
 PM1_DNS="${PM1_DNS:-mcs1}"
 
@@ -66,6 +67,16 @@ log_error = /var/log/mariadb/columnstore/mariadb-error.log
 columnstore_compression_type = LZ4
 columnstore_use_import_for_batchinsert=ALWAYS$RET
 EOT
+
+# Adjust Spider Configuration
+if [ $SPIDER = true ]; then
+cat <<EOT >> /etc/my.cnf.d/spider.cnf
+[mariadb]
+plugin-load-add=ha_spider.so
+spider_table_crd_thread_count=1
+spider_table_sts_thread_count=1
+EOT
+fi
 
 # Add API Key To 'cmapi_server.conf'
 sed -i "s@^x-api-key.*@x-api-key = '${CMAPI_KEY//&/\\&}'@" /etc/columnstore/cmapi_server.conf
