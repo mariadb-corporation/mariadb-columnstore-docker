@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+set -x
+export $(grep -v '^#' .env | xargs)
+
+
+docker build --rm -t $MCS_IMAGE_NAME \
+    --build-arg VERSION=$VERSION \
+    --build-arg TOKEN=$TOKEN \
+    --build-arg DEV=$DEV \
+    --build-arg ARCH=$ARCH \
+    --build-arg MCSBRANCH=$MCSBRANCH \
+    --build-arg MCSBUILDPATH=$MCSBUILDPATH \
+    --build-arg CMAPIBRANCH=$CMAPIBRANCH \
+    --build-arg CMAPIBUILDPATH=$CMAPIBUILDPATH .
+
