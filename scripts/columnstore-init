@@ -17,10 +17,10 @@ USE_S3_STORAGE="${USE_S3_STORAGE:-false}"
 PM1_DNS="${PM1_DNS:-mcs1}"
 HOST_CURRENT=$(hostname -s)
 if [[ $HOST_CURRENT == *"-"* ]]; then
-   #we are under k8s
-   #todo extract STS name and use it
-   PM1_DNS="mariadb-sts-0.mariadb-service.default.svc.cluster.local"
-   echo "switched to $PM1_DNS "
+   #we are under k8s/sky
+   NAMESPACE=$(cat /mnt/skysql/podinfo/namespace)
+   PM1_DNS="cs-node-0.cs-cluster.${NAMESPACE}.svc.cluster.local"
+   echo "using PM1 $PM1_DNS "
 fi
 echo "current PM1 is $PM1_DNS "
 
