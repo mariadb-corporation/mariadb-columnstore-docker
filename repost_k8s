@@ -1,5 +1,0 @@
-#!/bin/bash
-set -x
- kubectl cp /root/mariadb-skysql-columnstore-docker/scripts/provision  mariadb-sts-0:/provision_new
- kubectl exec -it   mariadb-sts-0 -- chmod +x /provision_new
-

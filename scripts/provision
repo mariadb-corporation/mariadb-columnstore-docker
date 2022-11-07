@@ -33,34 +33,19 @@ sleep 3
 printf "Running :  mcs cluster set api-key --key $CMAPI_KEY "
 mcs cluster set api-key --key $CMAPI_KEY
 
-# add all nodes to cluster
-# for host in $hosts;
-#      do 
-#         printf "Running :  mcs cluster node add --node $host "
-#         mcs cluster node add --node $host
-#      done
 
-# add all nodes to cluster -one command
+# add all nodes to cluster in one command
 cmd='mcs cluster node add '
 for host in $hosts;
      do 
         cmd+=" --node $host"
      done
+
 $cmd
 
 mcs cluster status
 
-echo " start sleep"
-sleep 30
-echo " end sleep "
 
-# echo -n 'Waiting for SELECT mcsSystemReady() '
-# while [ "$(mariadb -sN -e 'SELECT mcsSystemReady()')" -eq 0 ]
-# do
-#     printf "."
-#     sleep 2
-# done
-# printf " ${GREEN}done${NC}\n"
 
 # Validate
 
