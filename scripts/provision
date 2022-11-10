@@ -45,17 +45,18 @@ $cmd
 
 mcs cluster status
 
+mcs cluster restart
 
 
 # Validate
 
-printf "Running  validation ColumnStore engine ...  \n"
-QUERY=$(mariadb -sN -e "DROP DATABASE IF EXISTS validate; CREATE DATABASE validate; CREATE TABLE validate.sample (id INT) ENGINE=columnstore; INSERT INTO validate.sample VALUES (99); SELECT id FROM validate.sample;" 2>&1)
-if [ $? = 0 ] && [ $QUERY = 99 ]; then
-    printf "Validating ColumnStore engine ... ${GREEN}done${NC}\n"
-    mariadb -e "DROP DATABASE IF EXISTS validate;" 2>&1
-else
-    printf "Validating ColumnStore engine ... ${RED}fail${NC}\n"
-    exit 1
-fi
+# printf "Running  validation ColumnStore engine ...  \n"
+# QUERY=$(mariadb -sN -e "DROP DATABASE IF EXISTS validate; CREATE DATABASE validate; CREATE TABLE validate.sample (id INT) ENGINE=columnstore; INSERT INTO validate.sample VALUES (99); SELECT id FROM validate.sample;" 2>&1)
+# if [ $? = 0 ] && [ $QUERY = 99 ]; then
+#     printf "Validating ColumnStore engine ... ${GREEN}done${NC}\n"
+#     mariadb -e "DROP DATABASE IF EXISTS validate;" 2>&1
+# else
+#     printf "Validating ColumnStore engine ... ${RED}fail${NC}\n"
+#     exit 1
+# fi
 
