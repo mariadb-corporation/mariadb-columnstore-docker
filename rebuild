@@ -13,10 +13,10 @@ docker build --rm \
     --build-arg VERSION=$VERSION \
     --build-arg TOKEN=$TOKEN \
     --build-arg DEV=$DEV \
-    --build-arg MCSBRANCH=$MCSBRANCH \
-    --build-arg MCSBUILDPATH=$MCSBUILDPATH \
-    --build-arg CMAPIBRANCH=$CMAPIBRANCH \
-    --build-arg CMAPIBUILDPATH=$CMAPIBUILDPATH .
+    --build-arg MCS_REPO=$MCS_REPO \
+    --build-arg MCS_BASEURL=$MCS_BASEURL \
+    --build-arg CMAPI_REPO=$CMAPI_REPO \
+    --build-arg CMAPI_BASEURL=$CMAPI_BASEURL .
 
 if [ $CLUSTER == true ]; then
     docker-compose up -d

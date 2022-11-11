@@ -9,11 +9,10 @@ ARG VERSION=${VERSION}
 
 # Define Development ARGs
 ARG DEV=${DEV}
-ARG BASEURL=${BASEURL}
-ARG MCSBUILDPATH=${MCSBUILDPATH}
-ARG MCSBRANCH=${MCSBRANCH}
-ARG CMAPIBUILDPATH=${CMAPIBUILDPATH}
-ARG CMAPIBRANCH=${CMAPIBRANCH}
+ARG MCS_REPO=${MCS_REPO}
+ARG MCS_BASEURL=${MCS_BASEURL}
+ARG CMAPI_REPO=${CMAPI_REPO}
+ARG CMAPI_BASEURL=${CMAPI_BASEURL}
 
 # Define SkySQL Specific Path
 ENV PATH="/mnt/skysql/columnstore-container-scripts:${PATH}"
@@ -33,25 +32,22 @@ RUN printf "%s\n" \
 RUN curl -LsS https://dlm.mariadb.com/enterprise-release-helpers/mariadb_es_repo_setup | \
     bash -s -- --mariadb-server-version=${VERSION} --token=${TOKEN} --apply
 
-# Add Drone Repo (Development Use Only)
+# Add Engineering Repo (Development Use Only)
 RUN if [[ "${DEV}" == true ]]; then \
     printf "%s\n" \
-    "[Columnstore-Internal-Testing]" \
-    "name = Columnstore Drone Build" \
-    "baseurl = ${BASEURL}/${MCSBRANCH}/${MCSBUILDPATH}/$(uname -m)/rockylinux8" \
+    "[${MCS_REPO}]" \
+    "name = ${MCS_REPO}" \
+    "baseurl = ${MCS_BASEURL}" \
     "gpgcheck = 0" \
     "enabled = 1" \
     "module_hotfixes = 1" \
     "" \
-    "[CMAPI-Internal-Testing]" \
-    "name = CMAPI Drone Build" \
-    "baseurl = ${BASEURL}/${CMAPIBRANCH}/${CMAPIBUILDPATH}/$(uname -m)" \
+    "[${CMAPI_REPO}]" \
+    "name = ${CMAPI_REPO}" \
+    "baseurl = ${CMAPI_BASEURL}" \
     "gpgcheck = 0" \
     "enabled = 1" \
-    "module_hotfixes = 1" > /etc/yum.repos.d/drone.repo; fi
-
-# Copy XMLstarlet to Image
-#COPY rpms/${ARCH}/xmlstarlet-1.6.1-20.el8.rpm /tmp/
+    "module_hotfixes = 1" > /etc/yum.repos.d/engineering.repo; fi
 
 # Update System
 RUN dnf -y install epel-release && \

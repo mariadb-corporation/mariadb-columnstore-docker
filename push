@@ -1,0 +1,25 @@
+#!/usr/bin/env bash
+# shellcheck disable=SC2046
+# Columnstore Team Use Only
+
+export $(grep -v '^#' .env | xargs)
+
+docker buildx create --name $BUILDX_CONTAINER
+
+docker buildx build \
+    --platform linux/arm64,linux/amd64 \
+    --push \
+    --rm \
+    --tag mariadb/skysql-enterprise-columnstore-handoff:latest \
+    --tag mariadb/skysql-enterprise-columnstore-handoff:sky-$CS_VERSION-GA \
+    --tag mariadb/enterprise-columnstore:latest \
+    --tag mariadb/enterprise-columnstore:$CS_VERSION \
+    --tag mariadb/columnstore:latest \
+    --tag mariadb/columnstore:$CS_VERSION \
+    --build-arg VERSION=$VERSION \
+    --build-arg TOKEN=$TOKEN \
+    --build-arg DEV=$DEV \
+    --build-arg MCS_REPO=$MCS_REPO \
+    --build-arg MCS_BASEURL=$MCS_BASEURL \
+    --build-arg CMAPI_REPO=$CMAPI_REPO \
+    --build-arg CMAPI_BASEURL=$CMAPI_BASEURL .
