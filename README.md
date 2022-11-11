@@ -1,9 +1,9 @@
-# Columnstore Cluster (SkySQL Version)
+# MariaDB Columnstore Cluster
 
 #### Cluster Setup Instructions
 
-*   ```git clone https://github.com/mariadb-corporation/mariadb-skysql-columnstore-docker.git```
-*   ```cd mariadb-skysql-columnstore-docker```
+*   ```git clone https://github.com/mariadb-corporation/mariadb-columnstore-docker.git```
+*   ```cd mariadb-columnstore-docker```
 *   ```$ cp .env_example .env```
 *   Customize the ```.env``` file
 *   ```docker-compose up -d && docker exec -it mcs1 provision```
@@ -19,7 +19,7 @@ Validating ColumnStore engine ... done
 
 #### Single Node Setup Instructions
 
-*   ```docker run -d --shm-size=512m -e PM1=mcs1 --hostname=mcs1 --name mcs1 mariadb/skysql-enterprise-columnstore-handoff```
+*   ```docker run -d --shm-size=512m -e PM1=mcs1 --hostname=mcs1 --name mcs1 mariadb/columnstore```
 *   ```docker exec -it mcs1 provision```
 
 ```
