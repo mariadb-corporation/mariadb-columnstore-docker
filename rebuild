@@ -8,11 +8,14 @@ docker stop $(docker ps -a -q)
 
 docker system prune -a --volumes --force
 
-docker build --rm -t $MCS_IMAGE_NAME \
+docker buildx build \
+    --platform linux/arm64,linux/amd64 \
+    --push \
+    --rm \
+    --tag $MCS_IMAGE_NAME:sky-22.08.3-GA \
     --build-arg VERSION=$VERSION \
     --build-arg TOKEN=$TOKEN \
     --build-arg DEV=$DEV \
-    --build-arg ARCH=$ARCH \
     --build-arg MCSBRANCH=$MCSBRANCH \
     --build-arg MCSBUILDPATH=$MCSBUILDPATH \
     --build-arg CMAPIBRANCH=$CMAPIBRANCH \

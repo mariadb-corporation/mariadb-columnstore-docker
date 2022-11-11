@@ -3,20 +3,31 @@
 # Setup A Template Image
 FROM rockylinux:8
 
-# Define Production ARG Variables
+# Define Production ARGs
 ARG TOKEN=${TOKEN}
-ARG VERSION=${VERSION:-10.6}
+ARG VERSION=${VERSION}
 
-# Define Development ARG Variables
-ARG ARCH=${ARCH:-amd64}
-ARG CMAPIBRANCH=${CMAPIBRANCH:-develop}
-ARG CMAPIBUILDPATH=${CMAPIBUILDPATH:-latest/amd64}
-ARG DEV=${DEV:-false}
-ARG MCSBRANCH=${MCSBRANCH:-develop}
-ARG MCSBUILDPATH=${MCSBUILDPATH:-latest/10.9}
+# Define Development ARGs
+ARG DEV=${DEV}
+ARG BASEURL=${BASEURL}
+ARG MCSBUILDPATH=${MCSBUILDPATH}
+ARG MCSBRANCH=${MCSBRANCH}
+ARG CMAPIBUILDPATH=${CMAPIBUILDPATH}
+ARG CMAPIBRANCH=${CMAPIBRANCH}
 
 # Define SkySQL Specific Path
 ENV PATH="/mnt/skysql/columnstore-container-scripts:${PATH}"
+
+# Add Google SDK Repo
+RUN printf "%s\n" \
+    "[google-cloud-sdk]" \
+    "name=Google Cloud SDK" \
+    "baseurl=https://packages.cloud.google.com/yum/repos/cloud-sdk-el8-$(uname -m)" \
+    "enabled=1" \
+    "gpgcheck=1" \
+    "gpgkey=https://packages.cloud.google.com/yum/doc/yum-key.gpg" \
+    "       https://packages.cloud.google.com/yum/doc/rpm-package-key.gpg" > /etc/yum.repos.d/google-sdk.repo && \
+    sed -i 's/arm64/aarch64/' /etc/yum.repos.d/google-sdk.repo
 
 # Add MariaDB Enterprise Repo
 RUN curl -LsS https://dlm.mariadb.com/enterprise-release-helpers/mariadb_es_repo_setup | \
@@ -27,23 +38,20 @@ RUN if [[ "${DEV}" == true ]]; then \
     printf "%s\n" \
     "[Columnstore-Internal-Testing]" \
     "name = Columnstore Drone Build" \
-    "baseurl = https://cspkg.s3.amazonaws.com/${MCSBRANCH}/${MCSBUILDPATH}/${ARCH}/rockylinux8" \
+    "baseurl = ${BASEURL}/${MCSBRANCH}/${MCSBUILDPATH}/$(uname -m)/rockylinux8" \
     "gpgcheck = 0" \
     "enabled = 1" \
     "module_hotfixes = 1" \
     "" \
     "[CMAPI-Internal-Testing]" \
     "name = CMAPI Drone Build" \
-    "baseurl = https://cspkg.s3.amazonaws.com/cmapi/${CMAPIBRANCH}/${CMAPIBUILDPATH}/${ARCH}" \
+    "baseurl = ${BASEURL}/${CMAPIBRANCH}/${CMAPIBUILDPATH}/$(uname -m)" \
     "gpgcheck = 0" \
     "enabled = 1" \
     "module_hotfixes = 1" > /etc/yum.repos.d/drone.repo; fi
 
-# Copy The Google Cloud SDK Repo To Image
-COPY config/yum.repos.d/google-sdk-${ARCH}.repo /etc/yum.repos.d/
-
 # Copy XMLstarlet to Image
-COPY rpms/${ARCH}/xmlstarlet-1.6.1-20.el8.rpm /tmp/
+#COPY rpms/${ARCH}/xmlstarlet-1.6.1-20.el8.rpm /tmp/
 
 # Update System
 RUN dnf -y install epel-release && \
@@ -85,7 +93,7 @@ RUN dnf -y install awscli \
     tzdata \
     vim \
     wget \
-    /tmp/xmlstarlet-1.6.1-20.el8.rpm && \
+    xmlstarlet && \
     ln -s /usr/lib/lsb/init-functions /etc/init.d/functions && \
     sed -i 's/-n $\*$/-n $\* \\/' /etc/redhat-lsb/lsb_log_message && \
     rm -rf /usr/share/zoneinfo/tzdata.zi /usr/share/zoneinfo/leapseconds
