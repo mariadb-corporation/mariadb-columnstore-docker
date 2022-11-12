@@ -150,12 +150,12 @@ RUN echo '!includedir /mnt/skysql/columnstore-container-configuration' >> /etc/m
 
 # Customize cmapi_server.conf
 RUN printf "%s\n" \
-    ""\
-    "[Dispatcher]"\
-    "name = 'container'"\
-    "path = '/usr/share/columnstore/cmapi/mcs_node_control/custom_dispatchers/container.sh'"\
-    ""\
-    "[application]"\
+    "" \
+    "[Dispatcher]" \
+    "name = 'container'" \
+    "path = '/usr/share/columnstore/cmapi/mcs_node_control/custom_dispatchers/container.sh'" \
+    "" \
+    "[application]" \
     "auto_failover = True" >> /etc/columnstore/cmapi_server.conf
 
 # Make Copies Of MariaDB Related Folders
