@@ -31,9 +31,9 @@ Validating ColumnStore engine ... done
 
 #### Access Containers
 
-*   PM1: ```docker exec -it mcs1 bash```
-*   PM2: ```docker exec -it mcs2 bash```
-*   PM3: ```docker exec -it mcs3 bash```
+*   PM1: ```$ docker exec -it mcs1 bash```
+*   PM2: ```$ docker exec -it mcs2 bash```
+*   PM3: ```$ docker exec -it mcs3 bash```
 
 #### Cluster Manipulation Tools
 
