@@ -5,7 +5,6 @@ COLXML="/etc/columnstore/Columnstore.xml"
 IFLAG="/etc/columnstore/container-initialized"
 LOG_PREFIX="/var/log/mariadb/columnstore"
 MCS_INSTALL_BIN="/usr/bin"
-LEGACY="$MCS_INSTALL_BIN/ExeMgr"
 JEMALLOC_PATH="/usr/lib64/libjemalloc.so.2"
 
 export LD_PRELOAD=$JEMALLOC_PATH
@@ -16,6 +15,14 @@ ANALYTICS_ONLY="${ANALYTICS_ONLY:-false}"
 SPIDER="${SPIDER:-false}"
 USE_S3_STORAGE="${USE_S3_STORAGE:-false}"
 PM1_DNS="${PM1_DNS:-mcs1}"
+HOST_CURRENT=$(hostname -s)
+if [[ $HOST_CURRENT == *"-"* ]]; then
+   #we are under k8s/sky
+   NAMESPACE=$(cat /mnt/skysql/podinfo/namespace)
+   PM1_DNS="cs-node-0.cs-cluster.${NAMESPACE}.svc.cluster.local"
+   echo "using PM1 $PM1_DNS "
+fi
+echo "current PM1 is $PM1_DNS "
 
 # Set Credential Defaults If Missing
 CMAPI_KEY="${CMAPI_KEY:-somekey123}"
@@ -27,19 +34,29 @@ MAX_HOST="${MAX_HOST:-%}"
 REP_USER="${REP_USER:-idbrep}"
 REP_PASS="${REP_PASS:-C0lumnStore!}"
 REP_HOST="${REP_HOST:-%}"
+ADMIN_USER="${ADMIN_USER:-pgmabv99}"
+ADMIN_PASS="${ADMIN_PASS:-C0lumnStore!}"
+ADMIN_HOST="${ADMIN_HOST:-%}"
 
 # Set network defaults for SkySQL
 SKYSQL_INITIALIZATION="${SKYSQL_INITIALIZATION:-0}"
 
 # Miscellaneous Variables
-SERVER_ID=$(hostname -i | cut -d "." -f 4)
+# SERVER_ID=$(hostname -i | cut -d "." -f 4)
 
-if [ -f $LEGACY ]
-then
-    PROGS=('StorageManager' 'load_brm' 'workernode' 'controllernode' 'PrimProc' 'ExeMgr' 'DMLProc' 'DDLProc' 'WriteEngineServer')
-else
-    PROGS=('StorageManager' 'load_brm' 'workernode' 'controllernode' 'PrimProc' 'DMLProc' 'DDLProc' 'WriteEngineServer')
-fi
+# server_id for replication based on host
+# take 1st part of dns name and extract last digit. Todo - handle more then 0-9  
+# this below should work for both
+#  docker demo host, i.e  mcs1
+#  k8s    host       i.e  mariadb-sts-1.mariadb-service.default.svc.cluster.local 
+#  k8s    host       i.e  mariadb-sts-1 
+tok1=$(hostname -s | cut -d '.' -f 1)
+echo "$tok1"
+SERVER_ID=${tok1: -1}
+#cannot be zero
+SERVER_ID=$(( $SERVER_ID + 1 ))
+echo "SERVER_ID  $SERVER_ID" 
+
 
 RET=$'\n'
 
@@ -48,6 +65,7 @@ rsync -ravz --delete /opt/var/lib/mysql /var/lib
 rsync -ravz --delete /opt/var/lib/columnstore /var/lib
 rsync -ravz --delete /opt/etc/my.cnf.d /etc
 rsync -ravz --delete /opt/etc/columnstore /etc
+
 
 # Adjust Columnstore Cluster Configuration
 cat <<EOT >> /etc/my.cnf.d/columnstore.cnf
@@ -107,77 +125,13 @@ if [ $ANALYTICS_ONLY = true ]; then
     echo 'enforce_storage_engine=Columnstore' >> /etc/my.cnf.d/columnstore.cnf
 fi
 
-# Verify All Programs Are Available
-for i in "${PROGS[@]}" ; do
-    if [ ! -x $MCS_INSTALL_BIN/$i ] ; then
-        echo "$i doesn't exist."
-        exit 1
-    fi
-done
 
 # Conditional Provisioning
 if [[ "$PM1_DNS" == "$(hostname -s)"* || "$PM1_DNS" == "$(hostname -s)" ]]; then
 
-    # Start Primary Node
-    echo 'Starting primary node...'
 
-    echo 'Starting StorageManager'
-    touch $LOG_PREFIX/storagemanager.log && chmod 666 $LOG_PREFIX/storagemanager.log
-    $MCS_INSTALL_BIN/StorageManager &> $LOG_PREFIX/storagemanager.log &
-    echo "StorageManager PID = $!"
 
-    sleep 1
-
-    echo 'Loading BRM'
-    $MCS_INSTALL_BIN/mcs-loadbrm.py no > /dev/null 2>&1
-
-    echo 'Starting workernode'
-    touch $LOG_PREFIX/workernode.log && chmod 666 $LOG_PREFIX/workernode.log
-    $MCS_INSTALL_BIN/workernode DBRM_Worker1 &> $LOG_PREFIX/workernode.log &
-    echo "workernode PID = $!"
-
-    echo 'Starting controllernode'
-    touch $LOG_PREFIX/controllernode.log && chmod 666 $LOG_PREFIX/controllernode.log
-    $MCS_INSTALL_BIN/controllernode &> $LOG_PREFIX/controllernode.log &
-    echo "controllernode PID = $!"
-
-    sleep 2
-
-    echo 'Starting PrimProc'
-    touch $LOG_PREFIX/primproc.log && chmod 666 $LOG_PREFIX/primproc.log
-    $MCS_INSTALL_BIN/PrimProc &> $LOG_PREFIX/primproc.log &
-    echo "PrimProc PID = $!"
-
-    sleep 1
-
-    if [ -f $LEGACY ]
-    then
-        echo 'Starting ExeMgr'
-        touch $LOG_PREFIX/exemgr.log && chmod 666 $LOG_PREFIX/exemgr.log
-        $MCS_INSTALL_BIN/ExeMgr &> $LOG_PREFIX/exemgr.log &
-        echo "ExeMgr PID = $!"
-    fi
-
-    echo 'Starting WriteEngineServer'
-    touch $LOG_PREFIX/writeengineserver.log && chmod 666 $LOG_PREFIX/writeengineserver.log
-    $MCS_INSTALL_BIN/WriteEngineServer &> $LOG_PREFIX/writeengineserver.log &
-    echo "WriteEngineServer PID = $!"
-
-    sleep 2
-
-    echo 'Starting DMLProc'
-    touch $LOG_PREFIX/dmlproc.log && chmod 666 $LOG_PREFIX/dmlproc.log
-    $MCS_INSTALL_BIN/DMLProc &> $LOG_PREFIX/dmlproc.log &
-    echo "DMLProc PID = $!"
-
-    echo 'Starting DDLProc'
-    touch $LOG_PREFIX/ddlproc.log && chmod 666 $LOG_PREFIX/ddlproc.log
-    $MCS_INSTALL_BIN/DDLProc &> $LOG_PREFIX/ddlproc.log &
-    echo "DDLProc PID = $!"
-
-    echo 'Running dbbuilder'
-    $MCS_INSTALL_BIN/dbbuilder 7 &> $LOG_PREFIX/dbbuilder.log
-
+  ###################
     mariadbd-safe &
     sleep 5
 
@@ -300,36 +254,6 @@ if [[ "$PM1_DNS" == "$(hostname -s)"* || "$PM1_DNS" == "$(hostname -s)" ]]; then
 
     mariadb-admin shutdown
 
-    if [ ! -z "$(pidof "${PROGS[@]}")" ]; then
-        $MCS_INSTALL_BIN/mcs-savebrm.py
-    fi
-    for i in "${PROGS[@]}"; do
-        if [ ! -z "$(pidof $i)" ]; then
-            echo "Sending SIGTERM to $i"
-            pkill -15 $i > /dev/null
-            sleep 3
-            counter=1
-            while [[ -n $(pidof StorageManager) ]] && [[ $counter -le 60 ]]
-            do
-                sleep 1
-                ((counter++))
-            done
-        fi
-    done
-    for i in "${PROGS[@]}"; do
-        if [ ! -z "$(pidof $i)" ]; then
-            echo "Sending SIGKILL to $i"
-            pkill -9 $i > /dev/null
-            sleep 3
-            counter=1
-            while [[ -n $(pidof StorageManager) ]] && [[ $counter -le 60 ]]
-            do
-                sleep 1
-                ((counter++))
-            done
-        fi
-    done
-
     echo 'Clearing shared memory...'
     $MCS_INSTALL_BIN/clearShm
 
@@ -370,6 +294,7 @@ chown -R root:mysql /var/log/mariadb
 find /var/log/mariadb/ -type d -exec chmod g+ws {} \;
 
 # Mark Container Initialized
+echo "touch $IFLAG "
 touch $IFLAG
 
 # Return To cmapi-start

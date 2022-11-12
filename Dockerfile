@@ -126,7 +126,7 @@ COPY scripts/provision \
     scripts/cmapi-restart \
     scripts/skysql-specific-startup.sh \
     scripts/start-services \
-    scripts/mcs-process /usr/bin/
+                           /usr/bin/
 
 # Make Scripts Executable
 RUN chmod +x /usr/bin/provision \
@@ -135,8 +135,8 @@ RUN chmod +x /usr/bin/provision \
     /usr/bin/cmapi-stop \
     /usr/bin/cmapi-restart \
     /usr/bin/skysql-specific-startup.sh \
-    /usr/bin/start-services \
-    /usr/bin/mcs-process
+    /usr/bin/start-services
+ 
 
 # Stream Edit Some Configs
 RUN sed -i 's|set daemon\s.30|set daemon 5|g' /etc/monitrc && \
