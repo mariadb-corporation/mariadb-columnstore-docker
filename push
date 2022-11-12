@@ -12,8 +12,6 @@ docker buildx build \
     --rm \
     --tag mariadb/skysql-enterprise-columnstore-handoff:latest \
     --tag mariadb/skysql-enterprise-columnstore-handoff:sky-$CS_VERSION-GA \
-    --tag mariadb/enterprise-columnstore:latest \
-    --tag mariadb/enterprise-columnstore:$CS_VERSION \
     --tag mariadb/columnstore:latest \
     --tag mariadb/columnstore:$CS_VERSION \
     --build-arg VERSION=$VERSION \

@@ -178,7 +178,7 @@ RUN chmod +x /usr/bin/docker-entrypoint.sh && \
     dnf clean all && \
     rm -rf /var/cache/dnf && \
     find /var/log -type f -exec cp /dev/null {} \; && \
-    rm -rf /var/lib/mysql/*.err && \
+    rm -f /var/lib/mysql/*.err /etc/yum.repos.d/mariadb.repo /etc/yum.repos.d/engineering.repo && \
     cat /dev/null > ~/.bash_history && \
     history -c
 
