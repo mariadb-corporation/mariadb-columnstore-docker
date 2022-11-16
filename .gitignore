@@ -1,4 +1,8 @@
 .DS_Store
 .env
 push
+<<<<<<< HEAD
 clean
+=======
+clean
+>>>>>>> master
