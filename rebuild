@@ -1,5 +1,4 @@
 #!/usr/bin/env bash
-# shellcheck disable=SC2046
 # Columnstore Team Use Only
 
 export $(grep -v '^#' .env | xargs)
