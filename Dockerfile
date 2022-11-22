@@ -17,6 +17,10 @@ ARG CMAPI_BASEURL=${CMAPI_BASEURL}
 # Define SkySQL Specific Path
 ENV PATH="/mnt/skysql/columnstore-container-scripts:${PATH}"
 
+RUN if [[ "${DEV}" == true && "${SPIDER}" == true ]]; then \
+    echo "Unfortunately no spider engine provided in dev packages yet."; \
+    exit 1; fi
+
 # Add Google SDK Repo
 RUN printf "%s\n" \
     "[google-cloud-sdk]" \
@@ -34,20 +38,26 @@ RUN curl -LsS https://dlm.mariadb.com/enterprise-release-helpers/mariadb_es_repo
 
 # Add Engineering Repo (Development Use Only)
 RUN if [[ "${DEV}" == true ]]; then \
+    echo "Add develop builds repo."; \
     printf "%s\n" \
-    "[${MCS_REPO}]" \
-    "name = ${MCS_REPO}" \
-    "baseurl = ${MCS_BASEURL}" \
-    "gpgcheck = 0" \
-    "enabled = 1" \
-    "module_hotfixes = 1" \
-    "" \
-    "[${CMAPI_REPO}]" \
-    "name = ${CMAPI_REPO}" \
-    "baseurl = ${CMAPI_BASEURL}" \
-    "gpgcheck = 0" \
-    "enabled = 1" \
-    "module_hotfixes = 1" > /etc/yum.repos.d/engineering.repo; fi
+        "[${MCS_REPO}]" \
+        "name = ${MCS_REPO}" \
+        "baseurl = ${MCS_BASEURL}" \
+        "gpgcheck = 0" \
+        "enabled = 1" \
+        "module_hotfixes = 1" \
+        "" \
+        "[${CMAPI_REPO}]" \
+        "name = ${CMAPI_REPO}" \
+        "baseurl = ${CMAPI_BASEURL}" \
+        "gpgcheck = 0" \
+        "enabled = 1" \
+        "module_hotfixes = 1" > /etc/yum.repos.d/engineering.repo; \
+    else \
+        echo "Add MariaDB Enterprise Repo"; \
+        curl -LsS https://dlm.mariadb.com/enterprise-release-helpers/mariadb_es_repo_setup | \
+        bash -s -- --mariadb-server-version=${VERSION} --token=${TOKEN} --apply; \
+    fi
 
 # Update System
 RUN dnf -y install epel-release && \
@@ -106,8 +116,10 @@ RUN dnf -y install \
     MariaDB-shared \
     MariaDB-client \
     MariaDB-server \
-    MariaDB-backup \
-    MariaDB-spider-engine \
+    MariaDB-backup
+RUN if [[ "${SPIDER}" == true ]]; then \
+        dnf install -y MariaDB-spider-engine; fi
+RUN dnf install -y \
     MariaDB-cracklib-password-check && \
     rm -f /etc/my.cnf.d/spider.cnf && \
     cp /usr/share/mysql/mysql.server /etc/init.d/mariadb && \
