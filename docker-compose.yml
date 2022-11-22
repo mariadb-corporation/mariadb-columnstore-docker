@@ -1,19 +1,22 @@
 version: '3'
 
-services:
-
-  pm1:
-    image: ${MCS_IMAGE_NAME}
-    shm_size: '512mb'
-    hostname: ${PM1}
-    container_name: ${PM1}
-    volumes:
+x-base-service: &base-service
+  image: ${MCS_IMAGE_NAME}
+  shm_size: '512mb'
+  env_file: .env
+  volumes:
       - data1:/var/lib/columnstore/data1
       - data2:/var/lib/columnstore/data2
       - data3:/var/lib/columnstore/data3
       - storagemanager:/var/lib/columnstore/storagemanager
-    env_file:
-      - .env
+
+
+services:
+
+  pm1:
+    <<: *base-service
+    hostname: ${PM1}
+    container_name: ${PM1}
     depends_on:
       - "pm3"
     links:
@@ -23,17 +26,9 @@ services:
       - 3307:3306
 
   pm2:
-    image: ${MCS_IMAGE_NAME}
-    shm_size: '512mb'
+    <<: *base-service
     hostname: ${PM2}
     container_name: ${PM2}
-    volumes:
-      - data1:/var/lib/columnstore/data1
-      - data2:/var/lib/columnstore/data2
-      - data3:/var/lib/columnstore/data3
-      - storagemanager:/var/lib/columnstore/storagemanager
-    env_file:
-      - .env
     depends_on:
       - "pm3"
     links:
@@ -42,17 +37,9 @@ services:
       - 3308:3306
 
   pm3:
-    image: ${MCS_IMAGE_NAME}
-    shm_size: '512mb'
+    <<: *base-service
     hostname: ${PM3}
     container_name: ${PM3}
-    volumes:
-      - data1:/var/lib/columnstore/data1
-      - data2:/var/lib/columnstore/data2
-      - data3:/var/lib/columnstore/data3
-      - storagemanager:/var/lib/columnstore/storagemanager
-    env_file:
-      - .env
     ports:
       - 3309:3306
 
