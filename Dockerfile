@@ -110,6 +110,7 @@ RUN dnf -y install \
     MariaDB-client \
     MariaDB-server \
     MariaDB-backup \
+    MariaDB-spider-engine \
     MariaDB-cracklib-password-check && \
     rm -f /etc/my.cnf.d/spider.cnf && \
     cp /usr/share/mysql/mysql.server /etc/init.d/mariadb && \
@@ -119,9 +120,6 @@ RUN dnf -y install \
     dnf -y install MariaDB-columnstore-engine \
     MariaDB-columnstore-cmapi
 
-RUN if [[ "${SPIDER}" == true ]]; then \
-    RUN dnf -y install \
-    MariaDB-spider-engine ;fi
 
 # Copy Config Files & Scripts To Image
 COPY config/etc/ /etc/
