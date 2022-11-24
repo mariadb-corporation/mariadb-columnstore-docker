@@ -7,16 +7,6 @@ docker stop $(docker ps -a -q)
 
 docker system prune -a --volumes --force
 
-docker build --rm \
-    --tag $MCS_IMAGE_NAME \
-    --build-arg VERSION=$VERSION \
-    --build-arg TOKEN=$TOKEN \
-    --build-arg DEV=$DEV \
-    --build-arg MCS_REPO=$MCS_REPO \
-    --build-arg MCS_BASEURL=$MCS_BASEURL \
-    --build-arg CMAPI_REPO=$CMAPI_REPO \
-    --build-arg CMAPI_BASEURL=$CMAPI_BASEURL .
-
 if [[ $CLUSTER == true ]]; then
     if [[ $MAXSCALE == true ]]; then
     docker-compose -f docker-compose-mxs.yml up -d
