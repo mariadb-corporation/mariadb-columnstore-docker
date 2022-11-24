@@ -120,6 +120,7 @@ RUN dnf -y install \
 # Copy Config Files & Scripts To Image
 COPY config/etc/ /etc/
 COPY scripts/provision \
+    scripts/provision-full \
     scripts/columnstore-init \
     scripts/cmapi-start \
     scripts/cmapi-stop \
@@ -130,6 +131,7 @@ COPY scripts/provision \
 
 # Make Scripts Executable
 RUN chmod +x /usr/bin/provision \
+    /usr/bin/provision-full \
     /usr/bin/columnstore-init \
     /usr/bin/cmapi-start \
     /usr/bin/cmapi-stop \

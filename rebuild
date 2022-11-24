@@ -18,8 +18,8 @@ docker build --rm \
     --build-arg CMAPI_BASEURL=$CMAPI_BASEURL .
 
 if [[ $CLUSTER == true ]]; then
-    docker-compose up -d
-    docker exec -it $PM1 provision
+    docker-compose -f docker-compose-full.yml up -d
+    docker exec -it $PM1 provision-full
 else
     docker run -d --name $PM1 --hostname $PM1 --env PM1=$PM1 --shm-size=512mb $MCS_IMAGE_NAME
     docker exec -it $PM1 provision
