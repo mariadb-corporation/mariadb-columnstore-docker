@@ -10,7 +10,6 @@ docker system prune -a --volumes --force
 docker build --rm \
     --tag $MCS_IMAGE_NAME \
     --build-arg VERSION=$VERSION \
-    --build-arg TOKEN=$TOKEN \
     --build-arg DEV=$DEV \
     --build-arg MCS_REPO=$MCS_REPO \
     --build-arg MCS_BASEURL=$MCS_BASEURL \
