@@ -26,7 +26,7 @@ RUN printf "%s\n" \
     sed -i 's/arm64/aarch64/' /etc/yum.repos.d/google-sdk.repo
 
 # Add MariaDB Enterprise Repo
-ADD .secrets scripts/repo /tmp
+ADD .secrets scripts/repo /tmp/
 RUN bash /tmp/repo ${VERSION}
 
 # Add Engineering Repo (Development Use Only)
