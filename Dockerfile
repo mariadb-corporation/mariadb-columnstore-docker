@@ -3,11 +3,8 @@
 # Setup A Template Image
 FROM rockylinux:8
 
-# Define Production ARGs
-ARG TOKEN=${TOKEN}
-ARG VERSION=${VERSION}
-
 # Define Development ARGs
+ARG VERSION=${VERSION}
 ARG DEV=${DEV}
 ARG MCS_REPO=${MCS_REPO}
 ARG MCS_BASEURL=${MCS_BASEURL}
@@ -29,8 +26,8 @@ RUN printf "%s\n" \
     sed -i 's/arm64/aarch64/' /etc/yum.repos.d/google-sdk.repo
 
 # Add MariaDB Enterprise Repo
-RUN curl -LsS https://dlm.mariadb.com/enterprise-release-helpers/mariadb_es_repo_setup | \
-    bash -s -- --mariadb-server-version=${VERSION} --token=${TOKEN} --apply
+ADD .secrets scripts/repo /tmp/
+RUN bash /tmp/repo ${VERSION}
 
 # Add Engineering Repo (Development Use Only)
 RUN if [[ "${DEV}" == true ]]; then \
@@ -124,6 +121,7 @@ RUN dnf -y install \
 # Copy Config Files & Scripts To Image
 COPY config/etc/ /etc/
 COPY scripts/provision \
+    scripts/provision-mxs \
     scripts/columnstore-init \
     scripts/cmapi-start \
     scripts/cmapi-stop \
@@ -134,6 +132,7 @@ COPY scripts/provision \
 
 # Make Scripts Executable
 RUN chmod +x /usr/bin/provision \
+    /usr/bin/provision-mxs \
     /usr/bin/columnstore-init \
     /usr/bin/cmapi-start \
     /usr/bin/cmapi-stop \
@@ -180,9 +179,13 @@ RUN chmod +x /usr/bin/docker-entrypoint.sh && \
     sed -i 's|^.*module(load="imjournal"|#module(load="imjournal"|g' /etc/rsyslog.conf && \
     sed -i 's|^.*StateFile="imjournal.state")|#  StateFile="imjournal.state")|g' /etc/rsyslog.conf && \
     dnf clean all && \
-    rm -rf /var/cache/dnf && \
     find /var/log -type f -exec cp /dev/null {} \; && \
-    rm -f /var/lib/mysql/*.err /etc/yum.repos.d/mariadb.repo /etc/yum.repos.d/engineering.repo && \
+    rm -f /var/lib/mysql/*.err \
+    /etc/yum.repos.d/mariadb.repo \
+    /etc/yum.repos.d/engineering.repo \
+    /tmp/.secrets \
+    /tmp/repo && \
+    rm -rf /var/cache/dnf && \
     cat /dev/null > ~/.bash_history && \
     history -c
 
