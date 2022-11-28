@@ -32,9 +32,6 @@ RUN printf "%s\n" \
     "       https://packages.cloud.google.com/yum/doc/rpm-package-key.gpg" > /etc/yum.repos.d/google-sdk.repo && \
     sed -i 's/arm64/aarch64/' /etc/yum.repos.d/google-sdk.repo
 
-# Add MariaDB Enterprise Repo
-RUN curl -LsS https://dlm.mariadb.com/enterprise-release-helpers/mariadb_es_repo_setup | \
-    bash -s -- --mariadb-server-version=${VERSION} --token=${TOKEN} --apply
 
 # Add Engineering Repo (Development Use Only)
 RUN if [[ "${DEV}" == true ]]; then \
