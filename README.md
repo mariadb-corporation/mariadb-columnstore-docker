@@ -1,6 +1,25 @@
-# MariaDB Columnstore Cluster
+![MariaDB](https://mariadb.com/wp-content/uploads/2019/11/mariadb-logo_blue-transparent.png)
 
-#### Cluster Setup Instructions
+# Enterprise Columnstore Docker Project
+
+## Summary
+MariaDB ColumnStore is a columnar storage engine that utilizes a massively parallel distributed data architecture. It was built by porting InfiniDB to MariaDB and has been released under the GPL license.
+
+MariaDB ColumnStore is designed for big data scaling to process petabytes of data, linear scalability and exceptional performance with real-time response to analytical queries. It leverages the I/O benefits of columnar storage, compression, just-in-time projection, and horizontal and vertical partitioning to deliver tremendous performance when analyzing large data sets.
+
+## Requirements
+
+Please install the following software packages before you begin.
+
+*   [Git](https://git-scm.com/downloads)
+*   [Docker](https://www.docker.com/get-started)
+
+Also make sure to grab your download credentials from our website:
+
+*   [MariaDB Enterprise Token](https://customers.mariadb.com/downloads/token/)
+
+## Docker-Compose Cluster Instructions
+
 
 *   ```$ git clone https://github.com/mariadb-corporation/mariadb-columnstore-docker.git```
 *   ```$ cd mariadb-columnstore-docker```
