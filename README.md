@@ -139,7 +139,7 @@ Validating ColumnStore engine ... done
 *   **MX1**: Primary MaxScale Node
 *   **MX2**: Secondary MaxScale Node
 
-## MCS Commandline Tool Instructions
+## MCS Commandline Instructions
 
 ##### Set API Code:
 
