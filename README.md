@@ -8,7 +8,7 @@
 *   Customize the ```.env``` file
 *   ```$ cp .secrets_example .secrets```
 *   Customize the ```.secrets``` file
-*   ```$ docker-compose up -d && docker exec -it mcs1 provision```
+*   ```$ docker compose up -d && docker exec -it mcs1 provision```
 
 ```
 Waiting for PM1 to be initialized ................... done
