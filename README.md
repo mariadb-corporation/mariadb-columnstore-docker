@@ -104,13 +104,13 @@ Validating ColumnStore engine ... done
 
 #### MaxScale 1 GUI Access
 
-*   url: `http://127.0.0.1:8989`
+*   URL: `http://127.0.0.1:8989`
 *   username: `admin`
 *   password: `mariadb`
 
 #### MaxScale 2 GUI Access
 
-*   url: `http://127.0.0.1:8990`
+*   URL: `http://127.0.0.1:8990`
 *   username: `admin`
 *   password: `mariadb`
 
