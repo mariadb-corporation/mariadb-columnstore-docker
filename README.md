@@ -143,7 +143,7 @@ Validating ColumnStore engine ... done
 
 ##### Set API Code:
 
-``` mcs cluster set api-key <api_key>```
+``` mcs cluster set api-key --key <api_key>```
 
 ###### Get Status:
 
@@ -159,11 +159,11 @@ Validating ColumnStore engine ... done
 
 ###### Add Node:
 
-```mcs cluster node add <node>```
+```mcs cluster node add --node <node>```
 
 ###### Remove Node:
 
-```mcs cluster node remove <node>```
+```mcs cluster node remove --node <node>```
 
 ###### Mode Set:
 
