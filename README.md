@@ -24,7 +24,7 @@ Also make sure to grab your download credentials from our website:
 *   ```$ cd mariadb-columnstore-docker```
 *   ```$ cp .env_example .env```
 *   Customize the ```.env``` file
-*   ```$ ./run_project
+*   ```$ ./run_project```
 
 ```
 Waiting for PM1 to be initialized ................... done
