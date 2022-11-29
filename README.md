@@ -139,6 +139,7 @@ Validating ColumnStore engine ... done
 *   **MX1**: Primary MaxScale Node
 *   **MX2**: Secondary MaxScale Node
 
+
 ## MCS Commandline Instructions
 
 ##### Set API Code:
@@ -165,9 +166,14 @@ Validating ColumnStore engine ... done
 
 ```mcs cluster node remove --node <node>```
 
-###### Mode Set:
+###### Mode Set Read Only:
 
-```mcs cluster set mode <readonly/readwrite>```
+```mcs cluster set mode --mode readonly```
+
+###### Mode Set Read/Write:
+
+```mcs cluster set mode --mode readwrite```
+
 
 ## REST-API Instructions
 
