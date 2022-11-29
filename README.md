@@ -139,7 +139,37 @@ Validating ColumnStore engine ... done
 *   **MX1**: Primary MaxScale Node
 *   **MX2**: Secondary MaxScale Node
 
-#### REST-API Instructions
+## MCS Commandline Tool Instructions
+
+##### Set API Code:
+
+``` mcs cluster set api-key <api_key>```
+
+###### Get Status:
+
+```mcs cluster status```
+
+###### Start Cluster:
+
+```mcs cluster start```
+
+###### Stop Cluster:
+
+```mcs cluster stop```
+
+###### Add Node:
+
+```mcs cluster node add <node>```
+
+###### Remove Node:
+
+```mcs cluster node remove <node>```
+
+###### Mode Set:
+
+```mcs cluster set mode <readonly/readwrite>```
+
+## REST-API Instructions
 
 ##### Format of url endpoints for REST API:
 
