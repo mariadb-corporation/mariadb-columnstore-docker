@@ -24,8 +24,6 @@ Also make sure to grab your download credentials from our website:
 *   ```$ cd mariadb-columnstore-docker```
 *   ```$ cp .env_example .env```
 *   Customize the ```.env``` file
-*   ```$ cp .secrets_example .secrets```
-*   Customize the ```.secrets``` file
 *   ```$ docker compose up -d && docker exec -it mcs1 provision```
 
 ```
