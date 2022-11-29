@@ -18,6 +18,14 @@ Also make sure to grab your download credentials from our website:
 
 *   [MariaDB Enterprise Token](https://customers.mariadb.com/downloads/token/)
 
+## Quick Start Instructions (Single Node or Cluster)
+
+*   ```$ git clone https://github.com/mariadb-corporation/mariadb-columnstore-docker.git```
+*   ```$ cd mariadb-columnstore-docker```
+*   ```$ cp .env_example .env```
+*   Customize the ```.env``` file
+*   ```$ ./run_project
+
 ## Docker-Compose Cluster Instructions
 
 *   ```$ git clone https://github.com/mariadb-corporation/mariadb-columnstore-docker.git```
