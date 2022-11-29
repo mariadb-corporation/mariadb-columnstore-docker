@@ -20,7 +20,6 @@ Also make sure to grab your download credentials from our website:
 
 ## Docker-Compose Cluster Instructions
 
-
 *   ```$ git clone https://github.com/mariadb-corporation/mariadb-columnstore-docker.git```
 *   ```$ cd mariadb-columnstore-docker```
 *   ```$ cp .env_example .env```
@@ -38,7 +37,7 @@ Waiting for CMAPI cluster start ....... done
 Validating ColumnStore engine ... done
 ```
 
-#### Single Node Setup Instructions
+## Single Node Setup Instructions
 
 *   ```$ docker run -d --shm-size=512m -e PM1=mcs1 --hostname=mcs1 --name mcs1 mariadb/columnstore```
 *   ```$ docker exec -it mcs1 provision```
