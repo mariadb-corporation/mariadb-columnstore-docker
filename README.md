@@ -82,6 +82,18 @@ Validating ColumnStore engine ... done
 *   PM2: ```$ docker exec -it mcs2 bash```
 *   PM3: ```$ docker exec -it mcs3 bash```
 
+#### MaxScale 1 GUI Access
+
+*   url: `http://127.0.0.1:8989`
+*   username: `admin`
+*   password: `mariadb`
+
+#### MaxScale 2 GUI Access
+
+*   url: `http://127.0.0.1:8990`
+*   username: `admin`
+*   password: `mariadb`
+
 #### Cluster Manipulation Tools
 
 *   `core`  Change directory to /var/log/mariadb/columnstore/corefiles
@@ -98,6 +110,14 @@ Validating ColumnStore engine ... done
 *   `terror` Tail error.log
 *   `tinfo` Tail info.log
 *   `twarning` Tail warning.log
+
+#### Other Glossary Items
+*   **PM**: Performance Module
+*   **PM1**: Primary Database Node
+*   **PM2**: Secondary Database Node
+*   **PM3**: Tertiary Database Node
+*   **MX1**: Primary MaxScale Node
+*   **MX2**: Secondary MaxScale Node
 
 #### REST-API Instructions
 
@@ -149,3 +169,21 @@ $ curl -s -X DELETE https://127.0.0.1:8640/cmapi/0.4.0/cluster/node --header 'Co
 ```
 $ curl -s -X PUT https://127.0.0.1:8640/cmapi/0.4.0/cluster/mode-set --header 'Content-Type:application/json' --header 'x-api-key:somekey123' --data '{"timeout":20, "mode": "readwrite"}' -k | jq .
 ```
+
+#### Run Variables
+
+| Variable | Type | Default | Required |
+|---|---|---|---|
+| ADMIN_HOST | String | % | No |
+| ADMIN_PASS | String | C0lumnStore! | No |
+| ADMIN_USER | String | Admin | No |
+| CEJ_PASS | String | C0lumnStore! | No |
+| CEJ_USER | String | cej | No |
+| CMAPI_KEY | String | somekey123 | No |
+| PM1 | Hostname | mcs1 | **Yes** |
+| S3_ACCESS_KEY_ID | String | None | No |
+| S3_BUCKET | String | None | No |
+| S3_ENDPOINT | URL | None | No |
+| S3_REGION | String | None | No |
+| S3_SECRET_ACCESS_KEY | String | None | No |
+| USE_S3_STORAGE | Boolean | false | No |
