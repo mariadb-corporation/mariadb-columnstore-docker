@@ -1,6 +1,6 @@
 ![MariaDB](https://mariadb.com/wp-content/uploads/2019/11/mariadb-logo_blue-transparent.png)
 
-# Enterprise Columnstore Docker Project
+# Columnstore Docker Project
 
 ## Summary
 MariaDB ColumnStore is a columnar storage engine that utilizes a massively parallel distributed data architecture. It was built by porting InfiniDB to MariaDB and has been released under the GPL license.
