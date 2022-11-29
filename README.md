@@ -94,11 +94,13 @@ Validating ColumnStore engine ... done
 | S3_SECRET_ACCESS_KEY | String | None | No |
 | USE_S3_STORAGE | Boolean | false | No |
 
-#### Access Containers
+## Access
 
-*   PM1: ```$ docker exec -it mcs1 bash```
-*   PM2: ```$ docker exec -it mcs2 bash```
-*   PM3: ```$ docker exec -it mcs3 bash```
+#### Columnstore CLI Access
+
+*   PM1: ```$ docker exec -it mcs1 mariadb```
+*   PM2: ```$ docker exec -it mcs2 mariadb```
+*   PM3: ```$ docker exec -it mcs3 mariadb```
 
 #### MaxScale 1 GUI Access
 
