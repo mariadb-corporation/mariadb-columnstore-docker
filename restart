@@ -2,15 +2,27 @@
 # shellcheck disable=SC2046
 # Columnstore Team Use Only
 
+set -x
 export $(grep -v '^#' .env | xargs)
 
-docker-compose down
+if [[ $CLUSTER == true ]]; then
+    if [[ $MAXSCALE == true ]]; then
+        docker compose -f docker-compose-mxs.yml down
+        docker volume prune -f
+        docker compose -f docker-compose-mxs.yml up -d
+        #========= docker exec -it $PM1 provision-mxs
+        sleep 25
+        docker exec -it $PM1 provision
 
-docker volume prune -f
-
-if [ $CLUSTER == true ]; then
-    docker-compose up -d
-    docker exec -it $PM1 provision
+        docker cp scripts/provision-maxctrl $MX1:/provision-maxctrl
+        docker exec -it  $MX1 chmod +x /provision-maxctrl
+        docker exec -it $MX1 /provision-maxctrl 
+    else
+        docker compose -f docker-compose.yml down 
+        docker volume prune -f
+        docker compose -f docker-compose.yml up -d
+        docker exec -it $PM1 provision
+    fi
 else
     docker run -d --name $PM1 --hostname $PM1 --env PM1=$PM1 --shm-size=512mb $MCS_IMAGE_NAME
     docker exec -it $PM1 provision

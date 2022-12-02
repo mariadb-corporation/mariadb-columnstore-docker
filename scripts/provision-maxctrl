@@ -1,0 +1,21 @@
+#!/usr/bin/env bash
+
+set -x
+# function:
+# --issues maxctl calls to connect maxscale to MCS cluster
+
+
+# parameter :  list of MCS hosts
+# must be itself run on the EACH maxscale host
+
+hosts=${1:-'mcs1 mcs2 mcs3'}
+
+for host in $hosts;
+    do
+         maxctrl create server $host $host 3306 
+    done
+
+maxctrl create service mcs_service  readwritesplit  user=$MAX_USER  password=$MAX_PASS   --servers $hosts  
+maxctrl create listener mcs_service mcs_listner  3306  
+maxctrl create monitor  mcs_monitor mariadbmon --monitor-user=$MAX_USER --monitor-password=$MAX_PASS   --servers $hosts  
+maxctrl list servers
