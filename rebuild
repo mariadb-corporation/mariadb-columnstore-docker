@@ -1,6 +1,11 @@
 #!/usr/bin/env bash
 # Columnstore Team Use Only
 
+### Instructions:
+### $ cp .secrets_example .secrets
+### Customize the .secrets file
+### $ ./rebuild
+
 export $(grep -v '^#' .env | xargs)
 
 docker stop $(docker ps -a -q)
@@ -18,8 +23,7 @@ docker build --rm \
 
 if [[ $CLUSTER == true ]]; then
     if [[ $MAXSCALE == true ]]; then
-    docker compose -f docker-compose-mxs.yml up -d
-    
+    docker-compose -f docker-compose-mxs.yml up -d
     docker exec -it $PM1 provision-mxs
 
     else
