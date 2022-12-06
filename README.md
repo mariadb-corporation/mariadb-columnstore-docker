@@ -23,7 +23,9 @@ Also make sure to grab your download credentials from our website:
 *   ```$ git clone https://github.com/mariadb-corporation/mariadb-columnstore-docker.git```
 *   ```$ cd mariadb-columnstore-docker```
 *   ```$ cp .env_example .env```
+*   ```$ cp .secrets_example```
 *   Customize the ```.env``` file
+*   Customize the ```.secrets``` file
 *   ```$ ./build```
 *   ```$ ./run_project```
 
@@ -53,7 +55,9 @@ Validating ColumnStore engine ... done
 *   ```$ git clone https://github.com/mariadb-corporation/mariadb-columnstore-docker.git```
 *   ```$ cd mariadb-columnstore-docker```
 *   ```$ cp .env_example .env```
+*   ```$ cp .secrets_example```
 *   Customize the ```.env``` file
+*   Customize the ```.secrets``` file
 *   ```$ ./build```
 *   ```$ docker compose up -d```
 *   ```$ docker exec -it mcs1 provision```
@@ -72,7 +76,9 @@ Validating ColumnStore engine ... done
 *   ```$ git clone https://github.com/mariadb-corporation/mariadb-columnstore-docker.git```
 *   ```$ cd mariadb-columnstore-docker```
 *   ```$ cp .env_example .env```
+*   ```$ cp .secrets_example```
 *   Customize the ```.env``` file
+*   Customize the ```.secrets``` file
 *   ```$ ./build```
 *   ```$ docker run -d --shm-size=512m -e PM1=mcs1 --hostname=mcs1 --name mcs1 mariadb/columnstore```
 *   ```$ docker exec -it mcs1 provision```
