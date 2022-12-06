@@ -55,7 +55,8 @@ Validating ColumnStore engine ... done
 *   ```$ cp .env_example .env```
 *   Customize the ```.env``` file
 *   ```$ ./build```
-*   ```$ docker compose up -d && docker exec -it mcs1 provision```
+*   ```$ docker compose up -d```
+*   ```$ docker exec -it mcs1 provision```
 
 ```
 Waiting for PM1 to be initialized ................... done
@@ -73,7 +74,8 @@ Validating ColumnStore engine ... done
 *   ```$ cp .env_example .env```
 *   Customize the ```.env``` file
 *   ```$ ./build```
-*   ```$ docker run -d --shm-size=512m -e PM1=mcs1 --hostname=mcs1 --name mcs1 mariadb/columnstore && docker exec -it mcs1 provision```
+*   ```$ docker run -d --shm-size=512m -e PM1=mcs1 --hostname=mcs1 --name mcs1 mariadb/columnstore```
+*   ```$ docker exec -it mcs1 provision```
 
 ```
 Waiting for PM1 to be initialized ................... done
