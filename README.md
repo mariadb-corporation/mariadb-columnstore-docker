@@ -24,6 +24,7 @@ Also make sure to grab your download credentials from our website:
 *   ```$ cd mariadb-columnstore-docker```
 *   ```$ cp .env_example .env```
 *   Customize the ```.env``` file
+*   ```$ ./build```
 *   ```$ ./run_project```
 
 ```

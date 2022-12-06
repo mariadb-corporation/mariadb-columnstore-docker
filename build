@@ -8,10 +8,6 @@
 
 export $(grep -v '^#' .env | xargs)
 
-docker stop $(docker ps -a -q)
-
-docker system prune -a --volumes --force
-
 docker build --rm \
     --tag $MCS_IMAGE_NAME \
     --build-arg VERSION=$VERSION \
