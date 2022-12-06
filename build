@@ -2,9 +2,11 @@
 # Columnstore Team Use Only
 
 ### Instructions:
+### $ cp .env_example .env
 ### $ cp .secrets_example .secrets
+### Customize the .env file
 ### Customize the .secrets file
-### $ ./rebuild
+### $ ./build
 
 export $(grep -v '^#' .env | xargs)
 
