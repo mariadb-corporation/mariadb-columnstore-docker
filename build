@@ -1,5 +1,4 @@
 #!/usr/bin/env bash
-# Columnstore Team Use Only
 
 ### Instructions:
 ### $ cp .env_example .env
