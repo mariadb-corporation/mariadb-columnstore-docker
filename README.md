@@ -54,6 +54,7 @@ Validating ColumnStore engine ... done
 *   ```$ cd mariadb-columnstore-docker```
 *   ```$ cp .env_example .env```
 *   Customize the ```.env``` file
+*   ```$ ./build```
 *   ```$ docker compose up -d && docker exec -it mcs1 provision```
 
 ```
@@ -67,8 +68,12 @@ Validating ColumnStore engine ... done
 
 ## Docker Run Instructions (Single Node)
 
-*   ```$ docker run -d --shm-size=512m -e PM1=mcs1 --hostname=mcs1 --name mcs1 mariadb/columnstore```
-*   ```$ docker exec -it mcs1 provision```
+*   ```$ git clone https://github.com/mariadb-corporation/mariadb-columnstore-docker.git```
+*   ```$ cd mariadb-columnstore-docker```
+*   ```$ cp .env_example .env```
+*   Customize the ```.env``` file
+*   ```$ ./build```
+*   ```$ docker run -d --shm-size=512m -e PM1=mcs1 --hostname=mcs1 --name mcs1 mariadb/columnstore && docker exec -it mcs1 provision```
 
 ```
 Waiting for PM1 to be initialized ................... done
