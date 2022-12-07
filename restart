@@ -9,10 +9,15 @@ if [[ $CLUSTER == true ]]; then
     if [[ $MAXSCALE == true ]]; then
         docker compose -f docker-compose-mxs.yml down
         docker volume prune -f
+        sleep  5
         docker compose -f docker-compose-mxs.yml up -d
         #========= docker exec -it $PM1 provision-mxs
-        sleep 25
-        docker exec -it $PM1 provision
+        sleep 15
+        # docker exec -it $PM1 provision
+        # run local copy - not image copy
+        docker cp scripts/provision $PM1:/provision 
+        docker exec -it  $PM1 chmod +x /provision 
+        docker exec -it $PM1 /provision  
 
         docker cp scripts/provision-maxctrl $MX1:/provision-maxctrl
         docker exec -it  $MX1 chmod +x /provision-maxctrl

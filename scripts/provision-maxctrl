@@ -15,7 +15,13 @@ for host in $hosts;
          maxctrl create server $host $host 3306 
     done
 
-maxctrl create service mcs_service  readwritesplit  user=$MAX_USER  password=$MAX_PASS   --servers $hosts  
+maxctrl create service mcs_service  readwritesplit  \
+        user=$MAX_USER  password=$MAX_PASS   --servers $hosts  
 maxctrl create listener mcs_service mcs_listner  3306  
-maxctrl create monitor  mcs_monitor mariadbmon --monitor-user=$MAX_USER --monitor-password=$MAX_PASS   --servers $hosts  
+maxctrl create monitor  mcs_monitor mariadbmon  \
+        auto_failover=true  \
+        enforce_read_only_slaves=true  \
+        auto_rejoin=true  \
+        cooperative_monitoring_locks=majority_of_all  \
+        --monitor-user=$MAX_USER --monitor-password=$MAX_PASS   --servers $hosts  
 maxctrl list servers

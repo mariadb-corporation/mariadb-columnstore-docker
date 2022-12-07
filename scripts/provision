@@ -43,6 +43,9 @@ for host in $hosts;
 
 $cmd
 
+echo " sleeeeeep"
+sleep 10
+
 mcs cluster status
 
 # Validate
