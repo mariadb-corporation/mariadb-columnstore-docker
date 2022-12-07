@@ -1,16 +1,13 @@
 #!/usr/bin/env bash
-# Columnstore Team Use Only
 
 ### Instructions:
+### $ cp .env_example .env
 ### $ cp .secrets_example .secrets
+### Customize the .env file
 ### Customize the .secrets file
-### $ ./rebuild
+### $ ./build
 
 export $(grep -v '^#' .env | xargs)
-
-docker stop $(docker ps -a -q)
-
-docker system prune -a --volumes --force
 
 docker build --rm \
     --tag $MCS_IMAGE_NAME \
@@ -19,7 +16,8 @@ docker build --rm \
     --build-arg MCS_REPO=$MCS_REPO \
     --build-arg MCS_BASEURL=$MCS_BASEURL \
     --build-arg CMAPI_REPO=$CMAPI_REPO \
-    --build-arg CMAPI_BASEURL=$CMAPI_BASEURL .
+    --build-arg CMAPI_BASEURL=$CMAPI_BASEURL \
+    --build-arg SPIDER=$SPIDER .
 
 if [[ $CLUSTER == true ]]; then
     if [[ $MAXSCALE == true ]]; then

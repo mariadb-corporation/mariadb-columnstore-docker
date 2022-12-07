@@ -10,6 +10,7 @@ ARG MCS_REPO=${MCS_REPO}
 ARG MCS_BASEURL=${MCS_BASEURL}
 ARG CMAPI_REPO=${CMAPI_REPO}
 ARG CMAPI_BASEURL=${CMAPI_BASEURL}
+ARG SPIDER=${SPIDER}
 
 # Define SkySQL Specific Path
 ENV PATH="/mnt/skysql/columnstore-container-scripts:${PATH}"
@@ -25,11 +26,10 @@ RUN printf "%s\n" \
     "       https://packages.cloud.google.com/yum/doc/rpm-package-key.gpg" > /etc/yum.repos.d/google-sdk.repo && \
     sed -i 's/arm64/aarch64/' /etc/yum.repos.d/google-sdk.repo
 
-# Add MariaDB Enterprise Repo
+# Add Repo Setup Script
 ADD .secrets scripts/repo /tmp/
-RUN bash /tmp/repo ${VERSION}
 
-# Add Engineering Repo (Development Use Only)
+# Choose Repo Version
 RUN if [[ "${DEV}" == true ]]; then \
     printf "%s\n" \
     "[${MCS_REPO}]" \
@@ -44,7 +44,10 @@ RUN if [[ "${DEV}" == true ]]; then \
     "baseurl = ${CMAPI_BASEURL}" \
     "gpgcheck = 0" \
     "enabled = 1" \
-    "module_hotfixes = 1" > /etc/yum.repos.d/engineering.repo; fi
+    "module_hotfixes = 1" > /etc/yum.repos.d/engineering.repo; \
+    else \
+    bash /tmp/repo ${VERSION}; \
+    fi
  
 # RUN if [[ "${DEV}" == true ]]; then \
 #     rm -f  /etc/yum.repos.d/mariadb.repo;fi
@@ -114,7 +117,9 @@ RUN dnf -y install \
     mysql_tzinfo_to_sql /usr/share/zoneinfo | mariadb mysql && \
     /etc/init.d/mariadb stop && \
     dnf -y install MariaDB-columnstore-engine \
-    MariaDB-columnstore-cmapi
+    MariaDB-columnstore-cmapi &&\
+    if [[ "${SPIDER}" == true ]]; then \
+    dnf -y install MariaDB-spider-engine; fi
 
     # MariaDB-spider-engine \
 

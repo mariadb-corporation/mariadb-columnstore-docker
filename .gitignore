@@ -1,5 +1,6 @@
 .DS_Store
 .env
-push
+push_sky
+push_public
 clean
 .secrets
