@@ -16,7 +16,8 @@ docker build --rm \
     --build-arg MCS_REPO=$MCS_REPO \
     --build-arg MCS_BASEURL=$MCS_BASEURL \
     --build-arg CMAPI_REPO=$CMAPI_REPO \
-    --build-arg CMAPI_BASEURL=$CMAPI_BASEURL .
+    --build-arg CMAPI_BASEURL=$CMAPI_BASEURL \
+    --build-arg SPIDER=$SPIDER .
 
 if [[ $CLUSTER == true ]]; then
     if [[ $MAXSCALE == true ]]; then
