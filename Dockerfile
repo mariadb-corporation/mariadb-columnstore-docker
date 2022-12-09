@@ -121,7 +121,6 @@ RUN dnf -y install \
     if [[ "${SPIDER}" == true ]]; then \
     dnf -y install MariaDB-spider-engine; fi
 
-    # MariaDB-spider-engine \
 
 # Copy Config Files & Scripts To Image
 COPY config/etc/ /etc/
