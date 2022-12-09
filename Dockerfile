@@ -119,7 +119,9 @@ RUN dnf -y install \
     dnf -y install MariaDB-columnstore-engine \
     MariaDB-columnstore-cmapi &&\
     if [[ "${SPIDER}" == true ]]; then \
-    dnf -y install MariaDB-spider-engine; fi
+    dnf -y install MariaDB-spider-engine; fi && \
+    if [[ "${DEV}" == true ]]; then \
+    dnf -y install MariaDB-test; fi
 
 
 # Copy Config Files & Scripts To Image
