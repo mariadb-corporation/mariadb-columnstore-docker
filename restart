@@ -12,7 +12,7 @@ if [[ $CLUSTER == true ]]; then
         sleep  5
         docker compose -f docker-compose-mxs.yml up -d
         #========= docker exec -it $PM1 provision-mxs
-        sleep 15
+        # sleep 15
         # docker exec -it $PM1 provision
         # run local copy - not image copy
         docker cp scripts/provision $PM1:/provision 

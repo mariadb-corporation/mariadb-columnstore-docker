@@ -43,7 +43,7 @@ for host in $hosts;
 
 $cmd
 
-echo " sleeeeeep"
+echo " sleep 10 "
 sleep 10
 
 mcs cluster status
