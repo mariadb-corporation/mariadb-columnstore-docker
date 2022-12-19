@@ -171,7 +171,7 @@ Validating ColumnStore engine ... done
 
 ```mcs cluster set mode --mode readwrite```
 
-#### Other CLI Tools
+## Other CLI Tools
 
 *   `core`  Change directory to /var/log/mariadb/columnstore/corefiles
 *   `dbrm` Change directory to /var/lib/columnstore/data1/systemFiles/dbrm
