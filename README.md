@@ -27,7 +27,6 @@ Also make sure to grab your download credentials from our website:
 *   Customize the ```.env``` file
 *   Customize the ```.secrets``` file
 *   ```$ ./build```
-*   ```$ ./run_project```
 
 ```
 Waiting for PM1 to be initialized ................... done
