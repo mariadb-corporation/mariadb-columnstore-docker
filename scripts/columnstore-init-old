@@ -3,17 +3,22 @@
 # Set Path Variables
 COLXML="/etc/columnstore/Columnstore.xml"
 IFLAG="/etc/columnstore/container-initialized"
+LOG_PREFIX="/var/log/mariadb/columnstore"
 MCS_INSTALL_BIN="/usr/bin"
+LEGACY="$MCS_INSTALL_BIN/ExeMgr"
 JEMALLOC_PATH="/usr/lib64/libjemalloc.so.2"
 
 export LD_PRELOAD=$JEMALLOC_PATH
 
 # Set StorageManager Defaults If Missing
+ASYNC_CONN="${ASYNC_CONN:-false}"
+ANALYTICS_ONLY="${ANALYTICS_ONLY:-false}"
 SPIDER="${SPIDER:-false}"
 USE_S3_STORAGE="${USE_S3_STORAGE:-false}"
 PM1_DNS="${PM1_DNS:-mcs1}"
 
 # Set Credential Defaults If Missing
+CMAPI_KEY="${CMAPI_KEY:-somekey123}"
 CEJ_USER="${CEJ_USER:-cej}"
 CEJ_PASS="${CEJ_PASS:-C0lumnStore!}"
 MAX_USER="${MAX_USER:-maxscale}"
@@ -28,13 +33,21 @@ SKYSQL_INITIALIZATION="${SKYSQL_INITIALIZATION:-0}"
 
 # Miscellaneous Variables
 SERVER_ID=$(hostname -i | cut -d "." -f 4)
+
+if [ -f $LEGACY ]
+then
+    PROGS=('StorageManager' 'load_brm' 'workernode' 'controllernode' 'PrimProc' 'ExeMgr' 'DMLProc' 'DDLProc' 'WriteEngineServer')
+else
+    PROGS=('StorageManager' 'load_brm' 'workernode' 'controllernode' 'PrimProc' 'DMLProc' 'DDLProc' 'WriteEngineServer')
+fi
+
 RET=$'\n'
 
 # Copy Back MariaDB Folders
-#rsync -ravz --delete /opt/var/lib/mysql /var/lib
-#rsync -ravz --delete /opt/var/lib/columnstore /var/lib
-#rsync -ravz --delete /opt/etc/my.cnf.d /etc
-#rsync -ravz --delete /opt/etc/columnstore /etc
+rsync -ravz --delete /opt/var/lib/mysql /var/lib
+rsync -ravz --delete /opt/var/lib/columnstore /var/lib
+rsync -ravz --delete /opt/etc/my.cnf.d /etc
+rsync -ravz --delete /opt/etc/columnstore /etc
 
 # Adjust Columnstore Cluster Configuration
 cat <<EOT >> /etc/my.cnf.d/columnstore.cnf
@@ -61,15 +74,23 @@ cat <<EOT >> /etc/my.cnf.d/spider.cnf
 [mariadb]
 plugin-load-add=ha_spider.so
 spider_table_crd_thread_count=1
-spider_table_sts_thread_count=1$RET
+spider_table_sts_thread_count=1
 EOT
 fi
+
+# Add API Key To 'cmapi_server.conf'
+sed -i "s@^x-api-key.*@x-api-key = '${CMAPI_KEY//&/\\&}'@" /etc/columnstore/cmapi_server.conf
 
 # Storagemanager Configuration
 if [ $USE_S3_STORAGE = true ]; then
     xmlstarlet ed -L -u '/Columnstore/Installation/DBRootStorageType' -v "StorageManager" $COLXML
     xmlstarlet ed -L -u '/Columnstore/StorageManager/Enabled' -v "Y" $COLXML
     xmlstarlet ed -L -u '/Columnstore/SystemConfig/DataFilePlugin' -v "libcloudio.so" $COLXML
+    if [ $ASYNC_CONN = true ]; then
+        sed -i "s|object_size = 5M|object_size = 2M|" /etc/columnstore/storagemanager.cnf
+        sed -i "s|max_concurrent_uploads = 21|max_concurrent_uploads = 2|" /etc/columnstore/storagemanager.cnf
+        sed -i "s|max_concurrent_downloads = 21|max_concurrent_downloads = 10|" /etc/columnstore/storagemanager.cnf
+    fi
     sed -i "s|cache_size = 2g|cache_size = 4g|" /etc/columnstore/storagemanager.cnf
     sed -i "s|^service =.*|service = S3|" /etc/columnstore/storagemanager.cnf
     sed -i "s|^region =.*|region = $S3_REGION|" /etc/columnstore/storagemanager.cnf
@@ -79,16 +100,90 @@ if [ $USE_S3_STORAGE = true ]; then
     sed -i "s|^# aws_secret_access_key =.*|aws_secret_access_key = $S3_SECRET_ACCESS_KEY|" /etc/columnstore/storagemanager.cnf
 fi
 
+# Set Instance Type
+if [ $ANALYTICS_ONLY = true ]; then
+    echo '' >> /etc/my.cnf.d/columnstore.cnf
+    echo 'default_storage_engine=Columnstore' >> /etc/my.cnf.d/columnstore.cnf
+    echo 'enforce_storage_engine=Columnstore' >> /etc/my.cnf.d/columnstore.cnf
+fi
+
+# Verify All Programs Are Available
+for i in "${PROGS[@]}" ; do
+    if [ ! -x $MCS_INSTALL_BIN/$i ] ; then
+        echo "$i doesn't exist."
+        exit 1
+    fi
+done
+
 # Conditional Provisioning
 if [[ "$PM1_DNS" == "$(hostname -s)"* || "$PM1_DNS" == "$(hostname -s)" ]]; then
-    #mcs cluster start
-    #dbbuilder 7
+
+    # Start Primary Node
+    echo 'Starting primary node...'
+
+    echo 'Starting StorageManager'
+    touch $LOG_PREFIX/storagemanager.log && chmod 666 $LOG_PREFIX/storagemanager.log
+    $MCS_INSTALL_BIN/StorageManager &> $LOG_PREFIX/storagemanager.log &
+    echo "StorageManager PID = $!"
+
+    sleep 1
+
+    echo 'Loading BRM'
+    $MCS_INSTALL_BIN/mcs-loadbrm.py no > /dev/null 2>&1
+
+    echo 'Starting workernode'
+    touch $LOG_PREFIX/workernode.log && chmod 666 $LOG_PREFIX/workernode.log
+    $MCS_INSTALL_BIN/workernode DBRM_Worker1 &> $LOG_PREFIX/workernode.log &
+    echo "workernode PID = $!"
+
+    echo 'Starting controllernode'
+    touch $LOG_PREFIX/controllernode.log && chmod 666 $LOG_PREFIX/controllernode.log
+    $MCS_INSTALL_BIN/controllernode &> $LOG_PREFIX/controllernode.log &
+    echo "controllernode PID = $!"
+
+    sleep 2
+
+    echo 'Starting PrimProc'
+    touch $LOG_PREFIX/primproc.log && chmod 666 $LOG_PREFIX/primproc.log
+    $MCS_INSTALL_BIN/PrimProc &> $LOG_PREFIX/primproc.log &
+    echo "PrimProc PID = $!"
+
+    sleep 1
+
+    if [ -f $LEGACY ]
+    then
+        echo 'Starting ExeMgr'
+        touch $LOG_PREFIX/exemgr.log && chmod 666 $LOG_PREFIX/exemgr.log
+        $MCS_INSTALL_BIN/ExeMgr &> $LOG_PREFIX/exemgr.log &
+        echo "ExeMgr PID = $!"
+    fi
+
+    echo 'Starting WriteEngineServer'
+    touch $LOG_PREFIX/writeengineserver.log && chmod 666 $LOG_PREFIX/writeengineserver.log
+    $MCS_INSTALL_BIN/WriteEngineServer &> $LOG_PREFIX/writeengineserver.log &
+    echo "WriteEngineServer PID = $!"
+
+    sleep 2
+
+    echo 'Starting DMLProc'
+    touch $LOG_PREFIX/dmlproc.log && chmod 666 $LOG_PREFIX/dmlproc.log
+    $MCS_INSTALL_BIN/DMLProc &> $LOG_PREFIX/dmlproc.log &
+    echo "DMLProc PID = $!"
+
+    echo 'Starting DDLProc'
+    touch $LOG_PREFIX/ddlproc.log && chmod 666 $LOG_PREFIX/ddlproc.log
+    $MCS_INSTALL_BIN/DDLProc &> $LOG_PREFIX/ddlproc.log &
+    echo "DDLProc PID = $!"
+
+    echo 'Running dbbuilder'
+    $MCS_INSTALL_BIN/dbbuilder 7 &> $LOG_PREFIX/dbbuilder.log
+
     mariadbd-safe &
     sleep 5
 
     # Set Up MariaDB Cross Engine Join & Replication
-    mariadb-admin ping > /dev/null 2>&1
-    if [[ $? -eq 0 ]]; then
+    MARIADB_RUNNING=$(mariadb-admin ping)
+    if [[ $MARIADB_RUNNING == *"alive"* ]]; then
 
         # Set Up Cross Engine Join User
         $MCS_INSTALL_BIN/mariadb -e "
@@ -198,15 +293,45 @@ if [[ "$PM1_DNS" == "$(hostname -s)"* || "$PM1_DNS" == "$(hostname -s)" ]]; then
             echo 'ERROR: Securing MariaDB'
             exit 1
         fi
-    else
-        echo 'ERROR: MariaDB Is Not Running'
-        exit 1
     fi
 
     # Stop Primary Node
-    echo 'Stopping Primary Node'
+    echo 'Stopping primary node...'
+
     mariadb-admin shutdown
-    #mcs cluster stop
+
+    if [ ! -z "$(pidof "${PROGS[@]}")" ]; then
+        $MCS_INSTALL_BIN/mcs-savebrm.py
+    fi
+    for i in "${PROGS[@]}"; do
+        if [ ! -z "$(pidof $i)" ]; then
+            echo "Sending SIGTERM to $i"
+            pkill -15 $i > /dev/null
+            sleep 3
+            counter=1
+            while [[ -n $(pidof StorageManager) ]] && [[ $counter -le 60 ]]
+            do
+                sleep 1
+                ((counter++))
+            done
+        fi
+    done
+    for i in "${PROGS[@]}"; do
+        if [ ! -z "$(pidof $i)" ]; then
+            echo "Sending SIGKILL to $i"
+            pkill -9 $i > /dev/null
+            sleep 3
+            counter=1
+            while [[ -n $(pidof StorageManager) ]] && [[ $counter -le 60 ]]
+            do
+                sleep 1
+                ((counter++))
+            done
+        fi
+    done
+
+    echo 'Clearing shared memory...'
+    $MCS_INSTALL_BIN/clearShm
 
 else
 
@@ -243,9 +368,6 @@ fi
 # Standardize Log Ownership
 chown -R root:mysql /var/log/mariadb
 find /var/log/mariadb/ -type d -exec chmod g+ws {} \;
-
-# Clear Shared Memory
-clearShm
 
 # Mark Container Initialized
 touch $IFLAG

@@ -19,10 +19,10 @@ docker build --rm \
     --build-arg CMAPI_BASEURL=$CMAPI_BASEURL \
     --build-arg SPIDER=$SPIDER .
 
-if [[ $CLUSTER == true ]]; then
+if [[ $USE_COMPOSE == true ]]; then
     if [[ $MAXSCALE == true ]]; then
     docker compose -f docker-compose-mxs.yml up -d
-    docker exec -it $PM1 provision-mxs
+    docker exec -it $PM1 provision
     else
     docker compose -f docker-compose.yml up -d
     docker exec -it $PM1 provision

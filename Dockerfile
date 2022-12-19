@@ -125,23 +125,21 @@ COPY config/etc/ /etc/
 COPY scripts/provision \
     scripts/provision-mxs \
     scripts/columnstore-init \
-    scripts/cmapi-start \
-    scripts/cmapi-stop \
-    scripts/cmapi-restart \
+    scripts/mcs-start \
+    scripts/mcs-stop \
+    scripts/mcs-restart \
     scripts/skysql-specific-startup.sh \
-    scripts/start-services \
-    scripts/mcs-process /usr/bin/
+    scripts/start-services /usr/bin/
 
 # Make Scripts Executable
 RUN chmod +x /usr/bin/provision \
     /usr/bin/provision-mxs \
     /usr/bin/columnstore-init \
-    /usr/bin/cmapi-start \
-    /usr/bin/cmapi-stop \
-    /usr/bin/cmapi-restart \
+    /usr/bin/mcs-start \
+    /usr/bin/mcs-stop \
+    /usr/bin/mcs-restart \
     /usr/bin/skysql-specific-startup.sh \
-    /usr/bin/start-services \
-    /usr/bin/mcs-process
+    /usr/bin/start-services
 
 # Stream Edit Some Configs
 RUN sed -i 's|set daemon\s.30|set daemon 5|g' /etc/monitrc && \

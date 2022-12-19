@@ -2,7 +2,8 @@
 
 function exitColumnStore {
     monit unmonitor all
-    cmapi-stop
+    mariadb-admin shutdown
+    mcs-stop
     monit quit
 }
 

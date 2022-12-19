@@ -2,7 +2,6 @@
 
 # Set Some Variables
 COLXML='/etc/columnstore/Columnstore.xml'
-CMAPICFG='/etc/columnstore/cmapi_server.conf'
 IFLAG='/etc/columnstore/container-initialized'
 LOG_PREFIX='/var/log/mariadb/columnstore'
 MCS_INSTALL_BIN='/usr/bin'
@@ -10,15 +9,6 @@ CMAPI_KEY="${CMAPI_KEY:-somekey123}"
 TOTALUMMEMORY="${TOTALUMMEMORY:-25%}"
 NUMBLOCKSPCT="${NUMBLOCKPCT:-50}"
 SKYSQL_INITIALIZATION="${SKYSQL_INITIALIZATION:-0}"
-
-# Intialize Container If Necessary
-if [ ! -e $IFLAG ]; then
-    $MCS_INSTALL_BIN/columnstore-init &> $LOG_PREFIX/columnstore-init.log
-    if [ $? -ne 0 ]; then
-        echo "ERROR: During Initialization."
-        exit 1
-    fi
-fi
 
 # Dynamic Memory Allocation
 if [ -f /sys/fs/cgroup/memory/memory.limit_in_bytes ] && [ "$(cat /sys/fs/cgroup/memory/memory.limit_in_bytes)" -le "$(free -b | awk 'NR==2{printf "%d", $2 }')" ]; then
@@ -39,25 +29,23 @@ cd /usr/share/columnstore/cmapi || exit
 PYTHONPATH=/usr/share/columnstore/cmapi/deps /usr/share/columnstore/cmapi/python/bin/python3 -m cmapi_server &> $LOG_PREFIX/cmapi_server.log &
 echo CMAPI PID = $!
 
-# Start MariaDB & Columnstore
-mariadbd-safe &
-sleep 5
-
-# Calling Start Function Of API
-CMAPI="curl --write-out '%{http_code}' --silent --output /dev/null -X PUT https://$(mcsGetConfig PMS1 IPaddr):8640/cmapi/0.4.0/cluster"
-CMAPI_KEY=$(grep -r 'x-api-key' $CMAPICFG | cut -d= -f2- | xargs)
-HEADER="--header 'Content-Type:application/json' --header 'x-api-key:$CMAPI_KEY'"
-PAYLOAD="--data '{\"timeout\":60}'"
-
-if [[ $(hostname -s) == $(mcsGetConfig PMS1 IPaddr) ]]; then
-    if [ -e $IFLAG ]; then
-        bash -c "$CMAPI/start $HEADER $PAYLOAD -k"
+# Intialize Container If Necessary
+if [ ! -e $IFLAG ]; then
+    $MCS_INSTALL_BIN/columnstore-init &> $LOG_PREFIX/columnstore-init.log
+    if [ $? -ne 0 ]; then
+        echo "ERROR: During Initialization."
+        exit 1
     fi
 fi
 
-# Execute The SkySQL Specific Startup Script
-if [ $SKYSQL_INITIALIZATION -eq 1 ]; then
-    $MCS_INSTALL_BIN/skysql-specific-startup.sh
+# Start MariaDB & Columnstore
+mariadb-admin ping > /dev/null 2>&1
+
+if [[ $? -ne 0 ]]; then
+    mariadbd-safe &
+    sleep 5
 fi
+
+mcs cluster restart > /dev/null 2>&1
 
 exit 0

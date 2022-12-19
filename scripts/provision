@@ -1,25 +1,17 @@
 #!/usr/bin/env bash
 
 CMAPI_KEY="${CMAPI_KEY:-somekey123}"
+MAXSCALE="${MAXSCALE:-false}"
 IFLAG='/etc/columnstore/container-initialized'
-CLUSTER="${CLUSTER:-false}"
+
+HOSTS=( "$@" )
+if [[ "$#" -eq 0 ]]; then
+    HOSTS=(mcs1 mcs2 mcs3)
+fi
 
 RED='\033[0;31m'
 GREEN='\033[0;32m'
 NC='\033[0m'
-
-CMAPI="curl --write-out '%{http_code}' --silent --output /dev/null -X PUT https://${PM1}:8640/cmapi/0.4.0/cluster"
-
-HEADER1="'Content-Type:application/json'"
-HEADER2="'x-api-key:$CMAPI_KEY'"
-
-PAYLOAD1='{"timeout":60, "node": "'$PM1'"}'
-PAYLOAD2='{"timeout":60, "node": "'$PM2'"}'
-PAYLOAD3='{"timeout":60, "node": "'$PM3'"}'
-
-RESOURCE1='node'
-
-MODULES=("$CMAPI/$RESOURCE1 --header $HEADER1 --header $HEADER2 --data '$PAYLOAD1' -k" "$CMAPI/$RESOURCE1 --header $HEADER1 --header $HEADER2 --data '$PAYLOAD2' -k" "$CMAPI/$RESOURCE1 --header $HEADER1 --header $HEADER2 --data '$PAYLOAD3' -k")
 
 # Wait For Primary Node To Start
 if [ ! -f $IFLAG ]; then
@@ -34,63 +26,32 @@ fi
 
 sleep 3
 
-if [[ $CLUSTER == false ]]; then
-    # If Standalone Server Add Single Node
-    RESULT0=$(bash -c "${MODULES[0]}")
-    if [[ "$RESULT0" == 200 ]]; then
-        printf "Adding PM1 to CMAPI ... ${GREEN}done${NC}\n"
-    else
-        printf "Adding PM1 to CMAPI ... ${RED}fail${NC}\n"
-        exit 1
-    fi
-else
-    # Else Add Multiple Nodes Cluster
-    count=1
-    for i in "${MODULES[@]}"
-    do
-        RESULT1=$(bash -c "$i")
-        if [[ "$RESULT1" == 200 ]]; then
-            printf "Adding PM$count to CMAPI ... ${GREEN}done${NC}\n"
-        else
-            printf "Adding PM$count to CMAPI ... ${RED}fail${NC}\n"
-            exit 1
-        fi
-        (( count++ ))
-    done
-fi
-
-# Wait For CMAPI To Do It's Thing
-echo -n 'Waiting for CMAPI cluster start '
-
-log_check() {
-    until tail /var/log/mariadb/columnstore/cmapi_server.log | grep -q "cluster/start"
-    do
-        printf "."
-        sleep 2
-    done
-}
-
-declare -fxr log_check
-
-timeout 30 bash -ce 'log_check'
-
+# Set API Key
+mcs cluster set api-key --key $CMAPI_KEY > /dev/null 2>&1
 if [ $? -ne 0 ]; then
-    cmapi-restart > /dev/null 2>&1
-fi
-
-timeout 30 bash -ce 'log_check'
-
-if [ $? -ne 0 ]; then
-    printf " ${RED}fail${NC}\n"
+    echo "Failed Setting API Key"
     exit 1
 fi
 
-while [ "$(mariadb -sN -e 'SELECT mcsSystemReady()')" -eq 0 ]
+# Add Nodes To System
+count=1
+for i in "${HOSTS[@]}"
 do
-    printf "."
-    sleep 2
+    mcs cluster node add --node "$i" > /dev/null 2>&1
+    if [[ $? -eq 0 ]]; then
+        printf "Adding PM$count to CMAPI ... ${GREEN}done${NC}\n"
+    else
+        printf "Adding PM$count to CMAPI ... ${RED}fail${NC}\n"
+        exit 1
+    fi
+    (( count++ ))
 done
-printf " ${GREEN}done${NC}\n"
+
+if [[ ${MAXSCALE} == true ]]; then
+    /usr/bin/provision-mxs
+fi
+
+sleep 30
 
 # Validate
 QUERY=$(mariadb -sN -e "DROP DATABASE IF EXISTS validate; CREATE DATABASE validate; CREATE TABLE validate.sample (id INT) ENGINE=columnstore; INSERT INTO validate.sample VALUES (99); SELECT id FROM validate.sample;" 2>&1)

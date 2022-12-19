@@ -5,8 +5,7 @@ CMAPI_PID=$(pgrep -f cmapi_server)
 
 # Stop System
 echo 'Stopping Cluster Manager API...'
-
-mariadb-admin shutdown
+mcs cluster stop > /dev/null 2>&1
 
 if [[ ! -z $CMAPI_PID ]]; then
     kill $CMAPI_PID > /dev/null
