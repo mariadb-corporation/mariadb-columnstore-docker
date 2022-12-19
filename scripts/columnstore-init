@@ -32,7 +32,7 @@ RET=$'\n'
 
 # Copy Back MariaDB Folders
 rsync -ravz --delete /opt/var/lib/mysql /var/lib
-rsync -ravz --delete /opt/var/lib/columnstore /var/lib
+rsync -ravz --delete --exclude data2 --exclude data3 --exclude storagemanager /opt/var/lib/columnstore /var/lib
 rsync -ravz --delete /opt/etc/my.cnf.d /etc
 rsync -ravz --delete /opt/etc/columnstore /etc
 
