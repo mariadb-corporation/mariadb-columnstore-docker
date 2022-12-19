@@ -39,7 +39,6 @@ if [ $? -ne 0 ]; then
 fi
 
 # Add Nodes To System
-
 mcs cluster node add "${EXPANDED[@]}" > /dev/null 2>&1
 if [[ $? -eq 0 ]]; then
     printf "Adding PMs to Cluster ... ${GREEN}done${NC}\n"
