@@ -128,24 +128,7 @@ Validating ColumnStore engine ... done
 *   username: `admin`
 *   password: `mariadb`
 
-#### Cluster Manipulation Tools
-
-*   `core`  Change directory to /var/log/mariadb/columnstore/corefiles
-*   `dbrm` Change directory to /var/lib/columnstore/data1/systemFiles/dbrm
-*   `extentSave` Backup extent map
-*   `mcsModule` View current module name
-*   `mcsReadOnly` Set cluster to Read-Only mode via CMAPI
-*   `mcsReadWrite` Set cluster to Read-Write mode via CMAPI
-*   `mcsShutdown` Shutdown cluster via CMAPI
-*   `mcsStart` Start cluster via CMAPI
-*   `mcsStatus` Get cluster status via CMAPI
-*   `tcrit` Tail crit.log
-*   `tdebug` Tail debug.log
-*   `terror` Tail error.log
-*   `tinfo` Tail info.log
-*   `twarning` Tail warning.log
-
-#### Other Glossary Items
+#### Glossary Items
 *   **PM**: Performance Module
 *   **PM1**: Primary Database Node
 *   **PM2**: Secondary Database Node
@@ -187,6 +170,17 @@ Validating ColumnStore engine ... done
 ###### Mode Set Read/Write:
 
 ```mcs cluster set mode --mode readwrite```
+
+#### Other CLI Tools
+
+*   `core`  Change directory to /var/log/mariadb/columnstore/corefiles
+*   `dbrm` Change directory to /var/lib/columnstore/data1/systemFiles/dbrm
+*   `extentSave` Backup extent map
+*   `tcrit` Tail crit.log
+*   `tdebug` Tail debug.log
+*   `terror` Tail error.log
+*   `tinfo` Tail info.log
+*   `twarning` Tail warning.log
 
 
 ## REST-API Instructions
