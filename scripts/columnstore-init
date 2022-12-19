@@ -31,10 +31,10 @@ SERVER_ID=$(hostname -i | cut -d "." -f 4)
 RET=$'\n'
 
 # Copy Back MariaDB Folders
-#rsync -ravz --delete /opt/var/lib/mysql /var/lib
-#rsync -ravz --delete /opt/var/lib/columnstore /var/lib
-#rsync -ravz --delete /opt/etc/my.cnf.d /etc
-#rsync -ravz --delete /opt/etc/columnstore /etc
+rsync -ravz --delete /opt/var/lib/mysql /var/lib
+rsync -ravz --delete /opt/var/lib/columnstore /var/lib
+rsync -ravz --delete /opt/etc/my.cnf.d /etc
+rsync -ravz --delete /opt/etc/columnstore /etc
 
 # Adjust Columnstore Cluster Configuration
 cat <<EOT >> /etc/my.cnf.d/columnstore.cnf
@@ -81,8 +81,6 @@ fi
 
 # Conditional Provisioning
 if [[ "$PM1_DNS" == "$(hostname -s)"* || "$PM1_DNS" == "$(hostname -s)" ]]; then
-    #mcs cluster start
-    #dbbuilder 7
     mariadbd-safe &
     sleep 5
 
@@ -206,7 +204,7 @@ if [[ "$PM1_DNS" == "$(hostname -s)"* || "$PM1_DNS" == "$(hostname -s)" ]]; then
     # Stop Primary Node
     echo 'Stopping Primary Node'
     mariadb-admin shutdown
-    #mcs cluster stop
+    clearShm
 
 else
 
@@ -243,9 +241,6 @@ fi
 # Standardize Log Ownership
 chown -R root:mysql /var/log/mariadb
 find /var/log/mariadb/ -type d -exec chmod g+ws {} \;
-
-# Clear Shared Memory
-clearShm
 
 # Mark Container Initialized
 touch $IFLAG
