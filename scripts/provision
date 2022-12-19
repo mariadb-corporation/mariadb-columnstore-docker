@@ -9,6 +9,11 @@ if [[ "$#" -eq 0 ]]; then
     HOSTS=(mcs1 mcs2 mcs3)
 fi
 
+EXPANDED=()
+for e in "${HOSTS[@]}"; do
+    EXPANDED+=("--node ${e}")
+done
+
 RED='\033[0;31m'
 GREEN='\033[0;32m'
 NC='\033[0m'
@@ -34,18 +39,14 @@ if [ $? -ne 0 ]; then
 fi
 
 # Add Nodes To System
-count=1
-for i in "${HOSTS[@]}"
-do
-    mcs cluster node add --node "$i" > /dev/null 2>&1
-    if [[ $? -eq 0 ]]; then
-        printf "Adding PM$count to CMAPI ... ${GREEN}done${NC}\n"
-    else
-        printf "Adding PM$count to CMAPI ... ${RED}fail${NC}\n"
-        exit 1
-    fi
-    (( count++ ))
-done
+
+mcs cluster node add "${EXPANDED[@]}" > /dev/null 2>&1
+if [[ $? -eq 0 ]]; then
+    printf "Adding PMs to Cluster ... ${GREEN}done${NC}\n"
+else
+    printf "Adding PMs to Cluster ... ${RED}fail${NC}\n"
+    exit 1
+fi
 
 if [[ ${MAXSCALE} == true ]]; then
     /usr/bin/provision-mxs
