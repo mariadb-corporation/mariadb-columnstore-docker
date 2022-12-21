@@ -34,7 +34,7 @@ SKYSQL_INITIALIZATION="${SKYSQL_INITIALIZATION:-0}"
 
 # Hostname Variables
 HOSTNAME="$(hostname -s)"
-STEP1="${HOSTNAME} | cut -d '.' -f 1"
+STEP1=$(echo "${HOSTNAME}" | cut -d '.' -f 1)
 STEP2=${STEP1: -1}
 SERVER_ID=$((STEP2 + 10 ))
 PM1_DNS="${PM1_DNS:-mcs1}"
