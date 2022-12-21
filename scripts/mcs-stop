@@ -2,11 +2,37 @@
 
 # Set Variables
 CMAPI_PID=$(pgrep -f cmapi_server)
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+NC='\033[0m'
 
-# Stop System
-echo 'Stopping Cluster Manager API...'
-mcs cluster stop > /dev/null 2>&1
+echo "Shutting Down System"
 
+# Stop Columnstore
+mcs cluster stop  > /dev/null 2>&1
+if [[ $? -eq 0 ]]; then
+    printf "Stopping ColumnStore Cluster... ${GREEN}done${NC}\n"
+else
+    printf "Stopping ColumnStore Cluster... ${RED}fail${NC}\n"
+    exit 1
+fi
+
+# Stop CMAPI
 if [[ ! -z $CMAPI_PID ]]; then
     kill $CMAPI_PID > /dev/null
+    if [[ $? -eq 0 ]]; then
+        printf "Stopping Cluster Manager API... ${GREEN}done${NC}\n"
+    else
+        printf "Stopping Cluster Manager API... ${RED}fail${NC}\n"
+        exit 1
+    fi
+fi
+
+# Stop MariaDB
+mariadb-admin shutdown
+if [[ $? -eq 0 ]]; then
+    printf "Stopping MariaDB Server... ${GREEN}done${NC}\n"
+else
+    printf "Stopping MariaDB Server... ${RED}fail${NC}\n"
+    exit 1
 fi
