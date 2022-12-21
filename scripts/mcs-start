@@ -18,7 +18,7 @@ echo -e "${CYAN}***** Starting ColumnStore System *****${NC}"
 # Start CMAPI
 touch "${LOG_PREFIX}"/cmapi_server.log && chmod 666 "${LOG_PREFIX}"/cmapi_server.log
 cd /usr/share/columnstore/cmapi || exit
-if PYTHONPATH=/usr/share/columnstore/cmapi/deps /usr/share/columnstore/cmapi/python/bin/python3 -m cmapi_server &> "${LOG_PREFIX}"/cmapi_server.log &
+if PYTHONPATH=/usr/share/columnstore/cmapi/deps /usr/share/columnstore/cmapi/python/bin/python3 -m cmapi_server &> /dev/null &
 then
     echo -e "Starting Cluster Manager API... ${GREEN}done${NC}"
 else
