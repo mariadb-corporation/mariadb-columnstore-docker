@@ -6,14 +6,20 @@ IFLAG="/etc/columnstore/container-initialized"
 MCS_INSTALL_BIN="/usr/bin"
 JEMALLOC_PATH="/usr/lib64/libjemalloc.so.2"
 
-export LD_PRELOAD=$JEMALLOC_PATH
+export LD_PRELOAD=${JEMALLOC_PATH}
 
 # Set StorageManager Defaults If Missing
-SPIDER="${SPIDER:-false}"
 USE_S3_STORAGE="${USE_S3_STORAGE:-false}"
-PM1_DNS="${PM1_DNS:-mcs1}"
+S3_REGION="${S3_REGION:-us-west-2}"
+S3_BUCKET="${S3_BUCKET:-mybucket}"
+S3_ENDPOINT="${S3_ENDPOINT:-s3.us-west-2.amazonaws.com}"
+S3_ACCESS_KEY_ID="${S3_ACCESS_KEY_ID:-fakeaccesskeyid}"
+S3_SECRET_ACCESS_KEY="${S3_SECRET_ACCESS_KEY:-fakesecretaccesskey}"
 
 # Set Credential Defaults If Missing
+ADMIN_USER="${ADMIN_USER:-admin}"
+ADMIN_PASS="${ADMIN_PASS:-C0lumnStore!}"
+ADMIN_HOST="${ADMIN_HOST:-%}"
 CEJ_USER="${CEJ_USER:-cej}"
 CEJ_PASS="${CEJ_PASS:-C0lumnStore!}"
 MAX_USER="${MAX_USER:-maxscale}"
@@ -26,9 +32,22 @@ REP_HOST="${REP_HOST:-%}"
 # Set network defaults for SkySQL
 SKYSQL_INITIALIZATION="${SKYSQL_INITIALIZATION:-0}"
 
+# Hostname Variables
+HOSTNAME="$(hostname -s)"
+STEP1="${HOSTNAME} | cut -d '.' -f 1"
+STEP2=${STEP1: -1}
+SERVER_ID=$((STEP2 + 10 ))
+PM1_DNS="${PM1_DNS:-mcs1}"
+if [[ ${SKYSQL_INITIALIZATION} -eq 1 ]]; then
+    if [[ ${HOSTNAME} == *"-"* ]]; then
+        NAMESPACE=$(cat /mnt/skysql/podinfo/namespace)
+        PM1_DNS="cs-node-0.cs-cluster.${NAMESPACE}.svc.cluster.local"
+    fi
+fi
+
 # Miscellaneous Variables
-SERVER_ID=$(hostname -i | cut -d "." -f 4)
 RET=$'\n'
+SPIDER="${SPIDER:-false}"
 
 # Copy Back MariaDB Folders
 rsync -ravz --delete /opt/var/lib/mysql /var/lib
@@ -38,8 +57,8 @@ rsync -ravz --delete /opt/etc/columnstore /etc
 
 # Adjust Columnstore Cluster Configuration
 cat <<EOT >> /etc/my.cnf.d/columnstore.cnf
-$RET# Docker Settings
-server_id = $SERVER_ID
+${RET}# Docker Settings
+server_id = ${SERVER_ID}
 collation_server = utf8_general_ci
 character_set_server = utf8
 log_bin = /var/lib/mysql/mariadb-bin
@@ -52,66 +71,65 @@ innodb_strict_mode = OFF
 log_error = /var/log/mariadb/columnstore/mariadb-error.log
 #columnstore_cache_inserts = ON
 columnstore_compression_type = LZ4
-columnstore_use_import_for_batchinsert=ALWAYS$RET
+columnstore_use_import_for_batchinsert=ALWAYS${RET}
 EOT
 
 # Adjust Spider Configuration
-if [ $SPIDER = true ]; then
-cat <<EOT >> /etc/my.cnf.d/spider.cnf
+if [[ ${SPIDER} = true ]]; then
+    cat <<EOT >> /etc/my.cnf.d/spider.cnf
 [mariadb]
 plugin-load-add=ha_spider.so
 spider_table_crd_thread_count=1
-spider_table_sts_thread_count=1$RET
+spider_table_sts_thread_count=1${RET}
 EOT
 fi
 
 # Storagemanager Configuration
-if [ $USE_S3_STORAGE = true ]; then
-    xmlstarlet ed -L -u '/Columnstore/Installation/DBRootStorageType' -v "StorageManager" $COLXML
-    xmlstarlet ed -L -u '/Columnstore/StorageManager/Enabled' -v "Y" $COLXML
-    xmlstarlet ed -L -u '/Columnstore/SystemConfig/DataFilePlugin' -v "libcloudio.so" $COLXML
+if [[ ${USE_S3_STORAGE} = true ]]; then
+    xmlstarlet ed -L -u '/Columnstore/Installation/DBRootStorageType' -v "StorageManager" "${COLXML}"
+    xmlstarlet ed -L -u '/Columnstore/StorageManager/Enabled' -v "Y" "${COLXML}"
+    xmlstarlet ed -L -u '/Columnstore/SystemConfig/DataFilePlugin' -v "libcloudio.so" "${COLXML}"
     sed -i "s|cache_size = 2g|cache_size = 4g|" /etc/columnstore/storagemanager.cnf
     sed -i "s|^service =.*|service = S3|" /etc/columnstore/storagemanager.cnf
-    sed -i "s|^region =.*|region = $S3_REGION|" /etc/columnstore/storagemanager.cnf
-    sed -i "s|^bucket =.*|bucket = $S3_BUCKET|" /etc/columnstore/storagemanager.cnf
-    sed -i "s|^# endpoint =.*|endpoint = $S3_ENDPOINT|" /etc/columnstore/storagemanager.cnf
-    sed -i "s|^# aws_access_key_id =.*|aws_access_key_id = $S3_ACCESS_KEY_ID|" /etc/columnstore/storagemanager.cnf
-    sed -i "s|^# aws_secret_access_key =.*|aws_secret_access_key = $S3_SECRET_ACCESS_KEY|" /etc/columnstore/storagemanager.cnf
+    sed -i "s|^region =.*|region = ${S3_REGION}|" /etc/columnstore/storagemanager.cnf
+    sed -i "s|^bucket =.*|bucket = ${S3_BUCKET}|" /etc/columnstore/storagemanager.cnf
+    sed -i "s|^# endpoint =.*|endpoint = ${S3_ENDPOINT}|" /etc/columnstore/storagemanager.cnf
+    sed -i "s|^# aws_access_key_id =.*|aws_access_key_id = ${S3_ACCESS_KEY_ID}|" /etc/columnstore/storagemanager.cnf
+    sed -i "s|^# aws_secret_access_key =.*|aws_secret_access_key = ${S3_SECRET_ACCESS_KEY}|" /etc/columnstore/storagemanager.cnf
 fi
 
 # Conditional Provisioning
-if [[ "$PM1_DNS" == "$(hostname -s)"* || "$PM1_DNS" == "$(hostname -s)" ]]; then
+if [[ "${PM1_DNS}" == "${HOSTNAME}"* || "${PM1_DNS}" == "${HOSTNAME}" ]]; then
     mariadbd-safe &
     sleep 5
 
     # Set Up MariaDB Cross Engine Join & Replication
-    mariadb-admin ping > /dev/null 2>&1
-    if [[ $? -eq 0 ]]; then
+    if mariadb-admin ping > /dev/null 2>&1; then
 
         # Set Up Cross Engine Join User
-        $MCS_INSTALL_BIN/mariadb -e "
+        "${MCS_INSTALL_BIN}"/mariadb -e "
             GRANT SELECT, PROCESS
-            ON *.* TO '$CEJ_USER'@'127.0.0.1'
-            IDENTIFIED BY '$CEJ_PASS';
-            ALTER USER '$CEJ_USER'@'127.0.0.1' PASSWORD EXPIRE NEVER;
+            ON *.* TO '${CEJ_USER}'@'127.0.0.1'
+            IDENTIFIED BY '${CEJ_PASS}';
+            ALTER USER '${CEJ_USER}'@'127.0.0.1' PASSWORD EXPIRE NEVER;
         "
         if [ $? -ne 0 ]; then
             echo 'ERROR: During cross engine join user creation.'
             exit 1
         fi
-        xmlstarlet ed -L -u '/Columnstore/CrossEngineSupport/User' -v "$CEJ_USER" $COLXML
-        xmlstarlet ed -L -u '/Columnstore/CrossEngineSupport/Password' -v "$CEJ_PASS" $COLXML
-        xmlstarlet ed -L -u '/Columnstore/CrossEngineSupport/host' -v "127.0.0.1" $COLXML
+        xmlstarlet ed -L -u '/Columnstore/CrossEngineSupport/User' -v "${CEJ_USER}" "${COLXML}"
+        xmlstarlet ed -L -u '/Columnstore/CrossEngineSupport/Password' -v "${CEJ_PASS}" "${COLXML}"
+        xmlstarlet ed -L -u '/Columnstore/CrossEngineSupport/host' -v "127.0.0.1" "${COLXML}"
         echo 'Cross engine join user created'
 
         # Set Up Admin User
-        if [ ! -z $ADMIN_USER ] && [ ! -z $ADMIN_PASS ]; then
-            $MCS_INSTALL_BIN/mariadb -e "
+        if [[ -n ${ADMIN_USER} ]] && [[ -n ${ADMIN_PASS} ]]; then
+            "${MCS_INSTALL_BIN}"/mariadb -e "
                 GRANT ALL PRIVILEGES
-                ON *.* TO '$ADMIN_USER'@'$ADMIN_HOST'
-                IDENTIFIED BY '$ADMIN_PASS'
+                ON *.* TO '${ADMIN_USER}'@'${ADMIN_HOST}'
+                IDENTIFIED BY '${ADMIN_PASS}'
                 WITH GRANT OPTION;
-                ALTER USER '$ADMIN_USER'@'$ADMIN_HOST' PASSWORD EXPIRE NEVER;
+                ALTER USER '${ADMIN_USER}'@'${ADMIN_HOST}' PASSWORD EXPIRE NEVER;
             "
             if [ $? -ne 0 ]; then
                 echo "ERROR: During replication user creation."
@@ -121,15 +139,15 @@ if [[ "$PM1_DNS" == "$(hostname -s)"* || "$PM1_DNS" == "$(hostname -s)" ]]; then
         fi
 
         # Set Up Replication User
-        $MCS_INSTALL_BIN/mariadb -e "
+        "${MCS_INSTALL_BIN}"/mariadb -e "
             GRANT REPLICATION SLAVE ADMIN,
             REPLICATION SLAVE,
             BINLOG MONITOR,
             SLAVE MONITOR,
             REPLICATION MASTER ADMIN
-            ON *.* TO '$REP_USER'@'$REP_HOST'
-            IDENTIFIED BY '$REP_PASS';
-            ALTER USER '$REP_USER'@'$REP_HOST' PASSWORD EXPIRE NEVER;
+            ON *.* TO '${REP_USER}'@'${REP_HOST}'
+            IDENTIFIED BY '${REP_PASS}';
+            ALTER USER '${REP_USER}'@'${REP_HOST}' PASSWORD EXPIRE NEVER;
         "
         if [ $? -ne 0 ]; then
             echo "ERROR: During replication user creation."
@@ -138,7 +156,7 @@ if [[ "$PM1_DNS" == "$(hostname -s)"* || "$PM1_DNS" == "$(hostname -s)" ]]; then
         echo 'Replication user created'
 
         # Set Up MaxScale User
-        $MCS_INSTALL_BIN/mariadb -e "
+        "${MCS_INSTALL_BIN}"/mariadb -e "
             GRANT BINLOG ADMIN,
             READ_ONLY ADMIN,
             RELOAD,
@@ -148,34 +166,34 @@ if [[ "$PM1_DNS" == "$(hostname -s)"* || "$PM1_DNS" == "$(hostname -s)" ]]; then
             REPLICATION SLAVE ADMIN,
             REPLICATION SLAVE,
             SHOW DATABASES
-            ON *.* TO '$MAX_USER'@'$MAX_HOST' IDENTIFIED BY '$MAX_PASS';
-            ALTER USER '$MAX_USER'@'$MAX_HOST' PASSWORD EXPIRE NEVER;
+            ON *.* TO '${MAX_USER}'@'${MAX_HOST}' IDENTIFIED BY '${MAX_PASS}';
+            ALTER USER '${MAX_USER}'@'${MAX_HOST}' PASSWORD EXPIRE NEVER;
         "
         if [ $? -ne 0 ]; then
-            echo "ERROR: Creating user '$MAX_USER'@'$MAX_HOST'."
+            echo "ERROR: Creating user '${MAX_USER}'@'${MAX_HOST}'."
             exit 1
         fi
-        $MCS_INSTALL_BIN/mariadb -e "
-            GRANT SELECT ON mysql.columns_priv TO '$MAX_USER'@'$MAX_HOST';
-            GRANT SELECT ON mysql.db TO '$MAX_USER'@'$MAX_HOST';
-            GRANT SELECT ON mysql.procs_priv TO '$MAX_USER'@'$MAX_HOST';
-            GRANT SELECT ON mysql.proxies_priv TO '$MAX_USER'@'$MAX_HOST';
-            GRANT SELECT ON mysql.roles_mapping TO '$MAX_USER'@'$MAX_HOST';
-            GRANT SELECT ON mysql.tables_priv TO '$MAX_USER'@'$MAX_HOST';
-            GRANT SELECT ON mysql.user TO '$MAX_USER'@'$MAX_HOST';
+        "${MCS_INSTALL_BIN}"/mariadb -e "
+            GRANT SELECT ON mysql.columns_priv TO '${MAX_USER}'@'${MAX_HOST}';
+            GRANT SELECT ON mysql.db TO '${MAX_USER}'@'${MAX_HOST}';
+            GRANT SELECT ON mysql.procs_priv TO '${MAX_USER}'@'${MAX_HOST}';
+            GRANT SELECT ON mysql.proxies_priv TO '${MAX_USER}'@'${MAX_HOST}';
+            GRANT SELECT ON mysql.roles_mapping TO '${MAX_USER}'@'${MAX_HOST}';
+            GRANT SELECT ON mysql.tables_priv TO '${MAX_USER}'@'${MAX_HOST}';
+            GRANT SELECT ON mysql.user TO '${MAX_USER}'@'${MAX_HOST}';
         "
         if [ $? -ne 0 ]; then
-            echo "ERROR: Granting SELECT to '$MAX_USER'@'$MAX_HOST'."
+            echo "ERROR: Granting SELECT to '${MAX_USER}'@'${MAX_HOST}'."
             exit 1
         fi
         echo 'MaxScale user created'
 
-        if [ $SKYSQL_INITIALIZATION -eq 1 ] && [ -d "/mnt/skysql/columnstore-container-scripts" ]; then
+        if [[ ${SKYSQL_INITIALIZATION} -eq 1 ]] && [[ -d "/mnt/skysql/columnstore-container-scripts" ]]; then
             for f in /mnt/skysql/columnstore-container-scripts/*; do
                 case "$f" in
                     *.sql)
                         echo "$0: running $f"
-                        "$MCS_INSTALL_BIN/mariadb" < "$f"
+                        "${MCS_INSTALL_BIN}/mariadb" < "$f"
                         if [ $? -ne 0 ]; then
                             echo "ERROR: Wasn't able to initialize SkySQL specific users."
                             exit 1
@@ -188,7 +206,7 @@ if [[ "$PM1_DNS" == "$(hostname -s)"* || "$PM1_DNS" == "$(hostname -s)" ]]; then
         fi
 
         # Securing MariaDB Installation
-        $MCS_INSTALL_BIN/mariadb -e "
+        "${MCS_INSTALL_BIN}"/mariadb -e "
             DROP DATABASE IF EXISTS test;
             DELETE FROM mysql.user WHERE User='';
         "
@@ -217,11 +235,11 @@ else
     # Configure Replication On Slaves
     echo 'Setting up replication...'
 
-    $MCS_INSTALL_BIN/mariadb -e "
+    "${MCS_INSTALL_BIN}"/mariadb -e "
         STOP SLAVE;
-        CHANGE MASTER TO MASTER_HOST='$PM1_DNS',
-        MASTER_USER='$REP_USER',
-        MASTER_PASSWORD='$REP_PASS',
+        CHANGE MASTER TO MASTER_HOST='${PM1_DNS}',
+        MASTER_USER='${REP_USER}',
+        MASTER_PASSWORD='${REP_PASS}',
         MASTER_USE_GTID=slave_pos,
         MASTER_CONNECT_RETRY=10;
         START SLAVE;
@@ -243,7 +261,7 @@ chown -R root:mysql /var/log/mariadb
 find /var/log/mariadb/ -type d -exec chmod g+ws {} \;
 
 # Mark Container Initialized
-touch $IFLAG
+touch "${IFLAG}"
 
 # Return To mcs-start
 exit 0

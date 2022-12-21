@@ -3,6 +3,9 @@
 CMAPI_KEY="${CMAPI_KEY:-somekey123}"
 MAXSCALE="${MAXSCALE:-false}"
 IFLAG='/etc/columnstore/container-initialized'
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+NC='\033[0m'
 
 HOSTS=( "$@" )
 if [[ "$#" -eq 0 ]]; then
@@ -14,36 +17,30 @@ for e in "${HOSTS[@]}"; do
     EXPANDED+=("--node ${e}")
 done
 
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-NC='\033[0m'
-
 # Wait For Primary Node To Start
-if [ ! -f $IFLAG ]; then
-    echo -n 'Waiting for PM1 to be initialized '
-    while [ ! -f $IFLAG ]
+if [[ ! -f ${IFLAG} ]]; then
+    echo -n 'Waiting for PM1 To Be Initialized '
+    while [[ ! -f ${IFLAG} ]]
     do
         printf "."
         sleep 2
     done
-    printf " ${GREEN}done${NC}\n"
+    echo -e " ${GREEN}done${NC}"
 fi
 
 sleep 3
 
 # Set API Key
-mcs cluster set api-key --key $CMAPI_KEY > /dev/null 2>&1
-if [ $? -ne 0 ]; then
+if ! mcs cluster set api-key --key "${CMAPI_KEY}" > /dev/null 2>&1; then
     echo "Failed Setting API Key"
     exit 1
 fi
 
 # Add Nodes To System
-mcs cluster node add "${EXPANDED[@]}" > /dev/null 2>&1
-if [[ $? -eq 0 ]]; then
-    printf "Adding PMs to Cluster ... ${GREEN}done${NC}\n"
+if mcs cluster node add "${EXPANDED[@]}" > /dev/null 2>&1; then
+    echo -e "Adding PMs To Cluster ... ${GREEN}done${NC}"
 else
-    printf "Adding PMs to Cluster ... ${RED}fail${NC}\n"
+    echo -e "Adding PMs To Cluster ... ${RED}fail${NC}"
     exit 1
 fi
 
@@ -51,14 +48,22 @@ if [[ ${MAXSCALE} == true ]]; then
     provision-mxs
 fi
 
-sleep 30
+# Wait For ColumnStore To Be Ready
+READY=$(mariadb -sN -e "SELECT mcsSystemReady();")
+echo -n 'Waiting For Columnstore To Be Ready ...'
+while [[ ${READY} -eq 0 ]]
+do
+    printf "."
+    sleep 2
+done
+echo -e " ${GREEN}done${NC}"
 
 # Validate
 QUERY=$(mariadb -sN -e "DROP DATABASE IF EXISTS validate; CREATE DATABASE validate; CREATE TABLE validate.sample (id INT) ENGINE=columnstore; INSERT INTO validate.sample VALUES (99); SELECT id FROM validate.sample;" 2>&1)
-if [[ $? = 0 ]] && [[ ${QUERY} = 99 ]]; then
-    printf "Validating ColumnStore engine ... ${GREEN}done${NC}\n"
+if [[ ${QUERY} = 99 ]]; then
+    echo -e "Validating ColumnStore Engine ... ${GREEN}done${NC}"
     mariadb -e "DROP DATABASE IF EXISTS validate;" 2>&1
 else
-    printf "Validating ColumnStore engine ... ${RED}fail${NC}\n"
+    echo -e "Validating ColumnStore Engine ... ${RED}fail${NC}"
     exit 1
 fi

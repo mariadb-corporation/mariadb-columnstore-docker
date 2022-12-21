@@ -6,54 +6,53 @@ IFLAG='/etc/columnstore/container-initialized'
 LOG_PREFIX='/var/log/mariadb/columnstore'
 MCS_INSTALL_BIN='/usr/bin'
 CMAPI_KEY="${CMAPI_KEY:-somekey123}"
-TOTALUMMEMORY="${TOTALUMMEMORY:-25%}"
-NUMBLOCKSPCT="${NUMBLOCKPCT:-50}"
 SKYSQL_INITIALIZATION="${SKYSQL_INITIALIZATION:-0}"
 RED='\033[0;31m'
 GREEN='\033[0;32m'
+CYAN='\033[0;36m'
 NC='\033[0m'
 
-# Dynamic Memory Allocation
-if [ -f /sys/fs/cgroup/memory/memory.limit_in_bytes ] && [ "$(cat /sys/fs/cgroup/memory/memory.limit_in_bytes)" -le "$(free -b | awk 'NR==2{printf "%d", $2 }')" ]; then
-    # If limited by cgroups (e.g. in SkySQL)
-    MAX_RAM_BYTES=$(cat /sys/fs/cgroup/memory/memory.limit_in_bytes)
-    MAX_RAM=$((MAX_RAM_BYTES/1024/1024))
-    TOTALUMMEMORY=$( echo $MAX_RAM / 4  | bc )M
-    NUMBLOCKSPCT=$( echo $MAX_RAM / 2  | bc )M
-fi
-
-# Performance Tuning
-xmlstarlet ed -L -u '/Columnstore/HashJoin/TotalUmMemory' -v "$TOTALUMMEMORY" $COLXML
-xmlstarlet ed -L -u '/Columnstore/DBBC/NumBlocksPct' -v "$NUMBLOCKSPCT" $COLXML
+# Begin
+echo -e "${CYAN}***** Starting ColumnStore System *****${NC}"
 
 # Start CMAPI
-touch $LOG_PREFIX/cmapi_server.log && chmod 666 $LOG_PREFIX/cmapi_server.log
+touch "${LOG_PREFIX}"/cmapi_server.log && chmod 666 "${LOG_PREFIX}"/cmapi_server.log
 cd /usr/share/columnstore/cmapi || exit
-PYTHONPATH=/usr/share/columnstore/cmapi/deps /usr/share/columnstore/cmapi/python/bin/python3 -m cmapi_server &> $LOG_PREFIX/cmapi_server.log &
-if [[ $? -eq 0 ]]; then
-    printf "Starting Cluster Manager API... ${GREEN}done${NC}\n"
+if PYTHONPATH=/usr/share/columnstore/cmapi/deps /usr/share/columnstore/cmapi/python/bin/python3 -m cmapi_server &> "${LOG_PREFIX}"/cmapi_server.log &
+then
+    echo -e "Starting Cluster Manager API... ${GREEN}done${NC}"
 else
-    printf "Starting Cluster Manager API... ${RED}fail${NC}\n"
+    echo -e "Starting Cluster Manager API... ${RED}fail${NC}"
     exit 1
 fi
 
 # Intialize Container If Necessary
-if [ ! -e $IFLAG ]; then
-    $MCS_INSTALL_BIN/columnstore-init &> $LOG_PREFIX/columnstore-init.log
-    if [ $? -ne 0 ]; then
+if [[ ! -e ${IFLAG} ]]; then
+    if ! "${MCS_INSTALL_BIN}"/columnstore-init &> "${LOG_PREFIX}"/columnstore-init.log; then
         echo "ERROR: During Initialization."
         exit 1
     fi
 fi
 
+# Dynamic Memory Allocation
+MEMORY_PCT_LIMIT="${MEMORY_PCT_LIMIT:-90}"
+MAX_RAM_KB=$(grep MemTotal /proc/meminfo | cut -d':' -f2 | sed 's/ //g;s/[^0-9]//g')
+MAX_RAM=$((MAX_RAM_KB*MEMORY_PCT_LIMIT/100/1024))
+TOTALUMMEMORY=$( echo "${MAX_RAM}" / 4  | bc )M
+NUMBLOCKSPCT=$( echo "${MAX_RAM}" / 2  | bc )M
+
+# Performance Tuning
+xmlstarlet ed -L -u '/Columnstore/HashJoin/TotalUmMemory' -v "${TOTALUMMEMORY}" "${COLXML}"
+xmlstarlet ed -L -u '/Columnstore/DBBC/NumBlocksPct' -v "${NUMBLOCKSPCT}" "${COLXML}"
+
 # Start MariaDB & Columnstore
 mariadb-admin ping > /dev/null 2>&1
-if [[ $? -ne 0 ]]; then
-    mariadbd-safe  > /dev/null 2>&1 &
-    if [[ $? -eq 0 ]]; then
-        printf "Starting MariaDB Server... ${GREEN}done${NC}\n"
+if ! mariadb-admin ping > /dev/null 2>&1; then
+    if mariadbd-safe > /dev/null 2>&1 &
+    then
+        echo -e "Starting MariaDB Server... ${GREEN}done${NC}"
     else
-        printf "Starting MariaDB Server... ${RED}fail${NC}\n"
+        echo -e "Starting MariaDB Server... ${RED}fail${NC}"
         exit 1
     fi
     sleep 5
