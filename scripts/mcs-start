@@ -15,7 +15,7 @@ NC='\033[0m'
 # Begin
 echo -e "${CYAN}***** Starting ColumnStore System *****${NC}"
 
-# Start CMAPI
+# Start CMAPI & Columnstore
 touch "${LOG_PREFIX}"/cmapi_server.log && chmod 666 "${LOG_PREFIX}"/cmapi_server.log
 cd /usr/share/columnstore/cmapi || exit
 if PYTHONPATH=/usr/share/columnstore/cmapi/deps /usr/share/columnstore/cmapi/python/bin/python3 -m cmapi_server &> /dev/null &
@@ -45,7 +45,7 @@ NUMBLOCKSPCT=$( echo "${MAX_RAM}" / 2  | bc )M
 xmlstarlet ed -L -u '/Columnstore/HashJoin/TotalUmMemory' -v "${TOTALUMMEMORY}" "${COLXML}"
 xmlstarlet ed -L -u '/Columnstore/DBBC/NumBlocksPct' -v "${NUMBLOCKSPCT}" "${COLXML}"
 
-# Start MariaDB & Columnstore
+# Start MariaDB
 mariadb-admin ping > /dev/null 2>&1
 if ! mariadb-admin ping > /dev/null 2>&1; then
     if mariadbd-safe > /dev/null 2>&1 &
