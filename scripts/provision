@@ -48,15 +48,13 @@ if [[ ${MAXSCALE} == true ]]; then
     provision-mxs
 fi
 
-# Wait For ColumnStore To Be Ready
-READY=$(mariadb -sN -e "SELECT mcsSystemReady();")
-echo -n 'Waiting For Columnstore To Be Ready ...'
-while [[ ${READY} -eq 0 ]]
-do
-    printf "."
-    sleep 2
-done
-echo -e " ${GREEN}done${NC}"
+# Restart Cluster
+if mcs cluster restart > /dev/null 2>&1; then
+    echo -e "Restarting Cluster ... ${GREEN}done${NC}"
+else
+    echo -e "Restarting Cluster ... ${RED}fail${NC}"
+    exit 1
+fi
 
 # Validate
 QUERY=$(mariadb -sN -e "DROP DATABASE IF EXISTS validate; CREATE DATABASE validate; CREATE TABLE validate.sample (id INT) ENGINE=columnstore; INSERT INTO validate.sample VALUES (99); SELECT id FROM validate.sample;" 2>&1)
