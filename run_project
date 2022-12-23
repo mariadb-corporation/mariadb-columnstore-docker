@@ -1,16 +1,23 @@
 #!/usr/bin/env bash
+# Columnstore Team Use Only
+# shellcheck source=/dev/null
 
-export $(grep -v '^#' .env | xargs)
+source .env
 
-if [[ $USE_COMPOSE == true ]]; then
-    if [[ $MAXSCALE == true ]]; then
-    docker-compose -f docker-compose-mxs.yml up -d
-    docker exec -it $PM1 provision
+USE_COMPOSE=${USE_COMPOSE:-true}
+MAXSCALE=${MAXSCALE:-false}
+PM1=${PM1:-mcs1}
+MCS_IMAGE_NAME=${MCS_IMAGE_NAME:-mariadb/columnstore}
+
+if [[ "${USE_COMPOSE}" == true ]]; then
+    if [[ "${MAXSCALE}" == true ]]; then
+        docker-compose -f docker-compose-mxs.yml up -d
+        docker exec -it "${PM1}" provision
     else
-    docker compose -f docker-compose.yml up -d
-    docker exec -it $PM1 provision
+        docker compose -f docker-compose.yml up -d
+        docker exec -it "${PM1}" provision
     fi
 else
-    docker run -d --name $PM1 --hostname $PM1 --env PM1=$PM1 --shm-size=512mb $MCS_IMAGE_NAME
-    docker exec -it $PM1 provision
+    docker run -d --name "${PM1}" --hostname "${PM1}" --env PM1="${PM1}" --shm-size=512mb "${MCS_IMAGE_NAME}"
+    docker exec -it "${PM1}" provision
 fi

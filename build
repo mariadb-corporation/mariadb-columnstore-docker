@@ -1,4 +1,6 @@
 #!/usr/bin/env bash
+# Columnstore Team Use Only
+# shellcheck source=/dev/null
 
 ### Instructions:
 ### $ cp .env_example .env
@@ -7,14 +9,23 @@
 ### Customize the .secrets file
 ### $ ./build
 
-export $(grep -v '^#' .env | xargs)
+source .env
+
+MCS_IMAGE_NAME=${MCS_IMAGE_NAME:-mariadb/columnstore}
+VERSION=${VERSION:-10.6}
+DEV=${DEV:-false}
+MCS_REPO=${MCS_REPO:-Columnstore-Internal-Testing}
+MCS_BASEURL=${MCS_BASEURL:-}
+CMAPI_REPO=${CMAPI_REPO:-CMAPI-Internal-Testing}
+CMAPI_BASEURL=${CMAPI_BASEURL:-}
+SPIDER=${SPIDER:-false}
 
 docker build --rm \
-    --tag $MCS_IMAGE_NAME \
-    --build-arg VERSION=$VERSION \
-    --build-arg DEV=$DEV \
-    --build-arg MCS_REPO=$MCS_REPO \
-    --build-arg MCS_BASEURL=$MCS_BASEURL \
-    --build-arg CMAPI_REPO=$CMAPI_REPO \
-    --build-arg CMAPI_BASEURL=$CMAPI_BASEURL \
-    --build-arg SPIDER=$SPIDER .
+    --tag "${MCS_IMAGE_NAME}" \
+    --build-arg VERSION="${VERSION}" \
+    --build-arg DEV="${DEV}" \
+    --build-arg MCS_REPO="${MCS_REPO}" \
+    --build-arg MCS_BASEURL="${MCS_BASEURL}" \
+    --build-arg CMAPI_REPO="${CMAPI_REPO}" \
+    --build-arg CMAPI_BASEURL="${CMAPI_BASEURL}" \
+    --build-arg SPIDER="${SPIDER}" .
