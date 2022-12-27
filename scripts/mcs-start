@@ -12,6 +12,14 @@ GREEN='\033[0;32m'
 CYAN='\033[0;36m'
 NC='\033[0m'
 
+# Intialize Container If Necessary
+if [[ ! -e ${IFLAG} ]]; then
+    if ! "${MCS_INSTALL_BIN}"/columnstore-init &> "${LOG_PREFIX}"/columnstore-init.log; then
+        echo "ERROR: During Initialization."
+        exit 1
+    fi
+fi
+
 # Begin
 echo -e "${CYAN}***** Starting ColumnStore System *****${NC}"
 
@@ -24,14 +32,6 @@ then
 else
     echo -e "Starting Cluster Manager API... ${RED}fail${NC}"
     exit 1
-fi
-
-# Intialize Container If Necessary
-if [[ ! -e ${IFLAG} ]]; then
-    if ! "${MCS_INSTALL_BIN}"/columnstore-init &> "${LOG_PREFIX}"/columnstore-init.log; then
-        echo "ERROR: During Initialization."
-        exit 1
-    fi
 fi
 
 # Dynamic Memory Allocation
