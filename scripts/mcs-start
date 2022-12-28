@@ -35,11 +35,13 @@ else
 fi
 
 # Dynamic Memory Allocation
-MEMORY_PCT_LIMIT="${MEMORY_PCT_LIMIT:-90}"
-MAX_RAM_KB=$(grep MemTotal /proc/meminfo | cut -d':' -f2 | sed 's/ //g;s/[^0-9]//g')
-MAX_RAM=$((MAX_RAM_KB*MEMORY_PCT_LIMIT/100/1024))
-TOTALUMMEMORY=$( echo "${MAX_RAM}" / 4  | bc )M
-NUMBLOCKSPCT=$( echo "${MAX_RAM}" / 2  | bc )M
+if [[ "${SKYSQL_INITIALIZATION}" == 1 ]]; then
+    MEMORY_PCT_LIMIT="${MEMORY_PCT_LIMIT:-90}"
+    MAX_RAM_KB=$(grep MemTotal /proc/meminfo | cut -d':' -f2 | sed 's/ //g;s/[^0-9]//g')
+    MAX_RAM=$((MAX_RAM_KB*MEMORY_PCT_LIMIT/100/1024))
+    TOTALUMMEMORY=$( echo "${MAX_RAM}" / 4  | bc )M
+    NUMBLOCKSPCT=$( echo "${MAX_RAM}" / 2  | bc )M
+fi
 
 # Performance Tuning
 xmlstarlet ed -L -u '/Columnstore/HashJoin/TotalUmMemory' -v "${TOTALUMMEMORY}" "${COLXML}"
