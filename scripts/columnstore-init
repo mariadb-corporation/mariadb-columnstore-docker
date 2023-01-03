@@ -47,7 +47,6 @@ fi
 
 # Miscellaneous Variables
 RET=$'\n'
-SPIDER="${SPIDER:-false}"
 
 # Copy Back MariaDB Folders
 rsync -ravz --delete /opt/var/lib/mysql /var/lib
@@ -75,7 +74,7 @@ columnstore_use_import_for_batchinsert=ALWAYS${RET}
 EOT
 
 # Adjust Spider Configuration
-if [[ ${SPIDER} = true ]]; then
+if rpm -q MariaDB-spider-engine > /dev/null 2>&1; then
     cat <<EOT >> /etc/my.cnf.d/spider.cnf
 [mariadb]
 plugin-load-add=ha_spider.so
