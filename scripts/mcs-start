@@ -27,6 +27,8 @@ echo -e "${CYAN}***** Starting ColumnStore System *****${NC}"
 if [[ "${SKYSQL_INITIALIZATION}" == 1 ]]; then
     TOTALUMMEMORY="22%"
     NUMBLOCKSPCT="45"
+    xmlstarlet ed -L -u '/Columnstore/HashJoin/TotalUmMemory' -v "${TOTALUMMEMORY}" "${COLXML}"
+    xmlstarlet ed -L -u '/Columnstore/DBBC/NumBlocksPct' -v "${NUMBLOCKSPCT}" "${COLXML}"
 fi
 
 # Start CMAPI & Columnstore
@@ -39,11 +41,6 @@ else
     echo -e "Starting Cluster Manager API... ${RED}fail${NC}"
     exit 1
 fi
-
-
-# Performance Tuning
-xmlstarlet ed -L -u '/Columnstore/HashJoin/TotalUmMemory' -v "${TOTALUMMEMORY}" "${COLXML}"
-xmlstarlet ed -L -u '/Columnstore/DBBC/NumBlocksPct' -v "${NUMBLOCKSPCT}" "${COLXML}"
 
 # Start MariaDB
 mariadb-admin ping > /dev/null 2>&1
