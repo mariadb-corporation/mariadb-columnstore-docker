@@ -80,7 +80,7 @@ Validating ColumnStore engine ... done
 *   Customize the ```.env``` file
 *   Customize the ```.secrets``` file
 *   ```$ ./build```
-*   ```$ docker run -d --shm-size=512m -e PM1=mcs1 --hostname=mcs1 --name mcs1 mariadb/columnstore```
+*   ```$ docker run -d --name mcs1 --hostname mcs1 --env PM1=mcs1 --shm-size=512m -e PM1=mcs1 --hostname=mcs1 --name mcs1 mariadb/columnstore```
 *   ```$ docker exec -it mcs1 provision```
 
 ```
