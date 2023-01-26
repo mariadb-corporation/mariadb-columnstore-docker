@@ -60,7 +60,7 @@ Validating ColumnStore engine ... done
 *   Customize the ```.secrets``` file
 *   ```$ ./build```
 *   ```$ docker compose up -d```
-*   ```$ docker exec -it mcs1 provision```
+*   ```$ docker exec -it mcs1 provision mcs1 mcs2 mcs3```
 
 ```
 Waiting for PM1 to be initialized ................... done
@@ -81,7 +81,7 @@ Validating ColumnStore engine ... done
 *   Customize the ```.secrets``` file
 *   ```$ ./build```
 *   ```$ docker run -d --name mcs1 --hostname mcs1 --env PM1=mcs1 --shm-size=512m -e PM1=mcs1 mariadb/columnstore```
-*   ```$ docker exec -it mcs1 provision```
+*   ```$ docker exec -it mcs1 provision mcs1```
 
 ```
 Waiting for PM1 to be initialized ................... done
