@@ -3,6 +3,7 @@
 # Set Some Variables
 COLXML='/etc/columnstore/Columnstore.xml'
 IFLAG='/etc/columnstore/container-initialized'
+PFLAG='/etc/columnstore/container-provisioned'
 LOG_PREFIX='/var/log/mariadb/columnstore'
 MCS_INSTALL_BIN='/usr/bin'
 CMAPI_KEY="${CMAPI_KEY:-somekey123}"
@@ -31,7 +32,7 @@ if [[ "${SKYSQL_INITIALIZATION}" == 1 ]]; then
     xmlstarlet ed -L -u '/Columnstore/DBBC/NumBlocksPct' -v "${NUMBLOCKSPCT}" "${COLXML}"
 fi
 
-# Start CMAPI & Columnstore
+# Start CMAPI
 touch "${LOG_PREFIX}"/cmapi_server.log && chmod 666 "${LOG_PREFIX}"/cmapi_server.log
 cd /usr/share/columnstore/cmapi || exit
 if PYTHONPATH=/usr/share/columnstore/cmapi/deps /usr/share/columnstore/cmapi/python/bin/python3 -m cmapi_server &> /dev/null &
@@ -40,6 +41,16 @@ then
 else
     echo -e "Starting Cluster Manager API... ${RED}fail${NC}"
     exit 1
+fi
+
+# Start Columnstore
+if [[ -e ${PFLAG} ]]; then
+    if mcs cluster start  > /dev/null 2>&1; then
+        echo -e "Starting ColumnStore Cluster... ${GREEN}done${NC}"
+    else
+        echo -e "Starting ColumnStore Cluster... ${RED}fail${NC}"
+        exit 1
+    fi
 fi
 
 # Start MariaDB

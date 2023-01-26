@@ -27,3 +27,13 @@ if [[ -n ${CMAPI_PID} ]]; then
         exit 1
     fi
 fi
+
+# Stop MariaDB
+if mariadb-admin ping > /dev/null 2>&1; then
+    if mariadb-admin shutdown > /dev/null 2>&1; then
+        echo -e "Stopping MariaDB Server... ${GREEN}done${NC}"
+    else
+        echo -e "Stopping MariaDB Server... ${RED}fail${NC}"
+        exit 1
+    fi
+fi

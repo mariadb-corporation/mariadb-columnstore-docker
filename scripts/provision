@@ -3,6 +3,7 @@
 CMAPI_KEY="${CMAPI_KEY:-somekey123}"
 MAXSCALE="${MAXSCALE:-false}"
 IFLAG='/etc/columnstore/container-initialized'
+PFLAG='/etc/columnstore/container-provisioned'
 RED='\033[0;31m'
 GREEN='\033[0;32m'
 NC='\033[0m'
@@ -65,3 +66,5 @@ else
     echo -e "Validating ColumnStore Engine ... ${RED}fail${NC}"
     exit 1
 fi
+
+touch "${PFLAG}"
