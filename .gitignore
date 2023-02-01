@@ -4,3 +4,5 @@ push_sky
 push_public
 clean
 .secrets
+restore.sh
+backup.sh
