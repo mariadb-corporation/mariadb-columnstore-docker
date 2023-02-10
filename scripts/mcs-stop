@@ -1,4 +1,5 @@
 #!/bin/bash
+#shellcheck disable=SC2312
 
 # Set Variables
 PROGS='DMLProc DDLProc WriteEngineServer PrimProc workernode controllernode StorageManager'
@@ -14,15 +15,15 @@ NC='\033[0m'
 stop_mcs_processes() {
     echo "$(date)": Stopping... >> "${LOG_FILE}"
     
-    if  [[ ! -z $(pidof ${PROGS}) ]]; then
-        # Save BRM only on the primary node now.
-        if  [[ ! -z "$(pidof controllernode)" ]]; then
+    if  [[ -n $(pidof ${PROGS}) ]]; then
+        # Save BRM only on the primary node
+        if  [[ -n "$(pidof controllernode)" ]]; then
             "${MCS_INSTALL_BIN}"/mcs-savebrm.py &>> "${LOG_PREFIX}"/savebrm.log 2>&1
         fi
         echo "$(date)": Sending SIGTERM >>"${LOG_FILE}"
-        for pid in $(pidof ${PROGS});
+        for PID in $(pidof ${PROGS});
         do
-            kill $pid > /dev/null
+            kill "${PID}" > /dev/null
         done
         sleep 3
         # Make sure StorageManager had a chance to shutdown clean
@@ -33,26 +34,25 @@ stop_mcs_processes() {
             ((counter++))
         done
         echo "$(date)": Sending SIGKILL >> "${LOG_FILE}"
-        for pid in $(pidof ${PROGS});
+        for PID in $(pidof ${PROGS});
         do
-            kill -9 $pid > /dev/null
+            kill -9 "${PID}" > /dev/null
         done
+        echo "$(date)": Clearing SHM >> "${LOG_FILE}"
+        "${MCS_INSTALL_BIN}"/clearShm
     fi
 }
 
 echo -e "${YELLOW}***** Shutting Down ColumnStore System *****${NC}"
 
 # Stop Columnstore
-if [[ "$(pidof ${PROGS})" ]]; then
-    if stop_mcs_processes; then
+if [[ -n $(pidof ${PROGS}) ]]; then
+    if stop_mcs_processes > /dev/null; then
         echo -e "Stopping ColumnStore Processes... ${GREEN}done${NC}"
     else
         echo -e "Stopping ColumnStore Processes... ${RED}fail${NC}"
     fi
 fi
-
-echo $(date): Clearing SHM >> $LOG_FILE
-$MCS_INSTALL_BIN/clearShm
 
 # Stop CMAPI
 if [[ -n ${CMAPI_PID} ]]; then
