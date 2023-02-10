@@ -11,29 +11,44 @@ GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 NC='\033[0m'
 
+stop_mcs_processes() {
+    echo "$(date)": Stopping... >> "${LOG_FILE}"
+    
+    if  [[ ! -z $(pidof ${PROGS}) ]]; then
+        # Save BRM only on the primary node now.
+        if  [[ ! -z "$(pidof controllernode)" ]]; then
+            "${MCS_INSTALL_BIN}"/mcs-savebrm.py &>> "${LOG_PREFIX}"/savebrm.log 2>&1
+        fi
+        echo "$(date)": Sending SIGTERM >>"${LOG_FILE}"
+        for pid in $(pidof ${PROGS});
+        do
+            kill $pid > /dev/null
+        done
+        sleep 3
+        # Make sure StorageManager had a chance to shutdown clean
+        counter=1
+        while [[ -n "$(pidof StorageManager)" && ${counter} -le 60 ]]
+        do
+            sleep 1
+            ((counter++))
+        done
+        echo "$(date)": Sending SIGKILL >> "${LOG_FILE}"
+        for pid in $(pidof ${PROGS});
+        do
+            kill -9 $pid > /dev/null
+        done
+    fi
+}
+
 echo -e "${YELLOW}***** Shutting Down ColumnStore System *****${NC}"
 
 # Stop Columnstore
-echo $(date): Stopping... >> $LOG_FILE
-
-if  [[ ! -z "$(pidof $PROGS)" ]]; then
-    # Save BRM only on the primary node now.
-    if  [[ ! -z "$(pidof controllernode)" ]]; then
-        $MCS_INSTALL_BIN/mcs-savebrm.py &>> $LOG_PREFIX/savebrm.log 2>&1
+if [[ "$(pidof ${PROGS})" ]]; then
+    if stop_mcs_processes; then
+        echo -e "Stopping ColumnStore Processes... ${GREEN}done${NC}"
+    else
+        echo -e "Stopping ColumnStore Processes... ${RED}fail${NC}"
     fi
-    
-    echo $(date): Sending SIGTERM >> $LOG_FILE
-    kill $(pidof $PROGS) > /dev/null
-    sleep 3
-    # Make sure StorageManager had a chance to shutdown clean
-    counter=1
-    while [ -n "$(pidof StorageManager)" -a $counter -le 60 ]
-    do
-        sleep 1
-        ((counter++))
-    done
-    echo $(date): Sending SIGKILL >> $LOG_FILE
-    kill -9 $(pidof $PROGS) > /dev/null
 fi
 
 echo $(date): Clearing SHM >> $LOG_FILE
