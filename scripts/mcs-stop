@@ -2,52 +2,48 @@
 #shellcheck disable=SC2312
 
 # Set Variables
-PROGS='DMLProc DDLProc WriteEngineServer PrimProc workernode controllernode StorageManager'
 MCS_INSTALL_BIN=/usr/bin
 LOG_PREFIX=/var/log/mariadb/columnstore
-LOG_FILE=/var/log/mariadb/columnstore/container-sh.log
+PROGS='DMLProc DDLProc WriteEngineServer PrimProc workernode controllernode StorageManager'
 CMAPI_PID=$(pgrep -f cmapi_server)
 RED='\033[0;31m'
 GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
 NC='\033[0m'
 
 stop_mcs_processes() {
-    echo "$(date)": Stopping... >> "${LOG_FILE}"
+    echo "$(date)": Stopping... >> "${LOG_PREFIX}"/mcs-start.log
     
     if  [[ -n $(pidof ${PROGS}) ]]; then
-        # Save BRM only on the primary node
+        # Save BRM on the primary node only
         if  [[ -n "$(pidof controllernode)" ]]; then
-            "${MCS_INSTALL_BIN}"/mcs-savebrm.py &>> "${LOG_PREFIX}"/savebrm.log 2>&1
+            "${MCS_INSTALL_BIN}"/mcs-savebrm.py &>> "${LOG_PREFIX}"/savebrm.log
         fi
-        echo "$(date)": Sending SIGTERM >>"${LOG_FILE}"
+        echo "$(date)": Sending SIGTERM >> "${LOG_PREFIX}"/mcs-start.log
         for PID in $(pidof ${PROGS});
         do
-            kill "${PID}" > /dev/null
+            kill "${PID}" &> /dev/null
         done
         sleep 3
-        # Make sure StorageManager had a chance to shutdown clean
+        # Make sure StorageManager had a chance to shutdown cleanly
         counter=1
         while [[ -n "$(pidof StorageManager)" && ${counter} -le 60 ]]
         do
             sleep 1
             ((counter++))
         done
-        echo "$(date)": Sending SIGKILL >> "${LOG_FILE}"
+        echo "$(date)": Sending SIGKILL >> "${LOG_PREFIX}"/mcs-start.log
         for PID in $(pidof ${PROGS});
         do
-            kill -9 "${PID}" > /dev/null
+            kill -9 "${PID}" &> /dev/null
         done
-        echo "$(date)": Clearing SHM >> "${LOG_FILE}"
+        echo "$(date)": Clearing SHM >> "${LOG_PREFIX}"/mcs-start.log
         "${MCS_INSTALL_BIN}"/clearShm
     fi
 }
 
-echo -e "${YELLOW}***** Shutting Down ColumnStore System *****${NC}"
-
 # Stop Columnstore
 if [[ -n $(pidof ${PROGS}) ]]; then
-    if stop_mcs_processes > /dev/null; then
+    if stop_mcs_processes &> /dev/null; then
         echo -e "Stopping ColumnStore Processes... ${GREEN}done${NC}"
     else
         echo -e "Stopping ColumnStore Processes... ${RED}fail${NC}"
@@ -56,7 +52,7 @@ fi
 
 # Stop CMAPI
 if [[ -n ${CMAPI_PID} ]]; then
-    if kill "${CMAPI_PID}" > /dev/null; then
+    if kill "${CMAPI_PID}" &> /dev/null; then
         echo -e "Stopping Cluster Manager API... ${GREEN}done${NC}"
     else
         echo -e "Stopping Cluster Manager API... ${RED}fail${NC}"
@@ -65,8 +61,8 @@ if [[ -n ${CMAPI_PID} ]]; then
 fi
 
 # Stop MariaDB
-if mariadb-admin ping > /dev/null 2>&1; then
-    if mariadb-admin shutdown > /dev/null 2>&1; then
+if mariadb-admin ping &> /dev/null; then
+    if mariadb-admin shutdown &> /dev/null; then
         echo -e "Stopping MariaDB Server... ${GREEN}done${NC}"
     else
         echo -e "Stopping MariaDB Server... ${RED}fail${NC}"
