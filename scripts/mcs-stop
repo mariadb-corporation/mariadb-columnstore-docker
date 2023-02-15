@@ -41,15 +41,6 @@ stop_mcs_processes() {
     fi
 }
 
-# Stop Columnstore
-if [[ -n $(pidof ${PROGS}) ]]; then
-    if stop_mcs_processes &> /dev/null; then
-        echo -e "Stopping ColumnStore Processes... ${GREEN}done${NC}"
-    else
-        echo -e "Stopping ColumnStore Processes... ${RED}fail${NC}"
-    fi
-fi
-
 # Stop CMAPI
 if [[ -n ${CMAPI_PID} ]]; then
     if kill "${CMAPI_PID}" &> /dev/null; then
@@ -57,6 +48,15 @@ if [[ -n ${CMAPI_PID} ]]; then
     else
         echo -e "Stopping Cluster Manager API... ${RED}fail${NC}"
         exit 1
+    fi
+fi
+
+# Stop Columnstore
+if [[ -n $(pidof ${PROGS}) ]]; then
+    if stop_mcs_processes &> /dev/null; then
+        echo -e "Stopping ColumnStore Processes... ${GREEN}done${NC}"
+    else
+        echo -e "Stopping ColumnStore Processes... ${RED}fail${NC}"
     fi
 fi
 
