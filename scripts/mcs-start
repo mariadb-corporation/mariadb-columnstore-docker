@@ -3,6 +3,7 @@
 # Set Some Variables
 COLXML='/etc/columnstore/Columnstore.xml'
 IFLAG='/etc/columnstore/container-initialized'
+CLUSTER_SIZE=$(mcsGetConfig PrimitiveServers Count)
 PFLAG='/etc/columnstore/container-provisioned'
 LOG_PREFIX='/var/log/mariadb/columnstore'
 MCS_INSTALL_BIN='/usr/bin'
@@ -40,11 +41,11 @@ else
 fi
 
 # Start Columnstore
-if [[ -e ${PFLAG} ]]; then
+if [[ -e "${PFLAG}" && "${CLUSTER_SIZE}" -eq 1 ]]; then
     if mcs cluster start &> /dev/null; then
-        echo -e "Starting ColumnStore Cluster... ${GREEN}done${NC}"
+        echo -e "Starting ColumnStore... ${GREEN}done${NC}"
     else
-        echo -e "Starting ColumnStore Cluster... ${RED}fail${NC}"
+        echo -e "Starting ColumnStore... ${RED}fail${NC}"
         exit 1
     fi
 fi
