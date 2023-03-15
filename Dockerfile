@@ -84,6 +84,7 @@ RUN dnf -y install awscli \
     rsync \
     rsyslog \
     snappy \
+    sudo \
     tcl \
     tini \
     tzdata \
