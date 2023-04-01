@@ -15,25 +15,32 @@ NC='\033[0m'
 
 # Intialize Container If Necessary
 if [[ ! -e ${IFLAG} ]]; then
-    if ! "${MCS_INSTALL_BIN}"/columnstore-init &> "${LOG_PREFIX}"/columnstore-init.log; then
+    if ! "${MCS_INSTALL_BIN}"/columnstore-init &>"${LOG_PREFIX}"/columnstore-init.log; then
         echo "ERROR: During Initialization."
         exit 1
     fi
 fi
 
-# Dynamic Memory Allocation
-if [[ "${SKYSQL_INITIALIZATION}" == 1 ]]; then
-    TOTALUMMEMORY="22%"
-    NUMBLOCKSPCT="45"
-    xmlstarlet ed -L -u '/Columnstore/HashJoin/TotalUmMemory' -v "${TOTALUMMEMORY}" "${COLXML}"
-    xmlstarlet ed -L -u '/Columnstore/DBBC/NumBlocksPct' -v "${NUMBLOCKSPCT}" "${COLXML}"
+# Dynamic Memory Allocation For Container
+TOTALUMMEMORY="22%"
+NUMBLOCKSPCT="45"
+xmlstarlet ed -L -u '/Columnstore/HashJoin/TotalUmMemory' -v "${TOTALUMMEMORY}" "${COLXML}"
+xmlstarlet ed -L -u '/Columnstore/DBBC/NumBlocksPct' -v "${NUMBLOCKSPCT}" "${COLXML}"
+
+# Verify S3 Connectivity
+if [[ "${USE_S3_STORAGE}" == true ]]; then
+    if testS3Connection &>/dev/null; then
+        echo -e "Verifying S3 Connectivity... ${GREEN}done${NC}"
+    else
+        echo -e "Verifying S3 Connectivity... ${RED}fail${NC}"
+        exit 1
+    fi
 fi
 
 # Start CMAPI
 touch "${LOG_PREFIX}"/cmapi_server.log && chmod 666 "${LOG_PREFIX}"/cmapi_server.log
 cd /usr/share/columnstore/cmapi || exit
-if PYTHONPATH=/usr/share/columnstore/cmapi/deps /usr/share/columnstore/cmapi/python/bin/python3 -m cmapi_server &> /dev/null &
-then
+if PYTHONPATH=/usr/share/columnstore/cmapi/deps /usr/share/columnstore/cmapi/python/bin/python3 -m cmapi_server &>/dev/null & then
     echo -e "Starting Cluster Manager API... ${GREEN}done${NC}"
 else
     echo -e "Starting Cluster Manager API... ${RED}fail${NC}"
@@ -42,7 +49,7 @@ fi
 
 # Start Columnstore
 if [[ -e "${PFLAG}" && "${CLUSTER_SIZE}" -eq 1 ]]; then
-    if mcs cluster start &> /dev/null; then
+    if mcs cluster start &>/dev/null; then
         echo -e "Starting ColumnStore... ${GREEN}done${NC}"
     else
         echo -e "Starting ColumnStore... ${RED}fail${NC}"
@@ -51,10 +58,9 @@ if [[ -e "${PFLAG}" && "${CLUSTER_SIZE}" -eq 1 ]]; then
 fi
 
 # Start MariaDB
-mariadb-admin ping &> /dev/null
-if ! mariadb-admin ping &> /dev/null; then
-    if mariadbd-safe &> /dev/null &
-    then
+mariadb-admin ping &>/dev/null
+if ! mariadb-admin ping &>/dev/null; then
+    if mariadbd-safe &>/dev/null & then
         echo -e "Starting MariaDB Server... ${GREEN}done${NC}"
     else
         echo -e "Starting MariaDB Server... ${RED}fail${NC}"
