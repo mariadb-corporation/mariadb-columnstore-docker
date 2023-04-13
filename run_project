@@ -19,7 +19,7 @@ S3_REGION=${S3_REGION:-us-west-2}
 
 if [[ "${USE_COMPOSE}" == true ]]; then
     if [[ "${MAXSCALE}" == true ]]; then
-        docker-compose -f docker-compose-mxs.yml up -d
+        docker compose -f docker-compose-mxs.yml up -d
         docker exec -it "${PM1}" provision "${PM1}" "${PM2}" "${PM3}"
     else
         docker compose -f docker-compose.yml up -d
