@@ -17,7 +17,7 @@ Please install the following software packages before you begin.
 
 *   Clone this project to your local system
 *   Copy .env_example to .env
-*   Edit .env with your custom settings
+*   Edit .env with your customer settings
 *   ```$ docker compose up -d```
 *   ```$ docker exec -it mcs1 provision mcs1 mcs2 mcs3```
 
@@ -30,7 +30,8 @@ Validating ColumnStore Engine ... done
 
 ## Docker Run Instructions (Single Node)
 
-*   ```$ docker run -d -p 3307:3306 --shm-size=512m -e PM1=mcs1 --hostname=mcs1 --name mcs1 mariadb/columnstore```
+*   ```$ docker run -d -p 3307:3306 --shm-size=512m -e PM1=mcs1 \
+         --hostname=mcs1 --name mcs1 mariadb/columnstore```
 *   ```$ docker exec -it mcs1 provision mcs1```
 
 ```
