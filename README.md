@@ -52,18 +52,11 @@ Validating ColumnStore engine ... done
 
 ## Docker-Compose Instructions (Cluster)
 
-*   ```$ git clone https://github.com/mariadb-corporation/mariadb-columnstore-docker.git```
-*   ```$ cd mariadb-columnstore-docker```
-*   ```$ cp .env_example .env```
-*   ```$ cp .secrets_example```
-*   Customize the ```.env``` file
-*   Customize the ```.secrets``` file
-*   ```$ ./build```
 *   ```$ docker compose up -d```
 *   ```$ docker exec -it mcs1 provision mcs1 mcs2 mcs3```
 
 ```
-Waiting for PM1 to be initialized ................... done
+Waiting for PM1 To Be Initialized .. done
 Adding PM1 to CMAPI ... done
 Adding PM2 to CMAPI ... done
 Adding PM3 to CMAPI ... done
@@ -73,13 +66,6 @@ Validating ColumnStore engine ... done
 
 ## Docker Run Instructions (Single Node)
 
-*   ```$ git clone https://github.com/mariadb-corporation/mariadb-columnstore-docker.git```
-*   ```$ cd mariadb-columnstore-docker```
-*   ```$ cp .env_example .env```
-*   ```$ cp .secrets_example```
-*   Customize the ```.env``` file
-*   Customize the ```.secrets``` file
-*   ```$ ./build```
 *   ```$ docker run -d -p 3307:3306 --shm-size=512m -e PM1=mcs1 --hostname=mcs1 --name mcs1 mariadb/columnstore```
 *   ```$ docker exec -it mcs1 provision mcs1```
 *   ```$ mysql -h 127.0.0.1 -P 3307 -u admin -p```
