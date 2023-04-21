@@ -13,26 +13,14 @@ Please install the following software packages before you begin.
 
 *   [Docker](https://www.docker.com/get-started)
 
-## Docker-Compose Instructions (Cluster)
-
-*   Clone this project to your local system
-*   Copy **_.env_example_** to **_.env_**
-*   Edit **_.env_** with your custom settings
-*   ```$ docker compose up -d```
-*   ```$ docker exec -it mcs1 provision mcs1 mcs2 mcs3```
-
-```
-Waiting for PM1 To Be Initialized .... done
-Adding PM(s) To Cluster ... done
-Restarting Cluster ... done
-Validating ColumnStore Engine ... done
-```
-
 ## Docker Run Instructions (Single Node)
 
-*   ```$ docker run -d -p 3307:3306 --shm-size=512m -e PM1=mcs1 --hostname=mcs1 --name mcs1 mariadb/columnstore```
-*   ```$ docker exec -it mcs1 provision mcs1```
-
+```
+docker run -d -p 3307:3306 --shm-size=512m -e PM1=mcs1 --hostname=mcs1 --name mcs1 mariadb/columnstore
+```
+```
+docker exec -it mcs1 provision mcs1
+```
 ```
 Waiting for PM1 To Be Initialized .. done
 Adding PM(s) To Cluster ... done
@@ -50,7 +38,7 @@ Validating ColumnStore Engine ... done
 | CEJ_PASS | String | C0lumnStore! | No |
 | CEJ_USER | String | cej | No |
 | CMAPI_KEY | String | somekey123 | No |
-| PM1 | Hostname | mcs1 | **Yes** |
+| PM1 | Hostname | - | **Yes** |
 | S3_ACCESS_KEY_ID | String | None | No |
 | S3_BUCKET | String | None | No |
 | S3_ENDPOINT | URL | None | No |
@@ -58,12 +46,32 @@ Validating ColumnStore Engine ... done
 | S3_SECRET_ACCESS_KEY | String | None | No |
 | USE_S3_STORAGE | Boolean | false | No |
 
+## Docker-Compose Instructions (Cluster)
+
+*   Clone this [project](https://github.com/mariadb-corporation/mariadb-columnstore-docker) to your local system
+*   Copy **_.env_example_** to **_.env_**
+*   Edit **_.env_** with your custom settings
+```
+docker compose up -d
+```
+```
+docker exec -it mcs1 provision mcs1 mcs2 mcs3
+```
+```
+Waiting for PM1 To Be Initialized .... done
+Adding PM(s) To Cluster ... done
+Restarting Cluster ... done
+Validating ColumnStore Engine ... done
+```
+
 ## Access
 
 #### Database Access
 
-*   ```$ mysql -h 127.0.0.1 -P 3307 -u admin -p```
-*   The default password is: **C0lumnStore!**
+```
+mysql -h 127.0.0.1 -P 3307 -u admin -p
+```
+_The default password is: **C0lumnStore!**_
 
 #### MaxScale 1 GUI Access
 
@@ -89,35 +97,51 @@ Validating ColumnStore Engine ... done
 
 ##### Set API Code:
 
-``` mcs cluster set api-key --key <api_key>```
+```
+mcs cluster set api-key --key <api_key>
+```
 
 ###### Get Status:
 
-```mcs cluster status```
+```
+mcs cluster status
+```
 
 ###### Start Cluster:
 
-```mcs cluster start```
+```
+mcs cluster start
+```
 
 ###### Stop Cluster:
 
-```mcs cluster stop```
+```
+mcs cluster stop
+```
 
 ###### Add Node:
 
-```mcs cluster node add --node <node>```
+```
+mcs cluster node add --node <node>
+```
 
 ###### Remove Node:
 
-```mcs cluster node remove --node <node>```
+```
+mcs cluster node remove --node <node>
+```
 
 ###### Mode Set Read Only:
 
-```mcs cluster set mode --mode readonly```
+```
+mcs cluster set mode --mode readonly
+```
 
 ###### Mode Set Read/Write:
 
-```mcs cluster set mode --mode readwrite```
+```
+mcs cluster set mode --mode readwrite
+```
 
 ## Log Info
 
