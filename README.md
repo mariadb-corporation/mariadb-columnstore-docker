@@ -14,42 +14,6 @@ Please install the following software packages before you begin.
 *   [Git](https://git-scm.com/downloads)
 *   [Docker](https://www.docker.com/get-started)
 
-Also make sure to grab your download credentials from our website:
-
-*   [MariaDB Enterprise Token](https://customers.mariadb.com/downloads/token/)
-
-## Quick Start Instructions (All)
-
-*   ```$ git clone https://github.com/mariadb-corporation/mariadb-columnstore-docker.git```
-*   ```$ cd mariadb-columnstore-docker```
-*   ```$ cp .env_example .env```
-*   ```$ cp .secrets_example```
-*   Customize the ```.env``` file
-*   Customize the ```.secrets``` file
-*   ```$ ./build```
-*   ```$ ./run_project```
-
-```
-Waiting for PM1 to be initialized ................... done
-Adding PM1 to CMAPI ... done
-Adding PM2 to CMAPI ... done
-Adding PM3 to CMAPI ... done
-Adding PM1 to MaxScale 1 ... done
-Adding PM2 to MaxScale 1 ... done
-Adding PM3 to MaxScale 1 ... done
-Adding PM1 to MaxScale 2 ... done
-Adding PM2 to MaxScale 2 ... done
-Adding PM3 to MaxScale 2 ... done
-Adding SERVICE to MaxScale 1 ... done
-Adding SERVICE to MaxScale 2 ... done
-Adding LISTENER to MaxScale 1 ... done
-Adding LISTENER to MaxScale 2 ... done
-Adding MONITOR to MaxScale 1 ... done
-Adding MONITOR to MaxScale 2 ... done
-Waiting for CMAPI cluster start ....... done
-Validating ColumnStore engine ... done
-```
-
 ## Docker-Compose Instructions (Cluster)
 
 *   ```$ docker compose up -d```
