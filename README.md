@@ -11,7 +11,6 @@ MariaDB ColumnStore is designed for big data scaling to process petabytes of dat
 
 Please install the following software packages before you begin.
 
-*   [Git](https://git-scm.com/downloads)
 *   [Docker](https://www.docker.com/get-started)
 
 ## Docker-Compose Instructions (Cluster)
