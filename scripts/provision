@@ -39,9 +39,9 @@ fi
 
 # Add Nodes To System
 if mcs cluster node add "${EXPANDED[@]}" > /dev/null 2>&1; then
-    echo -e "Adding PMs To Cluster ... ${GREEN}done${NC}"
+    echo -e "Adding PM(s) To Cluster ... ${GREEN}done${NC}"
 else
-    echo -e "Adding PMs To Cluster ... ${RED}fail${NC}"
+    echo -e "Adding PM(s) To Cluster ... ${RED}fail${NC}"
     exit 1
 fi
 
