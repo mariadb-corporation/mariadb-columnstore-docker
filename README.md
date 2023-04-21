@@ -80,14 +80,16 @@ Validating ColumnStore engine ... done
 *   Customize the ```.env``` file
 *   Customize the ```.secrets``` file
 *   ```$ ./build```
-*   ```$ docker run -d --name mcs1 --hostname mcs1 --env PM1=mcs1 --shm-size=512m -e PM1=mcs1 mariadb/columnstore```
+*   ```$ docker run -d -p 3307:3306 --shm-size=512m -e PM1=mcs1 --hostname=mcs1 --name mcs1 mariadb/columnstore```
 *   ```$ docker exec -it mcs1 provision mcs1```
+*   ```$ mysql -h 127.0.0.1 -P 3307 -u admin -p```
+*   The default password is: **C0lumnStore!**
 
 ```
-Waiting for PM1 to be initialized ................... done
-Adding PM1 to CMAPI ... done
-Waiting for CMAPI cluster start ........ done
-Validating ColumnStore engine ... done
+Waiting for PM1 To Be Initialized .. done
+Adding PM(s) To Cluster ... done
+Restarting Cluster ... done
+Validating ColumnStore Engine ... done
 ```
 
 #### Run Variables

@@ -10,7 +10,7 @@ NC='\033[0m'
 
 HOSTS=( "$@" )
 if [[ "$#" -eq 0 ]]; then
-    HOSTS=(mcs1 mcs2 mcs3)
+    HOSTS=(127.0.0.1)
 fi
 
 EXPANDED=()
