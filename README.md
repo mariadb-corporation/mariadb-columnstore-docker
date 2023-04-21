@@ -29,8 +29,6 @@ Validating ColumnStore Engine ... done
 
 *   ```$ docker run -d -p 3307:3306 --shm-size=512m -e PM1=mcs1 --hostname=mcs1 --name mcs1 mariadb/columnstore```
 *   ```$ docker exec -it mcs1 provision mcs1```
-*   ```$ mysql -h 127.0.0.1 -P 3307 -u admin -p```
-*   The default password is: **C0lumnStore!**
 
 ```
 Waiting for PM1 To Be Initialized .. done
@@ -59,11 +57,10 @@ Validating ColumnStore Engine ... done
 
 ## Access
 
-#### Columnstore CLI Access
+#### Database Access
 
-*   PM1: ```$ docker exec -it mcs1 mariadb```
-*   PM2: ```$ docker exec -it mcs2 mariadb```
-*   PM3: ```$ docker exec -it mcs3 mariadb```
+*   ```$ mysql -h 127.0.0.1 -P 3307 -u admin -p```
+*   The default password is: **C0lumnStore!**
 
 #### MaxScale 1 GUI Access
 
