@@ -56,12 +56,10 @@ Validating ColumnStore engine ... done
 *   ```$ docker exec -it mcs1 provision mcs1 mcs2 mcs3```
 
 ```
-Waiting for PM1 To Be Initialized .. done
-Adding PM1 to CMAPI ... done
-Adding PM2 to CMAPI ... done
-Adding PM3 to CMAPI ... done
-Waiting for CMAPI cluster start ....... done
-Validating ColumnStore engine ... done
+Waiting for PM1 To Be Initialized .... done
+Adding PM(s) To Cluster ... done
+Restarting Cluster ... done
+Validating ColumnStore Engine ... done
 ```
 
 ## Docker Run Instructions (Single Node)
