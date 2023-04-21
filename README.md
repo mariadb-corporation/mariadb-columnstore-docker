@@ -15,6 +15,9 @@ Please install the following software packages before you begin.
 
 ## Docker-Compose Instructions (Cluster)
 
+*   Clone this project to your local system
+*   Copy .env_example to .env
+*   Edit .env with your customer settings
 *   ```$ docker compose up -d```
 *   ```$ docker exec -it mcs1 provision mcs1 mcs2 mcs3```
 
