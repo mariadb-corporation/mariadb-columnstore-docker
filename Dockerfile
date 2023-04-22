@@ -73,7 +73,6 @@ RUN dnf -y install awscli \
     libffi-devel \
     libxml2-devel \
     libxslt-devel \
-    monit \
     nano \
     net-tools \
     openssl \
@@ -122,7 +121,6 @@ RUN dnf -y install \
     dnf -y install MariaDB-test; fi
 
 # Copy Config Files & Scripts To Image
-COPY config/etc/ /etc/
 COPY scripts/provision \
     scripts/provision-mxs \
     scripts/columnstore-init \
@@ -141,10 +139,6 @@ RUN chmod +x /usr/bin/provision \
     /usr/bin/mcs-restart \
     /usr/bin/skysql-specific-startup.sh \
     /usr/bin/start-services
-
-# Stream Edit Some Configs
-RUN sed -i 's|set daemon\s.30|set daemon 5|g' /etc/monitrc && \
-    sed -i 's|#.*with start delay\s.*240|  with start delay 60|' /etc/monitrc
 
 # Add A Configuration Directory To my.cnf That Can Be Mounted By SkySQL & Disable The ed25519 Auth Plugin (DBAAS-2701)
 RUN echo '!includedir /mnt/skysql/columnstore-container-configuration' >> /etc/my.cnf && \
