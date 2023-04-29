@@ -173,3 +173,8 @@ mcs cluster set mode --mode readwrite
 ## Log Info
 
 Logs are stored in ```/var/log/mariadb/columnstore```
+
+They are also available via the following command:
+```
+docker logs mcs1
+```
