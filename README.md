@@ -46,12 +46,17 @@ Validating ColumnStore Engine ... done
 | S3_SECRET_ACCESS_KEY | String | None | No |
 | USE_S3_STORAGE | Boolean | false | No |
 
-## Docker-Compose Instructions (Cluster)
+## Docker Compose Instructions (Cluster)
 
 ```
 git clone https://github.com/mariadb-corporation/mariadb-columnstore-docker
 ```
-*   Copy **_.env_example_** to **_.env_**
+```
+cd mariadb-columnstore-docker
+```
+```
+cp .env_example .env
+```
 *   Edit **_.env_** with your custom settings
 ```
 docker compose up -d
@@ -67,6 +72,10 @@ Validating ColumnStore Engine ... done
 ```
 
 ## Custom Build Instructions (Optional)
+
+```
+git clone https://github.com/mariadb-corporation/mariadb-columnstore-docker
+```
 ```
 cd mariadb-columnstore-docker
 ```
@@ -76,8 +85,8 @@ cp .env_example .env
 ```
 cp .secrets_example .secrets
 ```
-*   Customize the .env file
-*   Customize the .secrets file
+*   Edit **_.env_** with your custom settings
+*   Edit **_.secrets_** with your [Enterprise Token](https://cloud.mariadb.com/csm?id=my_customer_token)
 ```
 ./build
 ```
