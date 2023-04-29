@@ -48,7 +48,9 @@ Validating ColumnStore Engine ... done
 
 ## Docker-Compose Instructions (Cluster)
 
-*   Clone this [project](https://github.com/mariadb-corporation/mariadb-columnstore-docker) to your local system
+```
+git clone https://github.com/mariadb-corporation/mariadb-columnstore-docker
+```
 *   Copy **_.env_example_** to **_.env_**
 *   Edit **_.env_** with your custom settings
 ```
@@ -62,6 +64,22 @@ Waiting for PM1 To Be Initialized .... done
 Adding PM(s) To Cluster ... done
 Restarting Cluster ... done
 Validating ColumnStore Engine ... done
+```
+
+## Custom Build Instructions (Optional)
+```
+cd mariadb-columnstore-docker
+```
+```
+cp .env_example .env
+```
+```
+cp .secrets_example .secrets
+```
+*   Customize the .env file
+*   Customize the .secrets file
+```
+./build
 ```
 
 ## Access

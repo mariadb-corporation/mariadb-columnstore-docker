@@ -2,6 +2,7 @@
 .env
 push_sky
 push_public
+push_public_spider
 clean
 .secrets
 restore.sh
