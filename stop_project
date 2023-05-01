@@ -17,5 +17,5 @@ S3_BUCKET=${S3_BUCKET:-mybucket}
 S3_ENDPOINT=${S3_ENDPOINT:-s3.us-west-2.amazonaws.com}
 S3_REGION=${S3_REGION:-us-west-2}
 
-docker-compose -f docker-compose-mxs.yml down
+docker compose -f docker-compose-mxs.yml down
 docker volume prune
