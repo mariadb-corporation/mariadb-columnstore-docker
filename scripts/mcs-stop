@@ -5,7 +5,7 @@
 MCS_INSTALL_BIN=/usr/bin
 LOG_PREFIX=/var/log/mariadb/columnstore
 PROGS='DMLProc DDLProc WriteEngineServer PrimProc workernode controllernode StorageManager'
-CMAPI_PID=$(pgrep -f cmapi_server)
+CMAPI_PID=$(pgrep -f 'python3 -m cmapi_server')
 RED='\033[0;31m'
 GREEN='\033[0;32m'
 NC='\033[0m'

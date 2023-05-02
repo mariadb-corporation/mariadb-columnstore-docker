@@ -58,7 +58,6 @@ if [[ -e "${PFLAG}" && "${CLUSTER_SIZE}" -eq 1 ]]; then
 fi
 
 # Start MariaDB
-mariadb-admin ping &>/dev/null ## is this needed?
 if ! mariadb-admin ping &>/dev/null; then
     if mariadbd-safe &>/dev/null & then
         echo -e "Starting MariaDB Server... ${GREEN}done${NC}"
