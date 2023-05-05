@@ -6,8 +6,10 @@ function exitColumnStore {
 }
 
 # Clean Remnants
-rm -f /var/run/syslogd.pid
-rm -f /var/lib/mysql/*.pid
+rm -f /var/run/syslogd.pid /var/lib/mysql/*.pid
+
+# Fix Permissions If Necessary
+chown -R mysql:mysql /var/lib/mysql /var/log/mariadb
 
 # Start rsyslog
 rsyslogd
