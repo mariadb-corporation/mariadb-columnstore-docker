@@ -124,6 +124,7 @@ RUN dnf -y install \
 COPY scripts/provision \
     scripts/provision-mxs \
     scripts/columnstore-init \
+    scripts/mcs-health \
     scripts/mcs-start \
     scripts/mcs-stop \
     scripts/mcs-restart \
@@ -134,6 +135,7 @@ COPY scripts/provision \
 RUN chmod +x /usr/bin/provision \
     /usr/bin/provision-mxs \
     /usr/bin/columnstore-init \
+    /usr/bin/mcs-health \
     /usr/bin/mcs-start \
     /usr/bin/mcs-stop \
     /usr/bin/mcs-restart \

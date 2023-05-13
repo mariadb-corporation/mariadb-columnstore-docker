@@ -1,0 +1,65 @@
+#!/usr/bin/env bash
+
+X=$(grep -o '[[:digit:]]*' /var/lib/columnstore/local/module)
+IPADDR=$(mcsGetConfig -a | grep -i PMS"${X}".IPAddr | awk '{ print $3 }')
+
+# Fix folder ownership (If necessary)
+if [ -f "/.dockerenv" ]; then
+    chown -R mysql:mysql /var/lib/mysql /var/log/mariadb
+    chown -R root:root /var/lib/columnstore /tmp/columnstore_tmp_files
+else
+    chown -R mysql:mysql /var/lib/mysql /var/lib/columnstore /var/log/mariadb /tmp/columnstore_tmp_files
+fi
+
+# Check if MariaDB is running
+if ! mariadb-admin ping &>/dev/null; then
+    echo "MariaDB server is not running"
+    exit 1
+fi
+
+# Is CMAPI running?
+if ! pgrep -f "python3 -m cmapi_server" &>/dev/null; then
+    echo "CMAPI server is not running"
+    exit 1
+fi
+
+# Get node status
+NODE_STATUS=$(mcs cluster status | jq -r .\""${IPADDR}"\")
+DBRM_MODE=$(echo "$NODE_STATUS" | jq -r .dbrm_mode)
+PROCESSES_RUNNING=$(echo "$NODE_STATUS" | jq -r .'services | length')
+CLUSTER_MODE=$(echo "$NODE_STATUS" | jq -r .cluster_mode)
+
+# Check primary or replica mode and number of processes running
+if [[ ! "$DBRM_MODE" == "master" && ! "$DBRM_MODE" == "slave" ]]; then
+    echo "Bad dbrm_mode"
+    exit 1
+elif [[ "$DBRM_MODE" == "slave" && ! "$PROCESSES_RUNNING" -eq 3 ]]; then
+    echo 'Wrong number of processes on replica'
+    exit 1
+elif [[ "$DBRM_MODE" == "master" && ! "$PROCESSES_RUNNING" -eq 6 ]]; then
+    echo 'Wrong number of processes on primary'
+    exit 1
+fi
+
+# Check readwrite vs readonly mode
+if [[ "$DBRM_MODE" == "slave" && ! "$CLUSTER_MODE" == "readonly" ]]; then
+    echo 'Node not in readonly mode'
+    exit 1
+elif [[ "$DBRM_MODE" == "master" && ! "$CLUSTER_MODE" == "readwrite" ]]; then
+    echo 'Node not in readwrite mode'
+    exit 1
+fi
+
+# Check if the engine is operational
+if [[ "$DBRM_MODE" == "slave" ]]; then
+    echo "Replica OK"
+    exit 0
+else
+    if ! mariadb -sN -e "SELECT COUNT(1) FROM calpontsys.syscolumn;" &>/dev/null; then
+        echo 'Server error'
+        exit 1
+    else
+        echo 'Primary OK'
+        exit 0
+    fi
+fi
