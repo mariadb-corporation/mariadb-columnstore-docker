@@ -40,14 +40,14 @@ fi
 # Start CMAPI
 touch "${LOG_PREFIX}"/cmapi_server.log && chmod 666 "${LOG_PREFIX}"/cmapi_server.log
 cd /usr/share/columnstore/cmapi || exit
-if PYTHONPATH=/usr/share/columnstore/cmapi/deps /usr/share/columnstore/cmapi/python/bin/python3 -m cmapi_server &>/dev/null & then
+if PYTHONPATH=/usr/share/columnstore/cmapi/deps /usr/share/columnstore/cmapi/python/bin/python3 -m cmapi_server &>"${LOG_PREFIX}"/cmapi_server.log & then
     echo -e "Starting Cluster Manager API... ${GREEN}done${NC}"
 else
     echo -e "Starting Cluster Manager API... ${RED}fail${NC}"
     exit 1
 fi
 
-# Start Columnstore
+# Start Columnstore (If This Is Single Node)
 if [[ -e "${PFLAG}" && "${CLUSTER_SIZE}" -eq 1 ]]; then
     if mcs cluster start &>/dev/null; then
         echo -e "Starting ColumnStore... ${GREEN}done${NC}"
