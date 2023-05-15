@@ -1,7 +1,7 @@
 # vim:set ft=dockerfile:
 
 # Setup A Template Image
-FROM rockylinux:8
+FROM rockylinux:8 as base
 
 # Define Development ARGs
 ARG VERSION=${VERSION}
@@ -14,17 +14,6 @@ ARG SPIDER=${SPIDER}
 
 # Define SkySQL Specific Path
 ENV PATH="/mnt/skysql/columnstore-container-scripts:${PATH}"
-
-# Add Google SDK Repo
-RUN printf "%s\n" \
-    "[google-cloud-sdk]" \
-    "name=Google Cloud SDK" \
-    "baseurl=https://packages.cloud.google.com/yum/repos/cloud-sdk-el8-$(uname -m)" \
-    "enabled=1" \
-    "gpgcheck=1" \
-    "gpgkey=https://packages.cloud.google.com/yum/doc/yum-key.gpg" \
-    "       https://packages.cloud.google.com/yum/doc/rpm-package-key.gpg" > /etc/yum.repos.d/google-sdk.repo && \
-    sed -i 's/arm64/aarch64/' /etc/yum.repos.d/google-sdk.repo
 
 # Add Repo Setup Script
 ADD .secrets scripts/repo /tmp/
@@ -54,7 +43,7 @@ RUN dnf -y install epel-release && \
     dnf -y upgrade
 
 # Install Various Packages/Tools
-RUN dnf -y install awscli \
+RUN dnf -y install \
     bind-utils \
     bc \
     boost \
@@ -64,7 +53,6 @@ RUN dnf -y install awscli \
     gcc \
     git \
     glibc-langpack-en \
-    google-cloud-sdk \
     htop \
     jemalloc \
     jq \
@@ -120,6 +108,9 @@ RUN dnf -y install \
     if [[ "${DEV}" == true ]]; then \
     dnf -y install MariaDB-test; fi
 
+# Create Persistent Volumes
+VOLUME ["/etc/columnstore", "/etc/my.cnf.d","/var/lib/mysql","/var/lib/columnstore"]
+
 # Copy Config Files & Scripts To Image
 COPY scripts/provision \
     scripts/provision-mxs \
@@ -128,7 +119,6 @@ COPY scripts/provision \
     scripts/mcs-start \
     scripts/mcs-stop \
     scripts/mcs-restart \
-    scripts/skysql-specific-startup.sh \
     scripts/start-services /usr/bin/
 
 # Make Scripts Executable
@@ -139,12 +129,11 @@ RUN chmod +x /usr/bin/provision \
     /usr/bin/mcs-start \
     /usr/bin/mcs-stop \
     /usr/bin/mcs-restart \
-    /usr/bin/skysql-specific-startup.sh \
     /usr/bin/start-services
 
 # Add A Configuration Directory To my.cnf That Can Be Mounted By SkySQL & Disable The ed25519 Auth Plugin (DBAAS-2701)
 RUN echo '!includedir /mnt/skysql/columnstore-container-configuration' >> /etc/my.cnf && \
-    mkdir -p /mnt/skysql/columnstore-container-configuration && \
+    mkdir -p /mnt/skysql/columnstore-container-configuration /mnt/skysql/columnstore-container-scripts && \
     touch /etc/my.cnf.d/mariadb-enterprise.cnf && \
     sed -i 's|plugin-load-add=auth_ed25519|#plugin-load-add=auth_ed25519|' /etc/my.cnf.d/mariadb-enterprise.cnf
 
@@ -156,15 +145,12 @@ RUN printf "%s\n" \
     "path = '/usr/share/columnstore/cmapi/mcs_node_control/custom_dispatchers/container.sh'" \
     "" \
     "[application]" \
-    "auto_failover = True" >> /etc/columnstore/cmapi_server.conf
+    "auto_failover = False" >> /etc/columnstore/cmapi_server.conf
 
 # Make Copies Of MariaDB Related Folders
 RUN /etc/init.d/mariadb stop && \
     rsync -Rravz --quiet /var/lib/mysql/ /var/lib/columnstore /etc/columnstore /etc/my.cnf.d /opt/ && \
     rm -f /opt/var/lib/mysql/mysql.sock
-
-# Create Persistent Volumes
-VOLUME ["/etc/columnstore", "/etc/my.cnf.d","/var/lib/mysql","/var/lib/columnstore"]
 
 # Copy Entrypoint To Image
 COPY scripts/docker-entrypoint.sh /usr/bin/
@@ -177,8 +163,7 @@ RUN chmod +x /usr/bin/docker-entrypoint.sh && \
     sed -i 's|^.*StateFile="imjournal.state")|#  StateFile="imjournal.state")|g' /etc/rsyslog.conf && \
     dnf clean all && \
     find /var/log -type f -exec cp /dev/null {} \; && \
-    rm -f /var/lib/mysql/*.err \
-    /etc/yum.repos.d/mariadb.repo \
+    rm -f /etc/yum.repos.d/mariadb.repo \
     /etc/yum.repos.d/engineering.repo \
     /tmp/.secrets \
     /tmp/repo && \
@@ -186,6 +171,31 @@ RUN chmod +x /usr/bin/docker-entrypoint.sh && \
     cat /dev/null > ~/.bash_history && \
     history -c
 
-# Bootstrap
+# Create entrypoint
 ENTRYPOINT ["/usr/bin/tini","--","docker-entrypoint.sh"]
+
+FROM scratch
+
+COPY --from=base / /
+
+# Define Development ARGs
+ARG VERSION=${VERSION}
+ARG DEV=${DEV}
+ARG MCS_REPO=${MCS_REPO}
+ARG MCS_BASEURL=${MCS_BASEURL}
+ARG CMAPI_REPO=${CMAPI_REPO}
+ARG CMAPI_BASEURL=${CMAPI_BASEURL}
+ARG SPIDER=${SPIDER}
+
+# Define SkySQL Specific Path
+ENV PATH="/mnt/skysql/columnstore-container-scripts:${PATH}"
+
+# Define ENV Variables
+ENV LANG=en_US.UTF-8
+ENV LANGUAGE=en_US.UTF-8
+ENV LC_ALL=en_US.UTF-8
+ENV MCSBRANCH=${MCSBRANCH:-develop}
+ENV CMAPIBRANCH=${CMAPIBRANCH:-develop}
+
+# Start
 CMD ["start-services"]

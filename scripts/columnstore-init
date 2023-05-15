@@ -60,11 +60,11 @@ ${RET}# Docker Settings
 server_id = ${SERVER_ID}
 collation_server = utf8_general_ci
 character_set_server = utf8
-log_bin = /var/lib/mysql/mariadb-bin
-log_bin_index = /var/lib/mysql/mariadb-bin.index
-relay_log = /var/lib/mysql/mariadb-relay
-relay_log_index = /var/lib/mysql/mariadb-relay.index
-log_slave_updates = ON
+#log_bin = /var/lib/mysql/mariadb-bin
+#log_bin_index = /var/lib/mysql/mariadb-bin.index
+#relay_log = /var/lib/mysql/mariadb-relay
+#relay_log_index = /var/lib/mysql/mariadb-relay.index
+#log_slave_updates = ON
 gtid_strict_mode = ON
 innodb_strict_mode = OFF
 log_error = /var/log/mariadb/columnstore/mariadb-error.log
@@ -258,6 +258,7 @@ fi
 # Standardize Log Ownership
 chown -R root:mysql /var/log/mariadb
 find /var/log/mariadb/ -type d -exec chmod g+ws {} \;
+rm -f /var/lib/mysql/buildkitsandbox.err
 
 # Mark Container Initialized
 touch "${IFLAG}"
