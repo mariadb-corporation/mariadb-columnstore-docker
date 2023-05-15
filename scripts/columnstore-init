@@ -29,21 +29,12 @@ REP_USER="${REP_USER:-idbrep}"
 REP_PASS="${REP_PASS:-C0lumnStore!}"
 REP_HOST="${REP_HOST:-%}"
 
-# Set network defaults for SkySQL
-SKYSQL_INITIALIZATION="${SKYSQL_INITIALIZATION:-0}"
-
 # Hostname Variables
 HOSTNAME="$(hostname -s)"
 STEP1=$(echo "${HOSTNAME}" | cut -d '.' -f 1)
 STEP2=${STEP1: -1}
 SERVER_ID=$((STEP2 + 10 ))
 PM1_DNS="${PM1_DNS:-mcs1}"
-if [[ ${SKYSQL_INITIALIZATION} -eq 1 ]]; then
-    if [[ ${HOSTNAME} == *"-"* ]]; then
-        NAMESPACE=$(cat /mnt/skysql/podinfo/namespace)
-        PM1_DNS="cs-node-0.cs-cluster.${NAMESPACE}.svc.cluster.local"
-    fi
-fi
 
 # Miscellaneous Variables
 RET=$'\n'
@@ -186,23 +177,6 @@ if [[ "${PM1_DNS}" == "${HOSTNAME}"* || "${PM1_DNS}" == "${HOSTNAME}" ]]; then
             exit 1
         fi
         echo 'MaxScale user created'
-
-        if [[ ${SKYSQL_INITIALIZATION} -eq 1 ]] && [[ -d "/mnt/skysql/columnstore-container-scripts" ]]; then
-            for f in /mnt/skysql/columnstore-container-scripts/*; do
-                case "$f" in
-                    *.sql)
-                        echo "$0: running $f"
-                        "${MCS_INSTALL_BIN}/mariadb" < "$f"
-                        if [ $? -ne 0 ]; then
-                            echo "ERROR: Wasn't able to initialize SkySQL specific users."
-                            exit 1
-                        fi
-                        echo
-                        ;;
-                esac
-                echo
-            done
-        fi
 
         # Securing MariaDB Installation
         "${MCS_INSTALL_BIN}"/mariadb -e "

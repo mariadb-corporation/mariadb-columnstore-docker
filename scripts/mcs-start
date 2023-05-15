@@ -8,7 +8,6 @@ PFLAG='/etc/columnstore/container-provisioned'
 LOG_PREFIX='/var/log/mariadb/columnstore'
 MCS_INSTALL_BIN='/usr/bin'
 CMAPI_KEY="${CMAPI_KEY:-somekey123}"
-SKYSQL_INITIALIZATION="${SKYSQL_INITIALIZATION:-0}"
 RED='\033[0;31m'
 GREEN='\033[0;32m'
 NC='\033[0m'
