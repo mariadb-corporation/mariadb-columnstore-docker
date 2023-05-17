@@ -109,7 +109,7 @@ RUN dnf -y install \
     dnf -y install MariaDB-test; fi
 
 # Create Persistent Volumes
-VOLUME ["/etc/columnstore", "/etc/my.cnf.d","/var/lib/mysql","/var/lib/columnstore"]
+VOLUME ["/etc/columnstore","/etc/my.cnf.d","/var/lib/mysql","/var/lib/columnstore"]
 
 # Copy Config Files & Scripts To Image
 COPY scripts/provision \
@@ -178,15 +178,6 @@ FROM scratch
 
 COPY --from=base / /
 
-# Define Development ARGs
-ARG VERSION=${VERSION}
-ARG DEV=${DEV}
-ARG MCS_REPO=${MCS_REPO}
-ARG MCS_BASEURL=${MCS_BASEURL}
-ARG CMAPI_REPO=${CMAPI_REPO}
-ARG CMAPI_BASEURL=${CMAPI_BASEURL}
-ARG SPIDER=${SPIDER}
-
 # Define SkySQL Specific Path
 ENV PATH="/mnt/skysql/columnstore-container-scripts:${PATH}"
 
@@ -194,8 +185,6 @@ ENV PATH="/mnt/skysql/columnstore-container-scripts:${PATH}"
 ENV LANG=en_US.UTF-8
 ENV LANGUAGE=en_US.UTF-8
 ENV LC_ALL=en_US.UTF-8
-ENV MCSBRANCH=${MCSBRANCH:-develop}
-ENV CMAPIBRANCH=${CMAPIBRANCH:-develop}
 
 # Start
 CMD ["start-services"]
