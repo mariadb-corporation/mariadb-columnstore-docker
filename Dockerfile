@@ -171,9 +171,6 @@ RUN chmod +x /usr/bin/docker-entrypoint.sh && \
     cat /dev/null > ~/.bash_history && \
     history -c
 
-# Create entrypoint
-ENTRYPOINT ["/usr/bin/tini","--","docker-entrypoint.sh"]
-
 FROM scratch
 
 COPY --from=base / /
@@ -185,6 +182,9 @@ ENV PATH="/mnt/skysql/columnstore-container-scripts:${PATH}"
 ENV LANG=en_US.UTF-8
 ENV LANGUAGE=en_US.UTF-8
 ENV LC_ALL=en_US.UTF-8
+
+# Create entrypoint
+ENTRYPOINT ["/usr/bin/tini","--","docker-entrypoint.sh"]
 
 # Start
 CMD ["start-services"]
