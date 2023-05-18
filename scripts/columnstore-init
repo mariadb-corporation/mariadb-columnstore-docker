@@ -51,8 +51,8 @@ ${RET}# Docker Settings
 server_id = ${SERVER_ID}
 collation_server = utf8_general_ci
 character_set_server = utf8
-#log_bin = /var/lib/mysql/mariadb-bin
-#log_bin_index = /var/lib/mysql/mariadb-bin.index
+log_bin = /var/lib/mysql/mariadb-bin
+log_bin_index = /var/lib/mysql/mariadb-bin.index
 #relay_log = /var/lib/mysql/mariadb-relay
 #relay_log_index = /var/lib/mysql/mariadb-relay.index
 #log_slave_updates = ON
