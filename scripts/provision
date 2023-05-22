@@ -8,7 +8,7 @@ RED='\033[0;31m'
 GREEN='\033[0;32m'
 NC='\033[0m'
 
-HOSTS=( "$@" )
+HOSTS=("$@")
 if [[ "$#" -eq 0 ]]; then
     HOSTS=(127.0.0.1)
 fi
@@ -18,11 +18,15 @@ for e in "${HOSTS[@]}"; do
     EXPANDED+=("--node ${e}")
 done
 
+if [[ -f ${PFLAG} ]]; then
+    echo -n 'Error: Container already provisioned.'
+    exit 1
+fi
+
 # Wait For Primary Node To Start
 if [[ ! -f ${IFLAG} ]]; then
     echo -n 'Waiting for PM1 To Be Initialized '
-    while [[ ! -f ${IFLAG} ]]
-    do
+    while [[ ! -f ${IFLAG} ]]; do
         printf "."
         sleep 2
     done
@@ -32,13 +36,13 @@ fi
 sleep 3
 
 # Set API Key
-if ! mcs cluster set api-key --key "${CMAPI_KEY}" > /dev/null 2>&1; then
+if ! mcs cluster set api-key --key "${CMAPI_KEY}" >/dev/null 2>&1; then
     echo "Failed Setting API Key"
     exit 1
 fi
 
 # Add Nodes To System
-if mcs cluster node add "${EXPANDED[@]}" > /dev/null 2>&1; then
+if mcs cluster node add "${EXPANDED[@]}" >/dev/null 2>&1; then
     echo -e "Adding PM(s) To Cluster ... ${GREEN}done${NC}"
 else
     echo -e "Adding PM(s) To Cluster ... ${RED}fail${NC}"
@@ -50,7 +54,7 @@ if [[ ${MAXSCALE} == true ]]; then
 fi
 
 # Restart Cluster
-if mcs cluster restart > /dev/null 2>&1; then
+if mcs cluster restart >/dev/null 2>&1; then
     echo -e "Restarting Cluster ... ${GREEN}done${NC}"
 else
     echo -e "Restarting Cluster ... ${RED}fail${NC}"
