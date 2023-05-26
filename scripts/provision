@@ -19,7 +19,7 @@ for e in "${HOSTS[@]}"; do
 done
 
 if [[ -f ${PFLAG} ]]; then
-    echo -n 'Error: Container already provisioned.'
+    echo 'Error: Container already provisioned.'
     exit 1
 fi
 
