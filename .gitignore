@@ -6,4 +6,6 @@ push_public_spider
 clean
 .secrets
 upgrade
-docker-compose-single.yml
+docker-compose-new.yml
+docker-compose-old.yml
+sample_data.sql
