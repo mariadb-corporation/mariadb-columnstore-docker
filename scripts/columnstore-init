@@ -1,4 +1,5 @@
 #!/bin/bash
+# shellcheck disable=SC2181
 
 # Set Path Variables
 COLXML="/etc/columnstore/Columnstore.xml"
@@ -33,7 +34,7 @@ REP_HOST="${REP_HOST:-%}"
 HOSTNAME="$(hostname -s)"
 STEP1=$(echo "${HOSTNAME}" | cut -d '.' -f 1)
 STEP2=${STEP1: -1}
-SERVER_ID=$((STEP2 + 10 ))
+SERVER_ID=$((STEP2 + 10))
 PM1_DNS="${PM1_DNS:-mcs1}"
 
 # Miscellaneous Variables
@@ -46,7 +47,7 @@ rsync -ravz --delete /opt/etc/my.cnf.d /etc
 rsync -ravz --delete /opt/etc/columnstore /etc
 
 # Adjust Columnstore Cluster Configuration
-cat <<EOT >> /etc/my.cnf.d/columnstore.cnf
+cat <<EOT >>/etc/my.cnf.d/columnstore.cnf
 ${RET}# Docker Settings
 server_id = ${SERVER_ID}
 collation_server = utf8_general_ci
@@ -65,8 +66,8 @@ columnstore_use_import_for_batchinsert=ALWAYS${RET}
 EOT
 
 # Adjust Spider Configuration
-if rpm -q MariaDB-spider-engine > /dev/null 2>&1; then
-    cat <<EOT >> /etc/my.cnf.d/spider.cnf
+if rpm -q MariaDB-spider-engine >/dev/null 2>&1; then
+    cat <<EOT >>/etc/my.cnf.d/spider.cnf
 [mariadb]
 plugin-load-add=ha_spider.so
 spider_table_crd_thread_count=1
@@ -86,6 +87,10 @@ if [[ ${USE_S3_STORAGE} = true ]]; then
     sed -i "s|^# endpoint =.*|endpoint = ${S3_ENDPOINT}|" /etc/columnstore/storagemanager.cnf
     sed -i "s|^# aws_access_key_id =.*|aws_access_key_id = ${S3_ACCESS_KEY_ID}|" /etc/columnstore/storagemanager.cnf
     sed -i "s|^# aws_secret_access_key =.*|aws_secret_access_key = ${S3_SECRET_ACCESS_KEY}|" /etc/columnstore/storagemanager.cnf
+    if ! /usr/bin/testS3Connection >/var/log/mariadb/testS3Connection.log 2>&1; then
+        echo "Error: S3 Connectivity Failed"
+        exit 1
+    fi
 fi
 
 # Conditional Provisioning
@@ -94,7 +99,7 @@ if [[ "${PM1_DNS}" == "${HOSTNAME}"* || "${PM1_DNS}" == "${HOSTNAME}" ]]; then
     sleep 5
 
     # Set Up MariaDB Cross Engine Join & Replication
-    if mariadb-admin ping > /dev/null 2>&1; then
+    if mariadb-admin ping >/dev/null 2>&1; then
 
         # Set Up Cross Engine Join User
         "${MCS_INSTALL_BIN}"/mariadb -e "
