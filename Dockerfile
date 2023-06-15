@@ -107,10 +107,7 @@ RUN dnf -y install \
     dnf -y install MariaDB-spider-engine; fi && \
     if [[ "${DEV}" == true ]]; then \
     dnf -y install MariaDB-test; fi
-
-# Create Persistent Volumes
-VOLUME ["/etc/columnstore","/etc/my.cnf.d","/var/lib/mysql","/var/lib/columnstore"]
-
+    
 # Copy Config Files & Scripts To Image
 COPY scripts/provision \
     scripts/provision-mxs \
@@ -146,6 +143,9 @@ RUN printf "%s\n" \
     "" \
     "[application]" \
     "auto_failover = False" >> /etc/columnstore/cmapi_server.conf
+
+# Create Persistent Volumes
+VOLUME ["/etc/columnstore","/etc/my.cnf.d","/var/lib/mysql","/var/lib/columnstore"]
 
 # Make Copies Of MariaDB Related Folders
 RUN /etc/init.d/mariadb stop && \
