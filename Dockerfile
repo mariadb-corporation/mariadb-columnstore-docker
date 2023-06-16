@@ -89,19 +89,14 @@ ENV LC_ALL=en_US.UTF-8
 ENV MCSBRANCH=${MCSBRANCH:-develop}
 ENV CMAPIBRANCH=${CMAPIBRANCH:-develop}
 
-# Install MariaDB Packages & Load Time Zone Info
+# Install MariaDB Packages
 RUN dnf -y install \
     MariaDB-shared \
     MariaDB-client \
     MariaDB-server \
     MariaDB-backup \
-    MariaDB-cracklib-password-check && \
-    rm -f /etc/my.cnf.d/spider.cnf && \
-    cp /usr/share/mysql/mysql.server /etc/init.d/mariadb && \
-    /etc/init.d/mariadb start && \
-    mysql_tzinfo_to_sql /usr/share/zoneinfo | mariadb mysql && \
-    /etc/init.d/mariadb stop && \
-    dnf -y install MariaDB-columnstore-engine \
+    MariaDB-cracklib-password-check \
+    MariaDB-columnstore-engine \
     MariaDB-columnstore-cmapi &&\
     if [[ "${SPIDER}" == true ]]; then \
     dnf -y install MariaDB-spider-engine; fi && \
@@ -147,8 +142,13 @@ RUN printf "%s\n" \
     "[application]" \
     "auto_failover = False" >> /etc/columnstore/cmapi_server.conf
 
-# Make Copies Of MariaDB Related Folders
-RUN /etc/init.d/mariadb stop && \
+# Load Time Zone Info & Make Copies Of MariaDB Related Folders 
+RUN if [[ ! -d /usr/share/mariadb/ ]]; then \
+    mkdir -p /usr/share/mariadb/ && \
+    ln -s /usr/share/mysql/mysql.server /usr/share/mariadb/mysql.server; fi && \
+    /usr/share/mariadb/mysql.server start && \
+    mysql_tzinfo_to_sql /usr/share/zoneinfo | mariadb mysql && \
+    /usr/share/mariadb/mysql.server stop && \
     rsync -Rravz --quiet /var/lib/mysql/ /var/lib/columnstore /etc/columnstore /etc/my.cnf.d /opt/ && \
     rm -f /opt/var/lib/mysql/mysql.sock
 

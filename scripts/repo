@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
+# shellcheck disable=SC2034,SC1091
 
 TOKEN=
 source /tmp/.secrets
 curl -LsS https://dlm.mariadb.com/enterprise-release-helpers/mariadb_es_repo_setup | bash -s -- --mariadb-server-version="$1" --token="${TOKEN}" --apply
+#curl -LsS https://r.mariadb.com/downloads/mariadb_repo_setup | bash -s -- --mariadb-server-version="$1"
