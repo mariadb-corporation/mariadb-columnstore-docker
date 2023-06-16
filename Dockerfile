@@ -4,7 +4,8 @@
 FROM rockylinux:8 as base
 
 # Define Development ARGs
-ARG VERSION=${VERSION}
+ARG ENTERPRISE=${ENTERPRISE}
+ARG RELEASE_NUMBER=${RELEASE_NUMBER}
 ARG DEV=${DEV}
 ARG MCS_REPO=${MCS_REPO}
 ARG MCS_BASEURL=${MCS_BASEURL}
@@ -35,7 +36,7 @@ RUN if [[ "${DEV}" == true ]]; then \
     "enabled = 1" \
     "module_hotfixes = 1" > /etc/yum.repos.d/engineering.repo; \
     else \
-    bash /tmp/repo ${VERSION}; \
+    bash /tmp/repo ${ENTERPRISE} ${RELEASE_NUMBER}; \
     fi
 
 # Update System

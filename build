@@ -12,7 +12,8 @@
 source .env
 
 MCS_IMAGE_NAME=${MCS_IMAGE_NAME:-mariadb/columnstore}
-VERSION=${VERSION:-10.6}
+ENTERPRISE=${ENTERPRISE:-true}
+RELEASE_NUMBER=${RELEASE_NUMBER:-10.6}
 DEV=${DEV:-false}
 MCS_REPO=${MCS_REPO:-Columnstore-Internal-Testing}
 MCS_BASEURL=${MCS_BASEURL:-}
@@ -22,7 +23,8 @@ SPIDER=${SPIDER:-false}
 
 docker build --rm \
     --tag "${MCS_IMAGE_NAME}" \
-    --build-arg VERSION="${VERSION}" \
+    --build-arg ENTERPRISE="${ENTERPRISE}" \
+    --build-arg RELEASE_NUMBER="${RELEASE_NUMBER}" \
     --build-arg DEV="${DEV}" \
     --build-arg MCS_REPO="${MCS_REPO}" \
     --build-arg MCS_BASEURL="${MCS_BASEURL}" \
