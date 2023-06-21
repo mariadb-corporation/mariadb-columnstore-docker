@@ -104,9 +104,6 @@ RUN dnf -y install \
     if [[ "${DEV}" == true ]]; then \
     dnf -y install MariaDB-test; fi
 
-# Create Persistent Volumes
-VOLUME ["/etc/columnstore","/etc/my.cnf.d","/var/lib/mysql","/var/lib/columnstore"]
-
 # Copy Config Files & Scripts To Image
 COPY scripts/provision \
     scripts/provision-mxs \
@@ -183,6 +180,9 @@ ENV PATH="/mnt/skysql/columnstore-container-scripts:${PATH}"
 ENV LANG=en_US.UTF-8
 ENV LANGUAGE=en_US.UTF-8
 ENV LC_ALL=en_US.UTF-8
+
+# Create Persistent Volumes
+VOLUME ["/etc/columnstore","/etc/my.cnf.d","/var/lib/mysql","/var/lib/columnstore"]
 
 # Create entrypoint
 ENTRYPOINT ["/usr/bin/tini","--","docker-entrypoint.sh"]
