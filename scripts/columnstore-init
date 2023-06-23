@@ -59,10 +59,7 @@ log_bin_index = /var/lib/mysql/mariadb-bin.index
 #log_slave_updates = ON
 gtid_strict_mode = ON
 innodb_strict_mode = OFF
-log_error = /var/log/mariadb/columnstore/mariadb-error.log
-#columnstore_cache_inserts = ON
-columnstore_compression_type = LZ4
-columnstore_use_import_for_batchinsert=ALWAYS${RET}
+log_error = /var/log/mariadb/columnstore/mariadb-error.log${RET}
 EOT
 
 # Adjust Spider Configuration
