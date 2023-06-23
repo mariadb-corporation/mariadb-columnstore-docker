@@ -62,7 +62,7 @@ innodb_strict_mode = OFF
 log_error = /var/log/mariadb/columnstore/mariadb-error.log
 #columnstore_cache_inserts = ON
 columnstore_compression_type = LZ4
-columnstore_use_import_for_batchinsert=ALWAYS${RET}
+columnstore_use_import_for_batchinsert=ON${RET}
 EOT
 
 # Adjust Spider Configuration
