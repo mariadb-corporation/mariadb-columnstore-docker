@@ -140,13 +140,15 @@ RUN printf "%s\n" \
     "[application]" \
     "auto_failover = False" >> /etc/columnstore/cmapi_server.conf
 
-# Load Time Zone Info & Make Copies Of MariaDB Related Folders 
-RUN if [[ ! -d /usr/share/mariadb/ ]]; then \
-    mkdir -p /usr/share/mariadb/ && \
-    ln -s /usr/share/mysql/mysql.server /usr/share/mariadb/mysql.server; fi && \
-    /usr/share/mariadb/mysql.server start && \
+# Create Symlinks, Add Timezone Info, Backup Data Folders
+RUN if [ -f /usr/share/mariadb/mysql.server ]; \
+    then ln -sf /usr/share/mariadb/mysql.server /etc/init.d/mariadb; \
+    elif [  -f /usr/share/mysql/mysql.server ]; \
+    then ln -sf /usr/share/mysql/mysql.server /etc/init.d/mariadb; \
+    fi && \
+    /etc/init.d/mariadb start && \
     mysql_tzinfo_to_sql /usr/share/zoneinfo | mariadb mysql && \
-    /usr/share/mariadb/mysql.server stop && \
+    /etc/init.d/mariadb stop && \
     rsync -Rravz --quiet /var/lib/mysql/ /var/lib/columnstore /etc/columnstore /etc/my.cnf.d /opt/ && \
     rm -f /opt/var/lib/mysql/mysql.sock
 

@@ -62,7 +62,7 @@ fi
 
 # Stop MariaDB
 if mariadb-admin ping &> /dev/null; then
-    if mariadb-admin shutdown &> /dev/null; then
+    if /etc/init.d/mariadb stop &> /dev/null; then
         echo -e "Stopping MariaDB Server... ${GREEN}done${NC}"
     else
         echo -e "Stopping MariaDB Server... ${RED}fail${NC}"

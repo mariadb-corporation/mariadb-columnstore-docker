@@ -1,7 +1,7 @@
 #!/bin/bash
 
 function exitColumnStore {
-    mariadb-admin shutdown
+    /etc/init.d/mariadb stop
     mcs-stop
 }
 

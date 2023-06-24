@@ -196,7 +196,7 @@ if [[ "${PM1_DNS}" == "${HOSTNAME}"* || "${PM1_DNS}" == "${HOSTNAME}" ]]; then
 
     # Stop Primary Node
     echo 'Stopping Primary Node'
-    mariadb-admin shutdown
+    /etc/init.d/mariadb stop
     clearShm
 
 else
@@ -204,7 +204,7 @@ else
     # Start Replicas
     echo 'Starting replicas...'
 
-    mariadbd-safe &
+    /etc/init.d/mariadb start
     sleep 5
 
     # Configure Replication On Slaves
@@ -227,7 +227,7 @@ else
     # Stop Replicas
     echo 'Stopping replicas...'
 
-    mariadb-admin shutdown
+    /etc/init.d/mariadb stop
 
 fi
 
