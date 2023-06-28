@@ -84,7 +84,7 @@ if [[ ${USE_S3_STORAGE} = true ]]; then
     sed -i "s|^# endpoint =.*|endpoint = ${S3_ENDPOINT}|" /etc/columnstore/storagemanager.cnf
     sed -i "s|^# aws_access_key_id =.*|aws_access_key_id = ${S3_ACCESS_KEY_ID}|" /etc/columnstore/storagemanager.cnf
     sed -i "s|^# aws_secret_access_key =.*|aws_secret_access_key = ${S3_SECRET_ACCESS_KEY}|" /etc/columnstore/storagemanager.cnf
-    if ! /usr/bin/testS3Connection >/var/log/mariadb/testS3Connection.log 2>&1; then
+    if ! /usr/bin/testS3Connection >/var/log/mariadb/columnstore/testS3Connection.log 2>&1; then
         echo "Error: S3 Connectivity Failed"
         exit 1
     fi
@@ -92,7 +92,7 @@ fi
 
 # Conditional Provisioning
 if [[ "${PM1_DNS}" == "${HOSTNAME}"* || "${PM1_DNS}" == "${HOSTNAME}" ]]; then
-    mariadbd-safe &
+     /etc/init.d/mariadb start
     sleep 5
 
     # Set Up MariaDB Cross Engine Join & Replication

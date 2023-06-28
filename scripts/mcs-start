@@ -58,7 +58,7 @@ fi
 
 # Start MariaDB
 if ! mariadb-admin ping &>/dev/null; then
-    if mariadbd-safe &>/dev/null & then
+    if  /etc/init.d/mariadb start &>/dev/null & then
         echo -e "Starting MariaDB Server... ${GREEN}done${NC}"
     else
         echo -e "Starting MariaDB Server... ${RED}fail${NC}"
