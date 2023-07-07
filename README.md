@@ -37,6 +37,7 @@ Validating ColumnStore Engine ... done
 | ADMIN_USER | String | Admin | No |
 | CEJ_PASS | String | C0lumnStore! | No |
 | CEJ_USER | String | cej | No |
+| CGROUP | String | ./ | Yes |
 | CMAPI_KEY | String | somekey123 | No |
 | PM1 | Hostname | - | **Yes** |
 | S3_ACCESS_KEY_ID | String | None | No |

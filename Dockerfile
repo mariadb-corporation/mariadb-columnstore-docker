@@ -59,9 +59,6 @@ RUN dnf -y install \
     jq \
     less \
     libaio \
-    libffi-devel \
-    libxml2-devel \
-    libxslt-devel \
     nano \
     net-tools \
     openssl \
@@ -73,12 +70,9 @@ RUN dnf -y install \
     rsyslog \
     snappy \
     sudo \
-    tcl \
     tini \
     tzdata \
-    vim \
-    wget \
-    xmlstarlet && \
+    wget && \
     ln -s /usr/lib/lsb/init-functions /etc/init.d/functions && \
     sed -i 's/-n $\*$/-n $\* \\/' /etc/redhat-lsb/lsb_log_message && \
     rm -rf /usr/share/zoneinfo/tzdata.zi /usr/share/zoneinfo/leapseconds

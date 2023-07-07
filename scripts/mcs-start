@@ -1,12 +1,11 @@
 #!/usr/bin/env bash
 
 # Set Some Variables
-COLXML='/etc/columnstore/Columnstore.xml'
 IFLAG='/etc/columnstore/container-initialized'
+MCS_INSTALL_BIN='/usr/bin'
+LOG_PREFIX='/var/log/mariadb/columnstore'
 CLUSTER_SIZE=$(mcsGetConfig PrimitiveServers Count)
 PFLAG='/etc/columnstore/container-provisioned'
-LOG_PREFIX='/var/log/mariadb/columnstore'
-MCS_INSTALL_BIN='/usr/bin'
 CMAPI_KEY="${CMAPI_KEY:-somekey123}"
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -19,12 +18,6 @@ if [[ ! -e ${IFLAG} ]]; then
         exit 1
     fi
 fi
-
-# Dynamic Memory Allocation For Container
-TOTALUMMEMORY="22%"
-NUMBLOCKSPCT="45"
-xmlstarlet ed -L -u '/Columnstore/HashJoin/TotalUmMemory' -v "${TOTALUMMEMORY}" "${COLXML}"
-xmlstarlet ed -L -u '/Columnstore/DBBC/NumBlocksPct' -v "${NUMBLOCKSPCT}" "${COLXML}"
 
 # Verify S3 Connectivity
 if [[ "${USE_S3_STORAGE}" == true ]]; then

@@ -36,6 +36,7 @@ else
     --env S3_BUCKET="${S3_BUCKET}" \
     --env S3_ENDPOINT="${S3_ENDPOINT}" \
     --env S3_REGION="${S3_REGION}" \
+    --env CGROUP="${CGROUP}" \
     -p 127.0.0.1:3306:3306 \
     --shm-size=512mb "${MCS_IMAGE_NAME}"
     docker exec -it "${PM1}" provision "${PM1}"
