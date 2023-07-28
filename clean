@@ -1,0 +1,21 @@
+#!/usr/bin/env bash
+# Columnstore Team Use Only
+# shellcheck source=/dev/null
+
+source .env
+
+BUILDX_CONTAINER=${BUILDX_CONTAINER:-columnstore}
+
+if [[ $(docker ps -a -q) ]]; then
+    docker stop $(docker ps -a -q)
+fi
+
+docker system prune -a --volumes --force
+
+if [[ $(docker buildx ls | grep columnstore) ]]; then
+    docker buildx stop "${BUILDX_CONTAINER}"
+    docker buildx rm "${BUILDX_CONTAINER}" --force
+fi
+
+docker buildx prune --all --force
+docker volume prune --all --force

@@ -3,7 +3,6 @@
 push_sky
 push_public
 push_public_spider
-clean
 .secrets
 upgrade
 docker-compose-new.yml
