@@ -185,6 +185,7 @@ if [[ "${PM1_DNS}" == "${HOSTNAME}"* || "${PM1_DNS}" == "${HOSTNAME}" ]]; then
         mariadb -e "
             DROP DATABASE IF EXISTS test;
             DELETE FROM mysql.user WHERE User='';
+            DELETE FROM mysql.user WHERE User='PUBLIC';
         "
         if [ $? -ne 0 ]; then
             echo 'ERROR: Securing MariaDB'
