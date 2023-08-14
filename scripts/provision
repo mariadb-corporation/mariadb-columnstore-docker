@@ -26,7 +26,7 @@ fi
 # Wait For Primary Node To Start
 if [[ ! -f ${IFLAG} ]]; then
     echo -n 'Waiting for PM1 To Be Initialized '
-    TIMEOUT=60
+    TIMEOUT=120
     while [[ ! -f "${IFLAG}" ]]; do
         if [[ $TIMEOUT -eq 0 ]]; then
             echo -e " ${RED}fail${NC}" >&2
