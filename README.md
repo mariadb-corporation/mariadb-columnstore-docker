@@ -179,3 +179,15 @@ They are also available via the following command:
 ```
 docker logs mcs1
 ```
+
+## Simple Backup Script Example
+
+```
+#!/bin/bash
+rm -rf /backup
+mkdir -p /backup/{mysql,columnstore}
+mariadb-backup --user=root --backup --rsync --target-dir=/backup/mysql
+mcs cluster set mode --mode readonly
+rsync -av /var/lib/columnstore/ /backup/columnstore/
+mcs cluster set mode --mode readwrite
+```
