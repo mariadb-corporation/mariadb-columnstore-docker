@@ -2,9 +2,4 @@
 .env
 push_sky
 push_public
-push_public_spider
 .secrets
-upgrade
-docker-compose-new.yml
-docker-compose-old.yml
-sample_data.sql

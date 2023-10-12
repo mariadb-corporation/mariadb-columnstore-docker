@@ -64,16 +64,6 @@ innodb_strict_mode = OFF
 log_error = /var/log/mariadb/columnstore/mariadb-error.log${RET}
 EOT
 
-# Adjust Spider Configuration
-if rpm -q MariaDB-spider-engine >/dev/null 2>&1; then
-    cat <<EOT >>/etc/my.cnf.d/spider.cnf
-[mariadb]
-plugin-load-add=ha_spider.so
-spider_table_crd_thread_count=1
-spider_table_sts_thread_count=1${RET}
-EOT
-fi
-
 # Storagemanager Configuration
 if [[ ${USE_S3_STORAGE} = true ]]; then
     mcsSetConfig Installation DBRootStorageType "StorageManager"

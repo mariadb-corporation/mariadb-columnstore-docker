@@ -11,7 +11,6 @@ ARG MCS_REPO=${MCS_REPO}
 ARG MCS_BASEURL=${MCS_BASEURL}
 ARG CMAPI_REPO=${CMAPI_REPO}
 ARG CMAPI_BASEURL=${CMAPI_BASEURL}
-ARG SPIDER=${SPIDER}
 
 # Define SkySQL Specific Path
 ENV PATH="/mnt/skysql/columnstore-container-scripts:${PATH}"
@@ -93,8 +92,6 @@ RUN dnf -y install \
     MariaDB-cracklib-password-check \
     MariaDB-columnstore-engine \
     MariaDB-columnstore-cmapi &&\
-    if [[ "${SPIDER}" == true ]]; then \
-    dnf -y install MariaDB-spider-engine; fi && \
     if [[ "${DEV}" == true ]]; then \
     dnf -y install MariaDB-test; fi
 
