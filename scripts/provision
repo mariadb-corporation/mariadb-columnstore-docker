@@ -39,7 +39,27 @@ if [[ ! -f ${IFLAG} ]]; then
     echo -e " ${GREEN}done${NC}"
 fi
 
-sleep 3
+SEC_TO_WAIT=15
+echo -n "Waiting CMAPI to finish startup on PM1"
+success=false
+for i in  $(seq 1 $SEC_TO_WAIT); do
+    echo -n "..$i"
+    if ! $(mcs cmapi is-ready > /dev/null); then
+        sleep 1
+    else
+        success=true
+        break
+    fi
+done
+
+echo
+if $success; then
+    echo -e "${GREEN}CMAPI ready to handle requests.${NC}"
+else
+    echo -e "${RED}CMAPI not ready after waiting $SEC_TO_WAIT seconds. Check mcs_cli.log file for further details.${NC}"
+    exit 1
+fi
+
 
 # Set API Key
 if ! mcs cluster set api-key --key "${CMAPI_KEY}" >/dev/null 2>&1; then
