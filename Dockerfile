@@ -9,6 +9,8 @@ ARG RELEASE_NUMBER=${RELEASE_NUMBER}
 ARG DEV=${DEV}
 ARG MCS_REPO=${MCS_REPO}
 ARG MCS_BASEURL=${MCS_BASEURL}
+ARG FDB_REPO=${FDB_REPO}
+ARG FDB_BASEURL=${FDB_BASEURL}
 ARG CMAPI_REPO=${CMAPI_REPO}
 ARG CMAPI_BASEURL=${CMAPI_BASEURL}
 
@@ -24,6 +26,13 @@ RUN if [[ "${DEV}" == true ]]; then \
     "[${MCS_REPO}]" \
     "name = ${MCS_REPO}" \
     "baseurl = ${MCS_BASEURL}" \
+    "gpgcheck = 0" \
+    "enabled = 1" \
+    "module_hotfixes = 1" \
+    "" \
+    "[${FDB_REPO}]" \
+    "name = ${FDB_REPO}" \
+    "baseurl = ${FDB_BASEURL}" \
     "gpgcheck = 0" \
     "enabled = 1" \
     "module_hotfixes = 1" \
