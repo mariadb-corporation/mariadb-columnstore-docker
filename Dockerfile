@@ -102,7 +102,7 @@ RUN dnf -y install \
     MariaDB-columnstore-engine \
     MariaDB-columnstore-cmapi &&\
     if [[ "${DEV}" == true ]]; then \
-    dnf -y install MariaDB-test; fi
+    dnf -y install MariaDB-test MariaDB-columnstore-engine-debuginfo gdb; fi
 
 # Copy Config Files & Scripts To Image
 COPY scripts/provision \
@@ -154,6 +154,14 @@ RUN if [ -f /usr/share/mariadb/mysql.server ]; \
 
 # Copy Entrypoint To Image
 COPY scripts/docker-entrypoint.sh /usr/bin/
+
+# Enable Core Dumps
+RUN if [[ "${DEV}" == true ]]; then \
+    echo "* soft core unlimited" >> /etc/security/limits.conf && \
+    echo "* hard core unlimited" >> /etc/security/limits.conf && \
+    echo "LimitCORE=infinity" >> /etc/systemd/coredump.conf && \
+    sysctl -p ; \
+fi; 
 
 # Do Some Housekeeping
 RUN chmod +x /usr/bin/docker-entrypoint.sh && \

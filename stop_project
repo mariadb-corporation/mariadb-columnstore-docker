@@ -1,6 +1,11 @@
 #!/usr/bin/env bash
 # Columnstore Team Use Only
 # shellcheck source=/dev/null
+#
+# Example:
+#   ./stop_project
+#   ./stop_project clean
+#   ./stop_project clean all
 
 source .env
 
@@ -17,3 +22,28 @@ if [[ "${USE_COMPOSE}" == true ]]; then
 else
     docker stop "${PM1}"
 fi
+
+if [ ! -z $1 ] && [ $1 == "clean" ]; then
+    
+    BUILDX_CONTAINER=${BUILDX_CONTAINER:-columnstore}
+    MCS_IMAGE_NAME=${MCS_IMAGE_NAME:-mariadb/columnstore}
+
+    echo "[-] Deleting containers w/image: $MCS_IMAGE_NAME"
+    CONTAINER_IDS=$(docker ps -a -q --filter "ancestor=$MCS_IMAGE_NAME")
+    if [[ ! -z $CONTAINER_IDS ]]; then
+        docker rm $CONTAINER_IDS
+    fi
+
+    echo "[-] Deleting image: $MCS_IMAGE_NAME"
+    IMAGE_IDS=$(docker images -q --filter "reference=$MCS_IMAGE_NAME" )
+    if [[ ! -z $IMAGE_IDS ]]; then
+        docker rmi $IMAGE_IDS
+    fi
+
+    echo "[-] Deleting unused build caches"
+    docker builder prune --force
+
+    if [ ! -z $2 ] && [ $2 == "all" ]; then
+        docker system prune -a --volumes --force
+    fi;
+fi;
