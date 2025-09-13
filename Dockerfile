@@ -1,7 +1,7 @@
 # vim:set ft=dockerfile:
 
 # Setup A Template Image
-FROM rockylinux:8 as base
+FROM rockylinux:9 as base
 
 # Define Development ARGs
 ARG ENTERPRISE=${ENTERPRISE}
@@ -39,7 +39,8 @@ RUN if [[ "${DEV}" == true ]]; then \
     fi
 
 # Update System
-RUN dnf -y install epel-release && \
+RUN dnf -y install epel-release dnf-plugins-core && \
+    dnf config-manager --set-enabled crb && \
     dnf -y upgrade
 
 # Install Various Packages/Tools
@@ -64,7 +65,6 @@ RUN dnf -y install \
     perl \
     perl-DBI \
     procps-ng \
-    redhat-lsb-core \
     rsync \
     rsyslog \
     snappy \
@@ -72,9 +72,11 @@ RUN dnf -y install \
     tini \
     tzdata \
     wget && \
-    ln -s /usr/lib/lsb/init-functions /etc/init.d/functions && \
-    sed -i 's/-n $\*$/-n $\* \\/' /etc/redhat-lsb/lsb_log_message && \
     rm -rf /usr/share/zoneinfo/tzdata.zi /usr/share/zoneinfo/leapseconds
+
+# Install initscripts to provide /etc/init.d/functions (required by mysql.server);
+RUN dnf -y install initscripts && \
+    test -f /etc/init.d/functions
 
 # Define ENV Variables
 ENV LANG=en_US.UTF-8
